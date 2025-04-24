@@ -57,7 +57,8 @@ jobs:
           event-type: ${{ steps.create_tags.outputs.DEPLOY_ENV }}
           client-payload: '{
               "service": "frontend",
-              "tag": "${{ steps.create_tags.outputs.TAG }}"
+              "tag": "${{ steps.create_tags.outputs.TAG }}",
+              "env": "${{ steps.create_tags.outputs.DEPLOY_ENV }}"
             }'
 
   # copy:
