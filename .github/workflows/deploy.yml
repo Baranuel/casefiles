@@ -55,11 +55,10 @@ jobs:
           token: ${{ secrets.PAT }}
           repository: Baranuel/casefiles-infra
           event-type: ${{ steps.create_tags.outputs.DEPLOY_ENV }}
-          client-payload: |
-            {
+          client-payload: '{
               "service": "frontend",
               "tag": "${{ steps.create_tags.outputs.TAG }}"
-            }
+            }'
 
   # copy:
   #   name: Copy
