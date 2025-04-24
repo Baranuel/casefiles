@@ -91,19 +91,4 @@ jobs:
   #         cat docker/dev/.env
   #         sleep 15
 
-  #     - name: Docker Stack Deploy
-  #       uses: cssnr/stack-deploy-action@v1
-  #       with:
-  #         mode: 'compose'
-  #         name: 'dev'
-  #         args: --remove-orphans --force-recreate
-  #         prune: true
-  #         registry_auth: true
-  #         registry_host: 'ghcr.io'
-  #         registry_user: ${{ github.actor }}
-  #         registry_pass: ${{ secrets.GITHUB_TOKEN }}
-  #         file: docker/dev/dev-compose.yml
-  #         env_file: docker/dev/.env
-  #         host: ${{ secrets.SSH_HOST }}
-  #         user: root
-  #         ssh_key: ${{ secrets.SSH_PRIVATE_KEY }}
+   
