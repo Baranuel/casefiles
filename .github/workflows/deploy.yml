@@ -20,8 +20,10 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "release" ]]; then
             echo "TAG=prod-${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+            echo "DEPLOY_ENV=production" >> $GITHUB_OUTPUT
           else
             echo "TAG=${{ github.sha }}" >> $GITHUB_OUTPUT
+            echo "DEPLOY_ENV=development" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up QEMU
@@ -37,7 +39,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      # Build and push
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
@@ -47,6 +48,18 @@ jobs:
           tags: |
             ghcr.io/baranuel/casefiles:${{ steps.create_tags.outputs.TAG }}
             ghcr.io/baranuel/casefiles:latest
+      
+      - name: Notify infra to deploy
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: baranuel/casefiles-infra
+          event-type: ${{ steps.create_tags.outputs.DEPLOY_ENV }}
+          client-payload: |
+            {
+              "service": "frontend",
+              "tag": "${{ steps.create_tags.outputs.TAG }}"
+            }
 
   # copy:
   #   name: Copy
@@ -95,5 +108,3 @@ jobs:
   #         host: ${{ secrets.SSH_HOST }}
   #         user: root
   #         ssh_key: ${{ secrets.SSH_PRIVATE_KEY }}
-
- 
