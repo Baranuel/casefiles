@@ -52,7 +52,7 @@ jobs:
       - name: Notify infra to deploy
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
           repository: Baranuel/casefiles-infra
           event-type: ${{ steps.create_tags.outputs.DEPLOY_ENV }}
           client-payload: |
