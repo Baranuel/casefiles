@@ -1,4 +1,6 @@
 
 export default function Home() {
-  return 'Hello sir'
+  return <section className="bg-red-200 h-screen w-screen">
+    <h1>Hello sir</h1>
+  </section>
 }
