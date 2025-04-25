@@ -74,7 +74,7 @@ jobs:
         id: create_pr
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
           branch: bump-frontend-dev-${{ needs.build.outputs.TAG }}
           base: dev
           title: "chore: bump FE to ${{ needs.build.outputs.TAG }} (dev)"
