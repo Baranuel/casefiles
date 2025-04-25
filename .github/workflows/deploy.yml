@@ -52,18 +52,19 @@ jobs:
   bump-dev:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout infra@dev
         uses: actions/checkout@v3
         with:
           repository: baranuel/casefiles-infra
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           ref: dev
-          path: infra
 
       - name: Bump FRONTEND_TAG
         run: |
-          cd infra
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           sed -i "s/^FRONTEND_TAG=.*/FRONTEND_TAG=${{ needs.build.outputs.TAG }}/" docker-stack.env
@@ -74,7 +75,6 @@ jobs:
         id: create_pr
         uses: peter-evans/create-pull-request@v5
         with:
-          path: infra 
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: bump-frontend-dev-${{ needs.build.outputs.TAG }}
           base: dev
