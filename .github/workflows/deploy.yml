@@ -85,5 +85,6 @@ jobs:
       - name: Auto-merge PR
         uses: peter-evans/enable-pull-request-automerge@v2
         with:
+          repository: baranuel/casefiles-infra
           token: ${{ secrets.PAT }}
           pull-request-number: ${{ steps.create_pr.outputs.pull-request-number }}
