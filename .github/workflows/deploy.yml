@@ -84,6 +84,7 @@ jobs:
           title: "chore: bump FE to ${{ needs.build.outputs.TAG }} (dev)"
           body: "Deploy frontend ${{ needs.build.outputs.TAG }} to dev"
           labels: automated
+          delete-branch: true
 
       - name: Auto-merge PR
         uses: peter-evans/enable-pull-request-automerge@v2
