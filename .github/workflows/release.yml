@@ -1,8 +1,8 @@
-name: Build and Push to GitHub Container Registry
+name: Release
 
 on:
-  push:
-    branches: [ main ]
+  release:
+    types: [ published ]
 
 jobs:
   build:
@@ -18,7 +18,7 @@ jobs:
       - name: Create Appropriate Image Tags
         id: create_tags
         run: |
-            echo "TAG=${{ github.sha }}" >> $GITHUB_OUTPUT
+            echo "TAG=prod-${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -43,16 +43,16 @@ jobs:
             ghcr.io/baranuel/casefiles:${{ steps.create_tags.outputs.TAG }}
             ghcr.io/baranuel/casefiles:latest
       
-  bump-dev:
+  release:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout infra@dev
+      - name: Checkout infra@main
         uses: actions/checkout@v3
         with:
           repository: baranuel/casefiles-infra
           token: ${{ secrets.PAT }}
-          ref: dev
+          ref: main
           path: infra
 
       - name: Bump FRONTEND_TAG
@@ -62,7 +62,7 @@ jobs:
           git config user.email "actions@github.com"
           sed -i "s/^FRONTEND_TAG=.*/FRONTEND_TAG=${{ needs.build.outputs.TAG }}/" docker-stack.env
           git add docker-stack.env
-          git commit -m "chore: bump FE to ${{ needs.build.outputs.TAG }} (dev)"
+          git commit -m "chore: bump FE to ${{ needs.build.outputs.TAG }} (main)"
 
       - name: Create Pull Request
         id: create_pr
@@ -70,10 +70,10 @@ jobs:
         with:
           path: infra
           token: ${{ secrets.PAT }}
-          branch: bump-frontend-dev-${{ needs.build.outputs.TAG }}
-          base: dev
-          title: "chore: bump FE to ${{ needs.build.outputs.TAG }} dev"
-          body: "Deploy frontend ${{ needs.build.outputs.TAG }} to dev"
+          branch: fe-release-main-${{ needs.build.outputs.TAG }}
+          base: main
+          title: "chore: bump FE to ${{ needs.build.outputs.TAG }} main"
+          body: "Deploy frontend ${{ needs.build.outputs.TAG }} to main"
           labels: automated
           delete-branch: true
 
