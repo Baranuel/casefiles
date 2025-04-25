@@ -7,9 +7,11 @@ on:
     types: [ published ]
 
 jobs:
-  build-and-push:
-    name: Build and Push
+  build:
+    name: Build
     runs-on: ubuntu-latest
+    outputs:
+      TAG: ${{ steps.create_tags.outputs.TAG }}
     
     steps:
       - name: Checkout code
@@ -20,10 +22,8 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "release" ]]; then
             echo "TAG=prod-${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
-            echo "DEPLOY_ENV=production" >> $GITHUB_OUTPUT
           else
             echo "TAG=${{ github.sha }}" >> $GITHUB_OUTPUT
-            echo "DEPLOY_ENV=development" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up QEMU
@@ -49,14 +49,40 @@ jobs:
             ghcr.io/baranuel/casefiles:${{ steps.create_tags.outputs.TAG }}
             ghcr.io/baranuel/casefiles:latest
       
-      - name: Notify infra to deploy
-        uses: peter-evans/repository-dispatch@v2
+  bump-dev:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout infra@dev
+        uses: actions/checkout@v3
         with:
-          token: ${{ secrets.PAT }}
-          repository: Baranuel/casefiles-infra
-          event-type: ${{ steps.create_tags.outputs.DEPLOY_ENV }}
-          client-payload: '{
-              "service": "frontend",
-              "tag": "${{ steps.create_tags.outputs.TAG }}",
-              "env": "${{ steps.create_tags.outputs.DEPLOY_ENV }}"
-            }'
+          repository: baranuel/casefiles-infra
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: dev
+          path: infra
+
+      - name: Bump FRONTEND_TAG
+        run: |
+          cd infra
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          sed -i "s/^FRONTEND_TAG=.*/FRONTEND_TAG=${{ needs.build.outputs.TAG }}/" docker-stack.env
+          git add docker-stack.env
+          git commit -m "chore: bump FE to ${{ needs.build.outputs.TAG }} (dev)"
+
+      - name: Create Pull Request
+        id: create_pr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: bump-frontend-dev-${{ needs.build.outputs.TAG }}
+          base: dev
+          title: "chore: bump FE to ${{ needs.build.outputs.TAG }} (dev)"
+          body: "Deploy frontend ${{ needs.build.outputs.TAG }} to dev"
+          labels: automated
+
+      - name: Auto-merge PR
+        uses: peter-evans/enable-pull-request-automerge@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ steps.create_pr.outputs.pull-request-number }}
