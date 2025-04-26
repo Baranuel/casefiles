@@ -20,7 +20,7 @@ export default function Hero() {
                 </p>
                 <button className="bg-primary-500 p-2 min-w-[150px]">Hello</button>
             </div>
-            <div className=" flex-1 w-full  aspect-[4/3] lg:min-w-[520px] max-w-[550px] border-4 border-primary-800 bg-black/50 rounded-lg"></div>
+            <div className=" flex-1 w-full  aspect-[5/3] min-h-[275px] lg:min-h-[350px] lg:min-w-[520px] max-w-[550px] border-4 border-primary-800 bg-black/50 rounded-lg"></div>
           </div>
         </div>
     </section>
