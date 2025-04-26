@@ -10,3 +10,8 @@
   --color-primary-800: #2C2421;
 }
 
+body {
+  background-color: var(--color-background-500);
+  color: var(--color-background-700);
+}
+
