@@ -1,5 +1,16 @@
+import { cn } from "@/utils/cn";
 import { ReactNode } from "react";
 
-export const SectionHeader = ({ children }: { children: string | ReactNode }) => {
-  return <h1 className="text-4xl lg:text-5xl font-black mb-6">{children}</h1>;
+export const SectionHeader = ({
+  children,
+  className,
+}: {
+  children: string | ReactNode;
+  className?: string;
+}) => {
+  return (
+    <h2 className={cn("text-4xl md:text-5xl font-black mb-6", className)}>
+      {children}
+    </h2>
+  );
 };

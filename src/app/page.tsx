@@ -1,9 +1,12 @@
+import { PageWrapper } from "@/components/global/PageWrapper";
 import Hero from "@/components/landing-page/Hero";
 import Intro from "@/components/landing-page/Intro";
+import { Overview } from "@/components/landing-page/Overview";
 
 export default function Home() {
-  return <main className="bg-background-500 w-screen min-h-screen max-w-[1720px] mx-auto flex flex-col items-center justify-start lg:justify-center gap-8">
+  return <PageWrapper>
     <Hero />
     <Intro/>
-  </main>
+    <Overview/>
+  </PageWrapper>
 }
