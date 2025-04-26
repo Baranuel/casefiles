@@ -1,6 +1,9 @@
+import Hero from "@/components/landing-page/Hero";
+import Intro from "@/components/landing-page/Intro";
 
 export default function Home() {
-  return <section className="bg-red-200 h-screen w-screen">
-    <h1>Hello sir</h1>
-  </section>
+  return <main className="bg-background-500 w-screen min-h-screen">
+    <Hero />
+    <Intro/>
+  </main>
 }
