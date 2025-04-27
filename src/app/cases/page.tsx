@@ -12,7 +12,7 @@ export default async function CasesPage() {
       <SectionWrapper className="min-h-24 md:min-h-24">
         <div className="w-full flex justify-between items-start  ">
           <SectionHeader>Active Cases</SectionHeader>
-          <CreateCaseButton/>
+          <CreateCaseButton baseUrl={process.env.NEXT_PUBLIC_BASE_API_URL!}/>
         </div>
       </SectionWrapper>
       <SectionWrapper className=" pt-0 lg:pt-0 lg:min-h-fit">
