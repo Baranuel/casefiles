@@ -1,21 +1,45 @@
-import { Case } from "@/types/cases";
+"use client";
+
+import { useCasesApi } from "@/hooks/use-cases-api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 
-export const CaseList = ({ cases }: { cases: Case[] }) => {
+export const CaseList = () => {
+  const queryClient = useQueryClient();
+  const { getCases,deleteCase } = useCasesApi();
+  
+  const { data, isError, isLoading} = useQuery({
+    queryKey: ["cases"],
+    queryFn: getCases,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (caseId: string) => deleteCase(caseId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+    },
+  });
+
+
+  if (isLoading) {
+    return <div className="text-center">Loading cases...</div>;
+  }
+
+  if (isError) {
+    return <div className="text-center">Error loading cases</div>;
+  }
+
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {cases?.map((caseItem) => (
+    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-2">
+      {data?.map((caseItem) => (
         <Link
           href={`/cases/${caseItem.id}`}
           key={caseItem.id}
           className="bg-white border border-primary-800/10 rounded-lg p-6 
-          hover:border-primary-600/20 hover:shadow-sm transition-all"
+          hover:border-primary-600/20 hover:shadow-sm transition-all max-h-[250px]"
         >
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 " onDoubleClick={() => deleteMutation.mutate(caseItem.id)}>
             <div className="flex justify-between items-center">
-              <span className="font-mono text-sm text-primary-800">
-                #{String(caseItem).padStart(3, "0")}
-              </span>
               <span className="px-2 py-1 text-xs bg-primary-50 text-primary-600 rounded-full">
                 Active
               </span>
