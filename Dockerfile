@@ -15,6 +15,10 @@ COPY . .
 RUN corepack enable pnpm && pnpm run build
 
 FROM base AS runner
+
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="__DUMMY__"
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+
 WORKDIR /app
 ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
