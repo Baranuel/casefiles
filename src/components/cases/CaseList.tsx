@@ -4,9 +4,9 @@ import { useCasesApi } from "@/hooks/use-cases-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 
-export const CaseList = () => {
+export const CaseList = ({baseUrl}:{baseUrl:string}) => {
   const queryClient = useQueryClient();
-  const { getCases,deleteCase } = useCasesApi();
+  const { getCases,deleteCase } = useCasesApi(baseUrl);
   
   const { data, isError, isLoading} = useQuery({
     queryKey: ["cases"],
@@ -20,6 +20,7 @@ export const CaseList = () => {
     },
   });
 
+  console.log(process.env)
 
   if (isLoading) {
     return <div className="text-center">Loading cases...</div>;
