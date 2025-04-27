@@ -1,4 +1,3 @@
-import { BASE_API_URL } from "@/constants";
 import { Case } from "@/types/cases";
 import { useAuth} from "@clerk/nextjs";
 
@@ -11,7 +10,7 @@ export const useCasesApi = () => {
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch(BASE_API_URL + "/cases", {
+        const res: Response = await fetch(process.env.NEXT_PUBLIC_BASE_API_URL + "/cases", {
             headers: {
                 "Content-Type": "application/json", 
                 "Authorization": `Bearer ${token}`,
@@ -31,7 +30,7 @@ export const useCasesApi = () => {
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch(BASE_API_URL + "/cases", {
+        const res: Response = await fetch(process.env.NEXT_PUBLIC_BASE_API_URL + "/cases", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json", 
@@ -53,7 +52,7 @@ export const useCasesApi = () => {
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch(BASE_API_URL + "/cases/" + caseId, {
+        const res: Response = await fetch(process.env.NEXT_PUBLIC_BASE_API_URL + "/cases/" + caseId, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
