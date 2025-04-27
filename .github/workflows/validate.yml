@@ -1,0 +1,42 @@
+name: Validate Build
+
+# Add concurrency to cancel in-progress runs
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: Install dependencies
+      run: corepack enable pnpm && pnpm install
+      env:
+        CI: true
+      
+    - name: Build Next.js app
+      run: pnpm build
+      env:
+        CI: true
+
+    - name: Cache Next.js build
+      uses: actions/cache@v3
+      with:
+        path: |
+          .next/cache
+          ${{ github.workspace }}/.next/cache
+        key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**.[jt]sx?', '**.[jt]s?') }}
+        restore-keys: |
+          ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
