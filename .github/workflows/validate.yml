@@ -1,6 +1,5 @@
 name: Validate Build
 
-# Add concurrency to cancel in-progress runs
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
