@@ -2,8 +2,13 @@ import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/global/PageWrapper";
 import { SectionWrapper } from "@/components/global/SectionWrapper";
 import Link from "next/link";
+import { getCases } from "@/actions/cases";
 
 export default async function CasesPage() {
+  // Fetch cases from the database
+  const cases = await getCases();
+  console.log(cases);
+
   return (
     <PageWrapper>
       <SectionWrapper>
