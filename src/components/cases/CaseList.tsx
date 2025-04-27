@@ -6,7 +6,7 @@ export const CaseList = ({ cases }: { cases: Case[] }) => {
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {cases?.map((caseItem) => (
         <Link
-          href={`/cases/${caseItem}`}
+          href={`/cases/${caseItem.id}`}
           key={caseItem.id}
           className="bg-white border border-primary-800/10 rounded-lg p-6 
           hover:border-primary-600/20 hover:shadow-sm transition-all"
