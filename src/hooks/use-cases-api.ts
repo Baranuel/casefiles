@@ -1,7 +1,7 @@
 import { Case } from "@/types/cases";
 import { useAuth} from "@clerk/nextjs";
 
-export const useCasesApi = () => {
+export const useCasesApi = (baseUrl:string) => {
     const { getToken } = useAuth()
 
     const getCases = async ():Promise<Case[]> => {
@@ -10,7 +10,7 @@ export const useCasesApi = () => {
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch(process.env.NEXT_PUBLIC_BASE_API_URL + "/cases", {
+        const res: Response = await fetch(baseUrl + "/cases", {
             headers: {
                 "Content-Type": "application/json", 
                 "Authorization": `Bearer ${token}`,
@@ -30,7 +30,7 @@ export const useCasesApi = () => {
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch(process.env.NEXT_PUBLIC_BASE_API_URL + "/cases", {
+        const res: Response = await fetch(baseUrl + "/cases", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json", 
@@ -52,7 +52,7 @@ export const useCasesApi = () => {
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch(process.env.NEXT_PUBLIC_BASE_API_URL + "/cases/" + caseId, {
+        const res: Response = await fetch(baseUrl + "/cases/" + caseId, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",

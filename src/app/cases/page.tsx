@@ -16,7 +16,7 @@ export default async function CasesPage() {
         </div>
       </SectionWrapper>
       <SectionWrapper className=" pt-0 lg:pt-0 lg:min-h-fit">
-        <CaseList />
+        <CaseList baseUrl={process.env.NEXT_PUBLIC_BASE_API_URL!} />
       </SectionWrapper>
     </PageWrapper>
   );
