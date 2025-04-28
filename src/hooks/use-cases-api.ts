@@ -1,9 +1,10 @@
+import { useConfig } from "@/providers/ConfigProvider";
 import { Case } from "@/types/cases";
 import { useAuth } from "@clerk/nextjs";
 
 export const useCasesApi = () => {
+    const { BASE_API_URL } = useConfig()
     const { getToken } = useAuth()
-    const baseApiUrl = process.env.BASE_API_URL
 
 
     const getCases = async (): Promise<Case[]> => {
@@ -12,7 +13,7 @@ export const useCasesApi = () => {
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch(baseApiUrl + "/cases", {
+        const res: Response = await fetch(BASE_API_URL + "/cases", {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`,
@@ -32,7 +33,7 @@ export const useCasesApi = () => {
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch("/api/cases", {
+        const res: Response = await fetch(BASE_API_URL + "/cases", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -54,7 +55,7 @@ export const useCasesApi = () => {
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch( "/api/cases/" + caseId, {
+        const res: Response = await fetch(BASE_API_URL + "/cases" + caseId, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
