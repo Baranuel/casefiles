@@ -1,18 +1,20 @@
 import { Case } from "@/types/cases";
-import { useAuth} from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 
-export const useCasesApi = (baseUrl:string) => {
+export const useCasesApi = () => {
     const { getToken } = useAuth()
+    const baseApiUrl = process.env.BASE_API_URL
 
-    const getCases = async ():Promise<Case[]> => {
+
+    const getCases = async (): Promise<Case[]> => {
         const token = await getToken({ template: "casefiles" });
-        
+
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch(baseUrl + "/cases", {
+        const res: Response = await fetch(baseApiUrl + "/cases", {
             headers: {
-                "Content-Type": "application/json", 
+                "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`,
             },
         });
@@ -25,15 +27,15 @@ export const useCasesApi = (baseUrl:string) => {
         return cases;
     };
 
-    const createCase = async (title:string):Promise<Case> => {
+    const createCase = async (title: string): Promise<Case> => {
         const token = await getToken({ template: "casefiles" });
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch(baseUrl + "/cases", {
+        const res: Response = await fetch("/api/cases", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json", 
+                "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`,
             },
             body: JSON.stringify(title),
@@ -47,12 +49,12 @@ export const useCasesApi = (baseUrl:string) => {
 
 
 
-    const deleteCase = async (caseId:string):Promise<void> => {
+    const deleteCase = async (caseId: string): Promise<void> => {
         const token = await getToken({ template: "casefiles" });
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch(baseUrl + "/cases/" + caseId, {
+        const res: Response = await fetch( "/api/cases/" + caseId, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",

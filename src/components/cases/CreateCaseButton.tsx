@@ -4,9 +4,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/global/Button";
 import { useCasesApi } from "@/hooks/use-cases-api";
 
-export function CreateCaseButton({baseUrl}:{baseUrl:string}) {
+export function CreateCaseButton() {
     const queryClient = useQueryClient();
-    const {createCase} = useCasesApi(baseUrl);
+    const {createCase} = useCasesApi();
 
   const mutation = useMutation({
     mutationFn: (data:string) => createCase(data),
