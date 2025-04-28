@@ -7,10 +7,8 @@ import {
   FileText,
   Clock,
   Search,
-  Image,
   Link2,
   MessageSquare,
-  Lock,
 } from "lucide-react";
 
 const featureList = [
