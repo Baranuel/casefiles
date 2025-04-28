@@ -11,6 +11,9 @@ importers:
       '@clerk/nextjs':
         specifier: ^6.18.0
         version: 6.18.0(next@15.3.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@next/env':
+        specifier: ^15.3.1
+        version: 15.3.1
       '@tanstack/react-query':
         specifier: ^5.74.4
         version: 5.74.4(react@19.1.0)
