@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/global/Navigation";
 import { ClerkProvider } from "@clerk/nextjs";
-import Providers from "@/providers/TanstackProvider";
+import TanstackProvider from "@/providers/TanstackProvider";
+import { ConfigProvider } from "@/providers/ConfigProvider";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -27,18 +28,22 @@ export default function RootLayout({
   return (
     <ClerkProvider
       dynamic
-      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || ""}
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}
     >
-      <Providers>
-        <html lang="en">
-          <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          >
-            <Navigation />
-            {children}
-          </body>
-        </html>
-      </Providers>
+      <ConfigProvider
+        variables={{ BASE_API_URL: process.env.NEXT_PUBLIC_BASE_API_URL! }}
+      >
+        <TanstackProvider>
+          <html lang="en">
+            <body
+              className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+            >
+              <Navigation />
+              {children}
+            </body>
+          </html>
+        </TanstackProvider>
+      </ConfigProvider>
     </ClerkProvider>
   );
 }
