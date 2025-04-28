@@ -69,7 +69,7 @@ export const Overview = () => {
         </span>
       </SectionHeader>
 
-      <div className="flex flex-col md:flex-row gap-4 w-full justify-start">
+      <div className="flex flex-col-reverse md:flex-row gap-4 w-full justify-start">
         {/* Feature List */}
         <div className="md:w-1/3 flex flex-row md:flex-col gap-2 overflow-x-auto py-3 pr-1 md:p-0 md:overflow-visible  rounded-md">
           {featureList.map((item, index) => (
