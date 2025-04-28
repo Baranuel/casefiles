@@ -39,7 +39,7 @@ const featureList = [
     description:
       "Quickly find any piece of evidence or note across all your cases.",
     color: "bg-[#F0FFF4] text-[#2F855A]",
-  },
+  }
 ];
 
 export const Overview = () => {
@@ -54,12 +54,12 @@ export const Overview = () => {
         </span>
       </SectionHeader>
 
-      <p className="text-primary-800/70 max-w-2xl mx-auto text-lg mb-8 text-center">
+      <p className="text-primary-800/70  mx-auto text-xl mb-8 text-center">
         Explore the features that make our platform the ultimate detective
         toolkit.
       </p>
 
-      <div className="flex flex-col-reverse md:flex-row gap-4 w-full justify-start">
+      <div className="flex flex-col-reverse md:flex-row gap-3 w-full justify-start max-w-6xl ">
         {/* Feature List */}
         <div className=" hidden  md:w-1/3 md:flex flex-row md:flex-col gap-2 overflow-x-auto py-3 pr-1 md:p-0 md:overflow-visible  rounded-md">
           {featureList.map((item, index) => (
@@ -67,6 +67,7 @@ export const Overview = () => {
               key={index}
               onClick={() => setActiveFeature(index)}
               className={`
+                lg:text-lg
                 flex items-center gap-4 p-4 rounded-lg transition-all
                 min-w-fit flex-1 text-nowrap md:min-w-0   hover:bg-white/60 hover:cursor-pointer
                 ${
@@ -83,16 +84,16 @@ export const Overview = () => {
         </div>
 
         {/* Feature Details */}
-        <div className=" hidden md:flex flex-col md:w-2/3 p-6 rounded-lg bg-white/50 border border-primary-800/10 min-h-[250px]">
+        <div className=" hidden md:flex flex-col md:w-2/3 p-6 rounded-lg bg-white/50 border border-primary-800/10 min-h-[300px]">
           <div className="flex items-center gap-4">
             <div className={feature.color + " p-3 rounded-md w-fit mb-4"}>
               {feature.icon}
             </div>
-            <h3 className="text-2xl font-bold text-primary-900 mb-3">
+            <h3 className="text-2xl xl:text-3xl font-bold text-primary-900 mb-3">
               {feature.title}
             </h3>
           </div>
-          <p className="text-primary-800/70 leading-relaxed">
+          <p className="text-primary-800/70 leading-relaxed xl:text-xl">
             {feature.description}
           </p>
         </div>
