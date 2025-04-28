@@ -48,7 +48,7 @@ export const Pricing = () => {
               Choose Your Detective Level
             </span>
           </SectionHeader>
-          <p className="text-primary-800/70 max-w-2xl mx-auto text-lg">
+          <p className="text-primary-800/70 mx-auto text-xl">
             Start your investigation journey today
           </p>
         </div>
