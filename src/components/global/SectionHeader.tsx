@@ -9,7 +9,7 @@ export const SectionHeader = ({
   className?: string;
 }) => {
   return (
-    <h2 className={cn("text-4xl md:text-5xl font-black mb-6", className)}>
+    <h2 className={cn("text-4xl md:text-5xl font-black mb-8", className)}>
       {children}
     </h2>
   );
