@@ -2,19 +2,12 @@
 import { useState } from "react";
 import { SectionHeader } from "../global/SectionHeader";
 import { SectionWrapper } from "../global/SectionWrapper";
-import {
-  Users,
-  FileText,
-  Clock,
-  Search,
-  Link2,
-  MessageSquare,
-} from "lucide-react";
+import { Users, FileText, Clock, Search, Link2 } from "lucide-react";
 
 const featureList = [
   {
     icon: <Users className="w-5 h-5" />,
-    title: "Collaborative Investigation",
+    title: "Collaboration",
     description:
       "Unite your team to crack challenging mysteries with seamless collaboration.",
     color: "bg-[#E6F2ED] text-[#2C6E49]",
@@ -28,7 +21,7 @@ const featureList = [
   },
   {
     icon: <FileText className="w-5 h-5" />,
-    title: "Case Notes & Reports",
+    title: "Case Notes",
     description:
       "Document your findings with rich markdown support and organized case files.",
     color: "bg-[#EDF2F7] text-[#2D3748]",
@@ -41,20 +34,12 @@ const featureList = [
     color: "bg-[#F0E7F7] text-[#553C9A]",
   },
   {
-    icon: <MessageSquare className="w-5 h-5" />,
-    title: "Team Discussion",
-    description:
-      "Discuss theories and findings directly within each case board.",
-    color: "bg-[#E6F6FF] text-[#2B6CB0]",
-  },
-  {
     icon: <Search className="w-5 h-5" />,
     title: "Advanced Search",
     description:
       "Quickly find any piece of evidence or note across all your cases.",
     color: "bg-[#F0FFF4] text-[#2F855A]",
-  }
-
+  },
 ];
 
 export const Overview = () => {
@@ -69,9 +54,14 @@ export const Overview = () => {
         </span>
       </SectionHeader>
 
+      <p className="text-primary-800/70 max-w-2xl mx-auto text-lg mb-8 text-center">
+        Explore the features that make our platform the ultimate detective
+        toolkit.
+      </p>
+
       <div className="flex flex-col-reverse md:flex-row gap-4 w-full justify-start">
         {/* Feature List */}
-        <div className="md:w-1/3 flex flex-row md:flex-col gap-2 overflow-x-auto py-3 pr-1 md:p-0 md:overflow-visible  rounded-md">
+        <div className=" hidden  md:w-1/3 md:flex flex-row md:flex-col gap-2 overflow-x-auto py-3 pr-1 md:p-0 md:overflow-visible  rounded-md">
           {featureList.map((item, index) => (
             <button
               key={index}
@@ -93,17 +83,40 @@ export const Overview = () => {
         </div>
 
         {/* Feature Details */}
-        <div className="md:w-2/3 p-6 rounded-lg bg-white/50 border border-primary-800/10 min-h-[250px]">
-          <div className={feature.color + " p-3 rounded-md w-fit mb-4"}>
-            {feature.icon}
+        <div className=" hidden md:flex flex-col md:w-2/3 p-6 rounded-lg bg-white/50 border border-primary-800/10 min-h-[250px]">
+          <div className="flex items-center gap-4">
+            <div className={feature.color + " p-3 rounded-md w-fit mb-4"}>
+              {feature.icon}
+            </div>
+            <h3 className="text-2xl font-bold text-primary-900 mb-3">
+              {feature.title}
+            </h3>
           </div>
-          <h3 className="text-2xl font-bold text-primary-900 mb-3">
-            {feature.title}
-          </h3>
           <p className="text-primary-800/70 leading-relaxed">
             {feature.description}
           </p>
         </div>
+      </div>
+
+      {/* Feature Details Mobile */}
+      <div className="flex flex-col md:hidden w-full gap-4">
+        {featureList.map((item, index) => (
+          <div
+            key={index}
+            className=" flex flex-col md:hidden md:w-2/3 p-6 rounded-lg bg-white/50 border border-primary-800/10 min-h-[150px]"
+          >
+            <div className="flex items-center gap-4 mb-2">
+              <div className={item.color + " p-3 rounded-md w-fit "}>
+                {item.icon}
+              </div>
+              <h3 className="text-xl font-bold text-primary-900">                {item.title}
+              </h3>
+            </div>
+            <p className="text-primary-800/70 leading-relaxed">
+              {item.description}
+            </p>
+          </div>
+        ))}
       </div>
     </SectionWrapper>
   );

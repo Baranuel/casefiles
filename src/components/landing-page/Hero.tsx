@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { SectionWrapper } from "../global/SectionWrapper";
+import { Button } from "../global/Button";
 
 export default function Hero() {
   return (
@@ -19,7 +20,12 @@ export default function Hero() {
             solve mysteries on 221B Baker Street. Our interactive detective
             boards turn every case into a collaborative adventure!
           </p>
-          <button className="bg-primary-500 p-2 min-w-[150px]">Hello</button>
+          <Button
+                variant='primary'
+                className=" py-2.5 rounded-md shadow-lg hover:shadow-xl mt-auto"
+              >
+                Start Investigation
+              </Button>
         </div>
         <div className=" relative flex-1 w-full lg:ml-4 aspect-[5/3] min-h-[250px] lg:min-h-[370px] lg:min-w-[520px] max-w-[600px] border-4 border-primary-800 bg-black/50 rounded-sm ">
           <Image
