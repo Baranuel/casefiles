@@ -19,7 +19,6 @@ export function CreateCaseButton() {
     <Button
       onClick={() => mutation.mutate('New Case')}
       isLoading={mutation.isPending}
-      loadingText="Creating..."
     >
       Create Case
     </Button>

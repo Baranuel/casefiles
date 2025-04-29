@@ -14,7 +14,7 @@ export default async function CasesPage() {
           <CreateCaseButton />
         </div>
       </SectionWrapper>
-      <SectionWrapper className=" pt-0 lg:pt-0 lg:min-h-fit">
+      <SectionWrapper className=" pt-0 lg:pt-0 md:min-h-fit lg:min-h-fit">
         <CaseList />
       </SectionWrapper>
     </PageWrapper>
