@@ -16,7 +16,6 @@ export const Button = ({
   variant = "primary",
   size = "md",
   isLoading = false,
-  loadingText,
   disabled,
   ...props
 }: ButtonProps) => {
@@ -45,10 +44,8 @@ export const Button = ({
       disabled={disabled || isLoading}
       {...props}
     >
-      {isLoading && (
-        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-      )}
-      {isLoading && loadingText ? loadingText : children}
+      {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+      {!isLoading && children}
     </button>
   );
 };

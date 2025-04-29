@@ -55,7 +55,7 @@ export const useCasesApi = () => {
         if (!token) {
             throw new Error("No token found");
         }
-        const res: Response = await fetch(BASE_API_URL + "/cases" + caseId, {
+        const res: Response = await fetch(BASE_API_URL + "/cases/" + caseId, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
