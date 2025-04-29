@@ -10,14 +10,18 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.18.0",
+    "@radix-ui/react-dialog": "^1.1.11",
+    "@radix-ui/react-slot": "^1.2.0",
     "@tanstack/react-query": "^5.74.4",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.503.0",
     "next": "15.3.1",
     "postcss": "^8.5.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tailwind-merge": "^3.2.0"
+    "tailwind-merge": "^3.2.0",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -29,6 +33,7 @@
     "eslint": "^9.25.1",
     "eslint-config-next": "15.3.1",
     "tailwindcss": "^4.1.4",
+    "tw-animate-css": "^1.2.8",
     "typescript": "^5.8.3"
   },
   "packageManager": "pnpm@10.9.0+sha512.0486e394640d3c1fb3c9d43d49cf92879ff74f8516959c235308f5a8f62e2e19528a65cdc2a3058f587cde71eba3d5b56327c8c33a97e4c4051ca48a10ca2d5f"

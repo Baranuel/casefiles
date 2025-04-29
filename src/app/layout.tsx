@@ -40,6 +40,11 @@ export default function RootLayout({
             >
               <Navigation />
               {children}
+              <footer className="flex items-center justify-center w-full h-24 bg-primary-800">
+                <p className="text-sm text-center text-background-500">
+                  Designed and developed by <a> Samuel Baran </a>
+                </p>
+              </footer>
             </body>
           </html>
         </TanstackProvider>
