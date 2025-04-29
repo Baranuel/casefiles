@@ -1,20 +1,15 @@
 import { Case } from "@/types/cases";
 import Link from "next/link";
-import { LoaderIcon, Trash2 } from "lucide-react";
+import { LoaderIcon, Trash2, Users, Clock } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCasesApi } from "@/hooks/use-cases-api";
 
-interface CasefileCardProps {
-  caseItem: Case;
-}
-
-export const CasefileCard = ({ caseItem }: CasefileCardProps) => {
+export const CasefileCard = ({ caseItem }: { caseItem: Case }) => {
   const queryClient = useQueryClient();
   const { deleteCase } = useCasesApi();
   const { mutate, isPending } = useMutation({
     mutationFn: deleteCase,
     onSuccess: () => {
-      // Optimistically remove the case from the cache
       queryClient.setQueryData(["cases"], (old: Case[]) =>
         old.filter((c) => c.id !== caseItem.id)
       );
@@ -25,61 +20,51 @@ export const CasefileCard = ({ caseItem }: CasefileCardProps) => {
   return (
     <Link
       href={`/cases/${caseItem.id}`}
-      className={`group/card relative bg-white border border-primary-800/10 rounded-lg p-6 
-        max-h-[220px]
-        hover:border-primary-600/20 hover:shadow-sm
-        transition-all duration-200 ease-in-out
-        ${isPending ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+      className={`group/card relative flex flex-col gap-3 p-4 rounded-lg bg-white
+        hover:shadow-sm transition-all 
+        ${isPending ? "opacity-50 pointer-events-none" : ""}`}
     >
-      {/* Delete Button - Shows on Hover */}
+      {/* Delete Button */}
       <button
-        title="Delete Case"
         onClick={(e) => {
           e.preventDefault();
-          e.stopPropagation();
           mutate(caseItem.id);
         }}
-        className={`absolute top-3 right-3 p-2 rounded-full 
-            md:invisible md:opacity-0
-            group-hover/card:visible group-hover/card:opacity-100
-            transition-all duration-200
-            bg-red-50 text-red-600
-            hover:bg-red-100
-            visible
-            ${isPending && "visible opacity-100"}
-            disabled:cursor-not-allowed`}
+        className="absolute right-3 top-3 p-2 rounded-full
+          opacity-0 group-hover/card:opacity-100 transition-opacity
+          bg-red-50 text-red-600 hover:bg-red-100"
         disabled={isPending}
       >
-        {!isPending ? (
-          <Trash2 className="w-4 h-4" />
-        ) : (
+        {isPending ? (
           <LoaderIcon className="w-4 h-4 animate-spin" />
+        ) : (
+          <Trash2 className="w-4 h-4" />
         )}
       </button>
 
-      <div className="flex flex-col gap-4">
-        {/* Status Badge */}
-        <div className="flex justify-between items-center">
-          <span className="px-2 py-1 text-xs bg-primary-50 text-primary-600 rounded-full">
-            Active
-          </span>
-        </div>
+      {/* Content */}
+      <span className="text-xs font-medium bg-primary-50 text-primary-700  py-1 rounded-full w-fit">
+        Active Case
+      </span>
 
-        {/* Content */}
-        <div className="space-y-2">
-          <h3 className="text-xl font-bold text-primary-900 line-clamp-2">
-            {caseItem.title}
-          </h3>
-          <p className="text-sm text-primary-800/70 line-clamp-2">
-            A peculiar case involving a series of mysterious disappearances...
-          </p>
-        </div>
+      <div>
+        <h3 className="font-semibold text-primary-950 mb-1.5 line-clamp-2">
+          {caseItem.title}
+        </h3>
+        <p className="text-sm text-primary-800 line-clamp-2">
+          {"No description provided"}
+        </p>
+      </div>
 
-        {/* Footer */}
-        <div className="flex gap-4 pt-4 text-xs text-primary-800/60 border-t">
-          <span>48h ago</span>
-          <span>3 agents</span>
-        </div>
+      <div className="flex gap-4 pt-3 text-xs text-primary-700 border-t border-primary-100">
+        <span className="flex items-center gap-1.5">
+          <Clock className="w-3.5 h-3.5" />
+          2d ago
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Users className="w-3.5 h-3.5" />
+          3 agents
+        </span>
       </div>
     </Link>
   );

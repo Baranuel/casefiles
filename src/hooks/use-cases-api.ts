@@ -30,9 +30,7 @@ export const useCasesApi = () => {
 
     const createCase = async (title: string): Promise<Case> => {
         const token = await getToken({ template: "casefiles" });
-        if (!token) {
-            throw new Error("No token found");
-        }
+
         const res: Response = await fetch(BASE_API_URL + "/cases", {
             method: "POST",
             headers: {
@@ -41,9 +39,6 @@ export const useCasesApi = () => {
             },
             body: JSON.stringify(title),
         });
-        if (!res.ok) {
-            throw new Error(`Error creating case: ${res.status}`);
-        }
         const newCase = await res.json();
         return newCase;
     };
@@ -52,19 +47,13 @@ export const useCasesApi = () => {
 
     const deleteCase = async (caseId: string): Promise<void> => {
         const token = await getToken({ template: "casefiles" });
-        if (!token) {
-            throw new Error("No token found");
-        }
-        const res: Response = await fetch(BASE_API_URL + "/cases/" + caseId, {
+        await fetch(BASE_API_URL + "/cases/" + caseId, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`,
             },
         });
-        if (!res.ok) {
-            throw new Error(`Error deleting case: ${res.status}`);
-        }
         return;
     };
 
