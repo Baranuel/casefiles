@@ -25,10 +25,9 @@
             if (!ctx) return;
 
             ctx.fillStyle = "red";
-            ctx.scale(this.dpr, this.dpr)
-            ctx.scale(zoom,zoom)
-            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            ctx.scale(this.dpr * zoom, this.dpr * zoom)
             ctx.save();
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
             ctx.translate(-x,-y)
 
             elements.forEach(el => {

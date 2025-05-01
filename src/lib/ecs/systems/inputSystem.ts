@@ -6,26 +6,24 @@ export class InputSystem implements System {
     private canvas: HTMLCanvasElement
     private controller: AbortController
     public mousePosition: { x: number, y: number } = { x: 0, y: 0 }
-    private boundUpdateMousePosition: (e: MouseEvent) => void
 
     constructor(engine: Engine) {
         this.controller = new AbortController()
         this.engine = engine
         this.canvas = this.engine.canvas
-        this.boundUpdateMousePosition = this.updateMousePosition.bind(this)
         this.canvas.addEventListener(
             'mousemove',
-            this.boundUpdateMousePosition,
+            this.updateMousePosition,
             { signal: this.controller.signal }
         )
         this.canvas.addEventListener(
             'wheel',
-            this.boundUpdateMousePosition,
+            this.updateMousePosition,
             { signal: this.controller.signal }
         )
     }
 
-    private updateMousePosition(e: MouseEvent) {
+    private updateMousePosition = (e: MouseEvent) => {
         const { canvas, engine } = this
         const { camera } = engine
         const rect = canvas.getBoundingClientRect()

@@ -7,17 +7,17 @@ export class CreationSystem implements System {
     engine: Engine
     inputSystem: InputSystem | undefined
     eventSystem: EventSystem | undefined
-    private boundOnMouseDown: (e: MouseEvent) => void;
+    controller: AbortController;
 
     constructor(engine: Engine) {
         this.engine = engine
+        this.controller = new AbortController()
         this.inputSystem = this.engine.getSystem('InputSystem')
         this.eventSystem = this.engine.getSystem('EventSystem')
-        this.boundOnMouseDown = this.onMouseDown.bind(this)
-        this.engine.canvas.addEventListener('mousedown', this.boundOnMouseDown)
+        this.engine.canvas.addEventListener('mousedown', this.onMouseDown, { signal: this.controller.signal })
     }
 
-    onMouseDown() {
+    onMouseDown = () => {
         const mousePos = this.inputSystem!.getWorldMousePosition()
         this.engine.getState().addElement({ x: mousePos?.x, y: mousePos?.y })
     }
@@ -28,6 +28,6 @@ export class CreationSystem implements System {
 
 
     destroy() {
-        this.engine.canvas.removeEventListener('mousedown', this.onMouseDown.bind(this))
+        this.controller.abort()
     }
 }
