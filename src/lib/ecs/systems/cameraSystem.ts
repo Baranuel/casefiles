@@ -2,33 +2,21 @@ import { Camera, System } from "@/types/engine";
 import { Engine } from "..";
 
 export class CameraSystem implements System {
-    engine: Engine;
-    private controller: AbortController;
-    private boundOnWheel: (e: WheelEvent) => void;
-    private boundOnTouchMove: (e: TouchEvent) => void;
-    private boundOnTouchStart: (e: TouchEvent) => void;
-
     private lastTouchPos: { x: number; y: number } | null = null;
+    private pinch = { startDist: null as number | null, startCam: null as Camera | null, center: { x: 0, y: 0 } };
+    private controller = new AbortController();
 
-    // for pinch‐to‐zoom
-    private pinchStartDist: number | null = null;
-    private pinchStartZoom = 1;
-    private pinchCenter: { x: number; y: number } = { x: 0, y: 0 };
+    constructor(public engine: Engine) {
+        const { canvas } = engine;
 
-    constructor(engine: Engine) {
-        this.engine = engine;
-        this.controller = new AbortController()
-        this.boundOnWheel = this.onWheel.bind(this);
-        this.boundOnTouchMove = this.onTouchMove.bind(this)
-        this.boundOnTouchStart = this.onTouchStart.bind(this)
+        canvas.addEventListener("wheel", this.onWheel, { passive: false, signal: this.controller.signal });
 
-        this.engine.canvas.addEventListener("wheel", this.onWheel.bind(this), { signal: this.controller.signal });
-        this.engine.canvas.addEventListener("touchstart", this.onTouchStart.bind(this), { passive: false, signal: this.controller.signal });
-        this.engine.canvas.addEventListener("touchmove", this.onTouchMove.bind(this), { passive: false, signal: this.controller.signal });
-        this.engine.canvas.addEventListener("touchend", this.onTouchEnd.bind(this), { signal: this.controller.signal });
+        canvas.addEventListener("touchstart", this.onTouchStart, { passive: false, signal: this.controller.signal });
+        canvas.addEventListener("touchmove", this.onTouchMove, { passive: false, signal: this.controller.signal });
+        canvas.addEventListener("touchend", this.onTouchEnd, { signal: this.controller.signal });
     }
 
-    onWheel(e: WheelEvent) {
+    private onWheel = (e: WheelEvent) => {
         e.preventDefault();
         const camera = this.engine.camera;
         const canvas = this.engine.canvas;
@@ -56,99 +44,75 @@ export class CameraSystem implements System {
 
         this.engine.camera = updateCamera;
     }
-    onTouchStart(e: TouchEvent) {
-        if (e.touches.length === 2) {
-            // start pinch
-            const [t0, t1] = [e.touches[0], e.touches[1]];
-            this.pinchStartDist = Math.hypot(
-                t1.clientX - t0.clientX,
-                t1.clientY - t0.clientY
-            );
-            this.pinchStartZoom = this.engine.camera.zoom;
 
-            // midpoint in canvas‐coordinates:
-            const rect = this.engine.canvas.getBoundingClientRect();
-            this.pinchCenter = {
-                x: (t0.clientX + t1.clientX) / 2 - rect.left,
-                y: (t0.clientY + t1.clientY) / 2 - rect.top,
-            };
-        } else if (e.touches.length === 1) {
-            // start pan
-            const t = e.touches[0];
-            this.lastTouchPos = { x: t.screenX, y: t.screenY };
-        }
-    }
-
-    onTouchMove(e: TouchEvent) {
+    private onTouchStart = (e: TouchEvent) => {
         e.preventDefault();
-        const cam = this.engine.camera;
-
-        if (e.touches.length === 2 && this.pinchStartDist != null) {
-            
-            const [t0, t1] = [e.touches[0], e.touches[1]];
-            const newDist = Math.hypot(
-                t1.clientX - t0.clientX,
-                t1.clientY - t0.clientY
-            );
-            const scale = newDist / this.pinchStartDist;
-            this.engine.camera = this.zoomAtPoint(
-                this.pinchCenter.x,
-                this.pinchCenter.y,
-                { ...cam, zoom: this.pinchStartZoom },
-                scale
-            );
-        } else if (e.touches.length === 1 && this.lastTouchPos) {
-            
-            const t = e.touches[0];
-            const deltaX = (t.screenX - this.lastTouchPos.x) / cam.zoom;
-            const deltaY = (t.screenY - this.lastTouchPos.y) / cam.zoom;
-            this.engine.camera = {
-                ...cam,
-                x: cam.x - deltaX,
-                y: cam.y - deltaY,
+        const t = e.touches;
+        if (t.length === 2) {
+            const d = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+            this.pinch.startDist = d;
+            this.pinch.startCam = { ...this.engine.camera };
+            const rect = this.engine.canvas.getBoundingClientRect();
+            this.pinch.center = {
+                x: (t[0].clientX + t[1].clientX) / 2 - rect.left,
+                y: (t[0].clientY + t[1].clientY) / 2 - rect.top,
             };
-            this.lastTouchPos = { x: t.screenX, y: t.screenY };
+        } else if (t.length === 1) {
+            this.lastTouchPos = { x: t[0].screenX, y: t[0].screenY };
         }
-    }
+    };
 
-    onTouchEnd(e: TouchEvent) {
-        // reset both gesture states once fingers lift
+    private onTouchMove = (e: TouchEvent) => {
+        e.preventDefault();
+        const { camera } = this.engine;
+        const t = e.touches;
+
+        if (t.length === 2 && this.pinch.startDist && this.pinch.startCam) {
+            const newD = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+            const scale = newD / this.pinch.startDist;
+            this.engine.camera = this.zoomAtPoint(this.pinch.center.x, this.pinch.center.y, this.pinch.startCam, scale);
+        }
+        else if (t.length === 1 && this.lastTouchPos) {
+            const dx = (t[0].screenX - this.lastTouchPos.x) / camera.zoom;
+            const dy = (t[0].screenY - this.lastTouchPos.y) / camera.zoom;
+            this.engine.camera = { ...camera, x: camera.x - dx, y: camera.y - dy };
+            this.lastTouchPos = { x: t[0].screenX, y: t[0].screenY };
+        }
+    };
+
+    private onTouchEnd = (e: TouchEvent) => {
         if (e.touches.length < 2) {
-            this.pinchStartDist = null;
+            this.pinch.startDist = null;
+            this.pinch.startCam = null;
+            const rem = e.touches[0];
+            this.lastTouchPos = rem ? { x: rem.screenX, y: rem.screenY } : null;
         }
-        if (e.touches.length === 0) {
-            this.lastTouchPos = null;
-        }
-    }
-    zoomAtPoint(newX: number, newY: number, camera: Camera, zoomFactor: number): Camera {
-        const newZoom = camera.zoom * zoomFactor;
-        const mouseWorldBefore = this.toCanvasPosition(newX, newY, camera);
-        const mouseWorldAfter = this.toCanvasPosition(newX, newY, { ...camera, zoom: newZoom });
-        const maxAllowedZoom = 0.25;
-        if (newZoom < maxAllowedZoom) return camera;
+    };
 
-        const zoomX = camera.x + (mouseWorldBefore.x - mouseWorldAfter.x);
-        const zoomY = camera.y + (mouseWorldBefore.y - mouseWorldAfter.y);
+    private zoomAtPoint(px: number, py: number, cam: Camera, factor: number): Camera {
+        const newZoom = cam.zoom * factor;
+
+        const MIN_ZOOM = 0.25;
+        const MAX_ZOOM = 4;
+        const clampedZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, newZoom));
+
+        const before = this.toCanvasPos(px, py, cam);
+        const after = this.toCanvasPos(px, py, { ...cam, zoom: clampedZoom });
 
         return {
-            zoom: Math.max(maxAllowedZoom, newZoom),
-            x: zoomX,
-            y: zoomY,
+            zoom: clampedZoom,
+            x: cam.x + (before.x - after.x),
+            y: cam.y + (before.y - after.y),
         };
     }
 
-    toCanvasPosition(x: number, y: number, camera: Camera) {
-        return {
-            x: camera.x + x / camera.zoom,
-            y: camera.y + y / camera.zoom
-        };
+    private toCanvasPos(x: number, y: number, cam: Camera) {
+        return { x: cam.x + x / cam.zoom, y: cam.y + y / cam.zoom };
     }
-
-    draw() { }
 
     update() { }
-
+    draw() { }
     destroy() {
-        this.controller.abort()
+        this.controller.abort();
     }
 }
