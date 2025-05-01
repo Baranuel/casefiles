@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { Engine } from "../ecs";
 import { InputSystem } from "../ecs/systems/inputSystem";
 import { CreationSystem } from "../ecs/systems/creationManager";
+import { useCaseStore } from "@/providers/CaseStoreProvider";
 
 export const Canvas = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [state, setState] = useState([{ x: 0, y: 0 }]); // dummy state for tests
-
+  const {elements} = useCaseStore((state) => state)
+  const [state] = useState([{ x: 0, y: 0 }]); // dummy state for tests
+  console.log(elements)
   // useEffect(() => {
   //   const newState = { x: Math.random() * 1200, y: Math.random() * 1200 };
   //   const interval = setInterval(
@@ -35,9 +37,8 @@ export const Canvas = () => {
   useEffect(() => {
     if (!canvasRef.current) return;
     const engine = new Engine(canvasRef.current, state);
-
     engine.addSystem("InputSystem", new InputSystem(engine));
-    engine.addSystem("CreationSystem", new CreationSystem(engine));
+    // engine.addSystem("CreationSystem", new CreationSystem(engine));
 
     engine.init();
 

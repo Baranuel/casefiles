@@ -3,8 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/global/Navigation";
 import { ClerkProvider } from "@clerk/nextjs";
-import TanstackProvider from "@/providers/TanstackProvider";
 import { ConfigProvider } from "@/providers/ConfigProvider";
+import { Providers } from "@/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +26,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  
   return (
     <ClerkProvider
       dynamic
@@ -35,7 +34,7 @@ export default async function RootLayout({
       <ConfigProvider
         variables={{ BASE_API_URL: process.env.NEXT_PUBLIC_BASE_API_URL! }}
       >
-        <TanstackProvider>
+        <Providers>
           <html lang="en">
             <body
               className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -49,7 +48,7 @@ export default async function RootLayout({
               </footer> */}
             </body>
           </html>
-        </TanstackProvider>
+        </Providers>
       </ConfigProvider>
     </ClerkProvider>
   );
