@@ -17,7 +17,6 @@ export class CreationSystem implements System {
     }
 
     onMouseDown() {
-        console.log(this)
         const mousePos = this.inputSystem!.getMousePosition()
         this.engine.getState().addElement({ x: mousePos?.x, y: mousePos?.y })
     }
