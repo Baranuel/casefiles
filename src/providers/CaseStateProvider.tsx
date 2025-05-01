@@ -2,7 +2,7 @@
 
 import { createContext, useContext, type ReactNode, useState, Dispatch, SetStateAction } from "react";
 
-type Position = { x: number; y: number };
+export type Position = { x: number; y: number };
 export type Tool = 'select'
 
 export type State = {
@@ -33,7 +33,7 @@ export function CaseProvider({ children }: { children: ReactNode }) {
   console.log(elements);
   return (
     <CaseContext.Provider value={contextStateValue}>
-      {children}
+        {children}
     </CaseContext.Provider>
   );
 }

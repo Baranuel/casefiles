@@ -1,36 +1,39 @@
 import { System } from "@/types/engine";
 import { Engine } from "..";
 
-export class EventSystem implements System { 
-    engine:Engine;
-    private listeners: Map<string, Array<(data: unknown) => void>> = new Map();
+export interface EngineEvents {
+    [key: string]: unknown;
+}
 
-    constructor(engine:Engine){
-        this.engine = engine
+export class EventSystem<Events extends object = EngineEvents> implements System {
+    constructor(public engine: Engine) { }
+
+    private listeners: Partial<{
+        [K in keyof Events]: Array<(data: Events[K]) => void>;
+    }> = {};
+
+    subscribe<K extends keyof Events>(
+        event: K,
+        callback: (data: Events[K]) => void
+    ): void {
+        (this.listeners[event] ||= []).push(callback);
     }
 
-    public subscribe(eventName: string, callback: (data: unknown) => void){ 
-        if(!this.listeners.has(eventName)){
-            this.listeners.set(eventName, []);
-        }
-        this.listeners.get(eventName)?.push(callback);
+    unsubscribe<K extends keyof Events>(
+        event: K,
+        callback: (data: Events[K]) => void
+    ): void {
+        this.listeners[event] = (this.listeners[event] ?? []).filter(cb => cb !== callback);
     }
 
-    public unsubscribe(eventName: string, callback: <T>(data: T) => void){ 
-        const callbacks = this.listeners.get(eventName) || [];
-        const newCallbacks = callbacks.filter(cb => cb !== callback);
-        this.listeners.set(eventName, newCallbacks);
+    emit<K extends keyof Events>(event: K, data: Events[K]): void {
+        (this.listeners[event] ?? []).forEach(cb => cb(data));
     }
 
-    public emit<T>(eventName: string, data:T){ 
-        const callbacks = this.listeners.get(eventName) || [];
-        callbacks.forEach(callback => callback(data));  
-    }
+    update() {}
+    draw() { }
 
-    update(){}
-    draw(){}
-
-    destroy(){
-        this.listeners.clear()
+    destroy(): void {
+        this.listeners = {};
     }
 }
