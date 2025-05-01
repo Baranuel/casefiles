@@ -1,7 +1,5 @@
 import { State } from "@/providers/CaseStateProvider";
-import { GetSystem, System, SystemsType } from "@/types/engine";
-
-
+import { Camera, GetSystem, System, SystemsType } from "@/types/engine";
 
 
 export class Engine {
@@ -9,6 +7,7 @@ export class Engine {
     private systems: Map<SystemsType, System> = new Map()
     private deltaTime: number;
     private lastTime: number;
+    public camera: Camera;
     private state: State
 
     constructor(canvas: HTMLCanvasElement, initialState: State) {
@@ -16,6 +15,7 @@ export class Engine {
         this.deltaTime = 0;
         this.lastTime = 0;
         this.state = initialState
+        this.camera = { x: 0, y: 0, zoom: 1 }
     }
 
     public init() {
@@ -32,7 +32,7 @@ export class Engine {
         const engineSystems = Array.from(this.systems.entries())
 
         // tick systems 
-        engineSystems.forEach(([, system]) => system.update())
+        engineSystems.forEach(([, system]) => system.update(this.deltaTime))
         engineSystems.forEach(([, system]) => system.draw())
 
         requestAnimationFrame(this.animate.bind(this));

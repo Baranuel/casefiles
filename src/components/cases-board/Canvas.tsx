@@ -8,6 +8,7 @@ import { InputSystem } from "@/lib/ecs/systems/inputSystem";
 import { CreationSystem } from "@/lib/ecs/systems/creationSystem";
 import { RenderingSystem } from "@/lib/ecs/systems/renderingSystem";
 import { EventSystem } from "@/lib/ecs/systems/eventSystem";
+import { CameraSystem } from "@/lib/ecs/systems/cameraSystem";
 
 export const Canvas = () => {
 
@@ -26,6 +27,7 @@ export const Canvas = () => {
     engine.addSystem("InputSystem", new InputSystem(engine));
     engine.addSystem("CreationSystem", new CreationSystem(engine));
     engine.addSystem("RenderingSystem", new RenderingSystem(engine));
+    engine.addSystem('CameraSystem', new CameraSystem(engine))
     engine.init();
 
     return () => {
