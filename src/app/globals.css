@@ -47,10 +47,16 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
+html, body {
+  height: 100%;
+}
 
 body {
   background-color: var(--color-background-500);
   color: var(--color-background-700);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 :root {
