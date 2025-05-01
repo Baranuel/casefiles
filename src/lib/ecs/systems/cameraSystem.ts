@@ -46,7 +46,6 @@ export class CameraSystem implements System {
     }
 
     private onTouchStart = (e: TouchEvent) => {
-        e.preventDefault();
         const t = e.touches;
         if (t.length === 2) {
             const d = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
