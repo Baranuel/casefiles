@@ -1,5 +1,6 @@
 import { PageWrapper } from "@/components/global/PageWrapper";
-import { Canvas } from "@/features/case-board/components/Canvas";
+import { Canvas } from "@/components/cases-board/Canvas";
+import { CaseProvider } from "@/providers/CaseStateProvider";
 
 type CasePageProps = {
   params: Promise<{ id: string }>;
@@ -7,10 +8,13 @@ type CasePageProps = {
 
 export default async function CasePage({ params }: CasePageProps) {
   const { id } = await params;
+  console.log(id)
 
   return (
-    <PageWrapper>
-      <Canvas/>
-    </PageWrapper>
+    <CaseProvider>
+      <PageWrapper>
+        <Canvas />
+      </PageWrapper>
+    </CaseProvider>
   );
 }
