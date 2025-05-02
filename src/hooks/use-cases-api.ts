@@ -1,8 +1,9 @@
 import { useConfig } from "@/providers/ConfigProvider";
 import { Case } from "@/types/cases";
+import { ElementDto } from "@/types/elements";
 import { useAuth } from "@clerk/nextjs";
 
-export const useCasesApi = () => {
+export const useCasesApi = (wsId?:string) => {
     const { BASE_API_URL } = useConfig()
     const { getToken } = useAuth()
 
@@ -31,7 +32,7 @@ export const useCasesApi = () => {
     const createCase = async (title: string): Promise<Case> => {
         const token = await getToken({ template: "casefiles" });
 
-        const res: Response = await fetch(BASE_API_URL + "/cases", {
+        const res: Response = await fetch(BASE_API_URL + `/cases`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -57,7 +58,45 @@ export const useCasesApi = () => {
         return;
     };
 
+    const getCaseElements = async (caseId:string): Promise<ElementDto[]> => {
+        const token = await getToken({ template: "casefiles" });
+        const res = await fetch(BASE_API_URL + "/cases/" + caseId + '/elements', {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+        });
+        return await res.json()
+    }
+
+    const createCaseElement = async (caseId:string, payload: Omit<ElementDto, 'id'>): Promise<ElementDto> => {
+        const token = await getToken({ template: "casefiles" });
+        const res = await fetch(BASE_API_URL + "/cases/" + caseId + '/elements' +`?wsId=${wsId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload)
+        });
+        return await res.json()
+    }
+
+    const deleteCaseElements = async (caseId:string): Promise<ElementDto> => {
+        const token = await getToken({ template: "casefiles" });
+        const res = await fetch(BASE_API_URL + "/cases/" + caseId + '/elements', {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+        });
+        return await res.json()
+    }
+    
 
 
-    return { getCases, createCase, deleteCase };
+
+    return { getCases, createCase, deleteCase, getCaseElements, createCaseElement, deleteCaseElements };
 }

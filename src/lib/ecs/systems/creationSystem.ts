@@ -19,7 +19,7 @@ export class CreationSystem implements System {
 
     onMouseDown = () => {
         const mousePos = this.inputSystem!.getWorldMousePosition()
-        this.engine.getState().addElement({ x: mousePos?.x, y: mousePos?.y })
+        this.engine.getState().addElement({ x1: mousePos?.x, y1: mousePos?.y, x2: mousePos.x + 100, y2:mousePos.y + 100 })
     }
 
     update() { }
