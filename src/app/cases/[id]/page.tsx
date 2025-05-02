@@ -2,6 +2,8 @@ import { PageWrapper } from "@/components/global/PageWrapper";
 import { Canvas } from "@/components/cases-board/Canvas";
 import { CaseProvider } from "@/providers/CaseStateProvider";
 import { Toolbar } from "@/components/cases-board/Toolbar";
+import { SocketProvider } from "@/providers/SocketProvider";
+import { randomUUID } from "crypto";
 
 type CasePageProps = {
   params: Promise<{ id: string }>;
@@ -9,14 +11,16 @@ type CasePageProps = {
 
 export default async function CasePage({ params }: CasePageProps) {
   const { id } = await params;
-  console.log(id)
+  const uniqueWsId = randomUUID()
 
   return (
-    <CaseProvider caseId={id}>
-      <PageWrapper>
-        <Canvas />
-        <Toolbar/>
-      </PageWrapper>
-    </CaseProvider>
+    <SocketProvider uniqueWsId={uniqueWsId} caseId={id}>
+      <CaseProvider caseId={id}>
+        <PageWrapper>
+          <Canvas />
+          <Toolbar/>
+        </PageWrapper>
+      </CaseProvider>
+    </SocketProvider>
   );
 }

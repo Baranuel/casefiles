@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCasesApi } from "./use-cases-api";
 import { ElementDto } from "@/types/elements";
+import { useSocketContext } from "@/providers/SocketProvider";
 
-export const useCaseElementsMutation = (caseId: string, wsId?:string) => {
-    const { createCaseElement, deleteCaseElements } = useCasesApi(wsId);
+export const useCaseElementsMutation = (caseId: string) => {
+    const {uniqueWsId} = useSocketContext()
+    const { createCaseElement, deleteCaseElements } = useCasesApi(uniqueWsId);
     const queryClient = useQueryClient();
 
     const updateMutation = useMutation({

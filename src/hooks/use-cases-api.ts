@@ -3,7 +3,7 @@ import { Case } from "@/types/cases";
 import { ElementDto } from "@/types/elements";
 import { useAuth } from "@clerk/nextjs";
 
-export const useCasesApi = (wsId?:string) => {
+export const useCasesApi = (uniqueWsId?: string) => {
     const { BASE_API_URL } = useConfig()
     const { getToken } = useAuth()
 
@@ -58,7 +58,7 @@ export const useCasesApi = (wsId?:string) => {
         return;
     };
 
-    const getCaseElements = async (caseId:string): Promise<ElementDto[]> => {
+    const getCaseElements = async (caseId: string): Promise<ElementDto[]> => {
         const token = await getToken({ template: "casefiles" });
         const res = await fetch(BASE_API_URL + "/cases/" + caseId + '/elements', {
             method: "GET",
@@ -70,9 +70,9 @@ export const useCasesApi = (wsId?:string) => {
         return await res.json()
     }
 
-    const createCaseElement = async (caseId:string, payload: Omit<ElementDto, 'id'>): Promise<ElementDto> => {
+    const createCaseElement = async (caseId: string, payload: Omit<ElementDto, 'id'>): Promise<ElementDto> => {
         const token = await getToken({ template: "casefiles" });
-        const res = await fetch(BASE_API_URL + "/cases/" + caseId + '/elements' +`?wsId=${wsId}`, {
+        const res = await fetch(BASE_API_URL + "/cases/" + caseId + '/elements' + `?wsId=${uniqueWsId}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -83,7 +83,7 @@ export const useCasesApi = (wsId?:string) => {
         return await res.json()
     }
 
-    const deleteCaseElements = async (caseId:string): Promise<ElementDto> => {
+    const deleteCaseElements = async (caseId: string): Promise<ElementDto> => {
         const token = await getToken({ template: "casefiles" });
         const res = await fetch(BASE_API_URL + "/cases/" + caseId + '/elements', {
             method: "DELETE",
@@ -94,7 +94,7 @@ export const useCasesApi = (wsId?:string) => {
         });
         return await res.json()
     }
-    
+
 
 
 
