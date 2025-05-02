@@ -12,7 +12,7 @@ export default async function CasePage({ params }: CasePageProps) {
   console.log(id)
 
   return (
-    <CaseProvider>
+    <CaseProvider caseId={id}>
       <PageWrapper>
         <Canvas />
         <Toolbar/>
