@@ -11,7 +11,7 @@ import { EventSystem } from "@/lib/ecs/systems/eventSystem";
 import { CameraSystem } from "@/lib/ecs/systems/cameraSystem";
 
 export const Canvas = () => {
-
+  console.log('rerender')
   const state = useCaseContext();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<Engine | null>(null);

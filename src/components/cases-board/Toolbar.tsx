@@ -1,4 +1,5 @@
 'use client'
+import { useCaseElementsMutation } from "@/hooks/use-case-elements-mutation";
 import { Tool, useCaseContext } from "@/providers/CaseStateProvider";
 
 import { 
@@ -8,6 +9,7 @@ import {
     StickyNote, 
     ArrowUpToLine 
 } from "lucide-react";
+import { useParams } from "next/navigation";
 import { JSX } from "react";
 
 const tools: { id: string; icon: JSX.Element; label: string }[] = [
@@ -39,7 +41,10 @@ const tools: { id: string; icon: JSX.Element; label: string }[] = [
 ] as const
 
 export const Toolbar = () => {
+  const params = useParams<{id:string}>()
+
   const {tool, setTool} = useCaseContext();
+  const {deleteAllMutation} = useCaseElementsMutation(params.id)
 
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-[#2C2420] p-2 rounded-lg border border-amber-700/50 shadow-lg">
@@ -53,7 +58,10 @@ export const Toolbar = () => {
         {tools.map((tool) => (
           <button
             key={tool.id}
-            onClick={() => setTool(tool.id as Tool)}
+            onClick={() => {
+              setTool(tool.id as Tool)
+              deleteAllMutation.mutate()
+            }}
             className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all relative hover:bg-amber-900/30`}
             title={tool.label}
           >
