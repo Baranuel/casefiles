@@ -9,7 +9,8 @@ export const useCaseElementsQuery = (caseId: string) => {
         queryKey: ['case-elements', caseId],
         queryFn: () => getCaseElements(caseId),
         placeholderData: [],
-        staleTime: Infinity,
+        refetchOnMount:true,
+        refetchOnWindowFocus:true
     })
     
 
