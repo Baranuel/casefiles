@@ -9,9 +9,10 @@ import { CreationSystem } from "@/lib/ecs/systems/creationSystem";
 import { RenderingSystem } from "@/lib/ecs/systems/renderingSystem";
 import { EventSystem } from "@/lib/ecs/systems/eventSystem";
 import { CameraSystem } from "@/lib/ecs/systems/cameraSystem";
+import { SelectionSystem } from "@/lib/ecs/systems/selectionSystem";
+import { MovingSystem } from "@/lib/ecs/systems/movingSystem";
 
 export const Canvas = () => {
-  console.log('rerender')
   const state = useCaseContext();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<Engine | null>(null);
@@ -23,11 +24,14 @@ export const Canvas = () => {
     const engine = new Engine(canvas, state);
     engineRef.current = engine;
 
-    engine.addSystem('EventSystem', new EventSystem(engine))
+    engine.addSystem("EventSystem", new EventSystem(engine));
     engine.addSystem("InputSystem", new InputSystem(engine));
     engine.addSystem("CreationSystem", new CreationSystem(engine));
     engine.addSystem("RenderingSystem", new RenderingSystem(engine));
-    engine.addSystem('CameraSystem', new CameraSystem(engine))
+    engine.addSystem("CameraSystem", new CameraSystem(engine));
+    engine.addSystem("SelectionSystem", new SelectionSystem(engine));
+    engine.addSystem('MovingSystem', new MovingSystem(engine))
+
     engine.init();
 
     return () => {

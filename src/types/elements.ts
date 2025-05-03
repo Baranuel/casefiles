@@ -1,8 +1,12 @@
 import z from 'zod'
 
-const ElementTypeDto = z.union([
+
+const ElementType = z.union([
     z.literal('PERSON'),
-    z.literal('LOCATION')
+    z.literal('LOCATION'),
+    z.literal('POINTER'),
+    z.literal('NOTE'),
+    z.literal('ITEM')
 ])
 
 export const Position = z.object({
@@ -12,13 +16,15 @@ export const Position = z.object({
     y2: z.number()
 })
 
-
+export const Tool = ElementType.or(z.literal('SELECT'))
 
 export const Element = z.object({
     id: z.string(),
-    type: ElementTypeDto,
+    type: ElementType,
     position: Position
 })
 
 export type ElementDto = z.infer<typeof Element>
 export type ElementPosition = z.infer<typeof Position>
+export type ElementType = z.infer<typeof ElementType>
+export type Tool = z.infer<typeof Tool>

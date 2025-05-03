@@ -10,16 +10,14 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import type { ElementDto, ElementPosition } from "@/types/elements";
+import type { ElementDto, Tool } from "@/types/elements";
 import { useCaseElementsQuery } from "@/hooks/use-case-elements-query";
 import { useCaseElementsMutation } from "@/hooks/use-case-elements-mutation";
-
-export type Tool = "select";
 
 export type State = {
   elements: ElementDto[];
   tool: Tool;
-  addElement: (pos: ElementPosition) => void;
+  addElement: (element: ElementDto) => void;
   setTool: Dispatch<SetStateAction<Tool>>;
 };
 
@@ -32,21 +30,17 @@ export function CaseProvider({
   children: ReactNode;
   caseId: string;
 }) {
+  const { data: elements, isLoading } = useCaseElementsQuery(caseId);
+  
+  const { createMutation } = useCaseElementsMutation(caseId);
 
-  const { data: elements } = useCaseElementsQuery(caseId);
-  const { updateMutation } = useCaseElementsMutation(caseId);
+  const [tool, setTool] = useState<Tool>("SELECT");
 
-  const [tool, setTool] = useState<Tool>("select");
-
-  // Memoize the addElement function so it keeps a stable identity
   const addElement = useCallback(
-    (position: ElementPosition) => {
-      updateMutation.mutate({
-        type: "PERSON",
-        position,
-      });
+    (newElement: ElementDto) => {
+      createMutation.mutate(newElement);
     },
-    [updateMutation]
+    [createMutation]
   );
 
   const contextStateValue = useMemo(
@@ -58,6 +52,12 @@ export function CaseProvider({
     }),
     [elements, tool, addElement]
   );
+
+  console.log(isLoading)
+  if(isLoading){
+    return 'Loading...'
+  }
+  
 
   return (
     <CaseContext.Provider value={contextStateValue}>

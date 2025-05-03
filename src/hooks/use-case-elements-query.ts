@@ -8,7 +8,6 @@ export const useCaseElementsQuery = (caseId: string) => {
     return useQuery<ElementDto[]>({
         queryKey: ['case-elements', caseId],
         queryFn: () => getCaseElements(caseId),
-        placeholderData: [],
         refetchOnMount:true,
         refetchOnWindowFocus:true
     })
