@@ -18,8 +18,26 @@ export class CreationSystem implements System {
     }
 
     onMouseDown = () => {
-        const mousePos = this.inputSystem!.getWorldMousePosition()
-        this.engine.getState().addElement({ x1: mousePos?.x, y1: mousePos?.y, x2: mousePos.x + 100, y2:mousePos.y + 100 })
+        const { tool, addElement } = this.engine.getState()
+
+        if (tool === 'SELECT') return
+
+        const { x, y } = this.inputSystem!.getWorldMousePosition();
+        const width = 200;
+        const height = 300;
+        const x1 = x - width / 2;
+        const y1 = y - height / 2;
+        const x2 = x + width / 2;
+        const y2 = y + height / 2;
+
+        const id = crypto.randomUUID()
+        const position = { x1, y1, x2, y2 };
+        const newElement = {
+            id,
+            type: tool,
+            position
+        };
+        addElement(newElement)
     }
 
     update() { }

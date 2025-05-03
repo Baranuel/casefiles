@@ -8,15 +8,15 @@ export const useCaseElementsMutation = (caseId: string) => {
     const { createCaseElement, deleteCaseElements } = useCasesApi(uniqueWsId);
     const queryClient = useQueryClient();
 
-    const updateMutation = useMutation({
+    const createMutation = useMutation({
         mutationKey: ['element-mutation', caseId],
-        mutationFn: (payload: Omit<ElementDto, 'id'>) => createCaseElement(caseId, payload),
+        mutationFn: (payload: ElementDto) => createCaseElement(caseId, payload),
 
         onMutate: async (newElement) => {
             await queryClient.cancelQueries({ queryKey: ['case-elements', caseId] });
             const previousElements = queryClient.getQueryData<ElementDto[]>(['case-elements', caseId]);
             queryClient.setQueryData<ElementDto[]>(['case-elements', caseId], old =>
-                old ? [...old, { ...newElement, id: 'temp-' + Math.random() }] : [{ ...newElement, id: 'temp-' + Math.random() }]
+                old ? [...old, { ...newElement }] : [{...newElement}]
             );
 
             return { previousElements };
@@ -43,5 +43,5 @@ export const useCaseElementsMutation = (caseId: string) => {
 
 
 
-    return { updateMutation, deleteAllMutation };
+    return {createMutation, deleteAllMutation };
 };

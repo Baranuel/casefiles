@@ -1,5 +1,10 @@
 import { State } from "@/providers/CaseStateProvider";
 import { Camera, GetSystem, System, SystemsType } from "@/types/engine";
+import { Entity } from "./entities/Entity";
+import { PositionComponent } from "./components/PositionComponent";
+import { StyleComponent } from "./components/StyleComponent";
+import { TypeComponent } from "./components/TypeComponent";
+import { MovableComponent } from "./components/MovableComponent";
 
 
 export class Engine {
@@ -9,6 +14,7 @@ export class Engine {
     private lastTime: number;
     public camera: Camera;
     private state: State
+    public entities: Map<string, Entity> = new Map();
 
     constructor(canvas: HTMLCanvasElement, initialState: State) {
         this.canvas = canvas;
@@ -20,6 +26,7 @@ export class Engine {
 
     public init() {
         this.animate(0)
+        console.log(this.entities)
     }
 
 
@@ -31,7 +38,6 @@ export class Engine {
 
         const engineSystems = Array.from(this.systems.entries())
 
-        // tick systems 
         engineSystems.forEach(([, system]) => system.update(this.deltaTime))
         engineSystems.forEach(([, system]) => system.draw())
 
@@ -51,11 +57,47 @@ export class Engine {
     }
 
     public updateEngineState(state: State) {
-        this.state = state
+        this.state = state;
+        this.entities.clear()
+
+        for (const element of state.elements) {
+            const entity = new Entity(element.id)
+            this.entities.set(element.id, entity)
+
+            // every entity has a position
+            entity.addComponent(
+                "position",
+                new PositionComponent(entity, element.position)
+            );
+
+            switch (element.type) {
+                case "PERSON":
+                    entity.addComponent('type', new TypeComponent(entity, 'PERSON'))
+                    entity.addComponent('movable', new MovableComponent(entity))
+
+                    break;
+                case "LOCATION":
+                    entity.addComponent('type', new TypeComponent(entity, 'LOCATION'))
+                    entity.addComponent('style', new StyleComponent(entity, 'blue'))
+                    entity.addComponent('movable', new MovableComponent(entity))
+                    break;
+                case "ITEM":
+                    entity.addComponent('type', new TypeComponent(entity, 'ITEM'))
+                    break;
+                case "NOTE":
+                    entity.addComponent('type', new TypeComponent(entity, 'NOTE'))
+                    break;
+                case "POINTER":
+                    entity.addComponent('type', new TypeComponent(entity, 'POINTER'))
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     public cleanup() {
-        this.systems.forEach(s => s.destroy)
+        this.systems.forEach(s => s.destroy())
     }
 
 
