@@ -6,7 +6,9 @@ import { EventSystem } from "@/lib/ecs/systems/eventSystem"
 import { InputSystem } from "@/lib/ecs/systems/inputSystem"
 import { MovingSystem } from "@/lib/ecs/systems/movingSystem"
 import { RenderingSystem } from "@/lib/ecs/systems/renderingSystem"
+import { ResizeSystem } from "@/lib/ecs/systems/resizeSystem"
 import { SelectionSystem } from "@/lib/ecs/systems/selectionSystem"
+import { UserIntentSystem } from "@/lib/ecs/systems/userIntentSystem"
 
 export interface System {
     engine: Engine
@@ -27,7 +29,9 @@ export type SystemsType =
     'EventSystem' |
     'CameraSystem' |
     'SelectionSystem'|
-    'MovingSystem'
+    'MovingSystem'|
+    'UserIntentSystem'|
+    'ResizeSystem'
 
 export type SystemsMap = {
     'InputSystem': InputSystem
@@ -36,7 +40,9 @@ export type SystemsMap = {
     'EventSystem': EventSystem
     'CameraSystem': CameraSystem
     'SelectionSystem': SelectionSystem
-    'MovingSystem': MovingSystem
+    'MovingSystem': MovingSystem,
+    'UserIntentSystem':UserIntentSystem
+    'ResizeSystem':ResizeSystem
 }
 
 export type GetSystem<K extends SystemsType> = SystemsMap[K]

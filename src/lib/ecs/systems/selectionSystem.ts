@@ -2,11 +2,16 @@ import { System } from "@/types/engine";
 import { Engine } from "..";
 import { PositionComponent } from "../components/PositionComponent";
 import { Entity } from "../entities/Entity";
+import { PositionWithinElement } from "@/types/elements";
+import { TypeComponent } from "../components/TypeComponent";
+import { getPositionWithinElement } from "@/lib/positions";
 
 export class SelectionSystem implements System {
     engine: Engine;
     hoveredEntity: Entity | null = null;
     selectedEntity: Entity | null = null;
+    interactionPoint: PositionWithinElement | null = null;
+    
     private controller = new AbortController();
 
     constructor(engine: Engine) {
@@ -22,7 +27,7 @@ export class SelectionSystem implements System {
 
         for (const entity of entities) {
             const positionComponent = entity.getComponent<PositionComponent>('position')
-            if (!positionComponent) return null
+            if (!positionComponent) continue;
 
             const { x1, y1, x2, y2 } = positionComponent.position;
             const minX = Math.min(x1, x2);
@@ -36,16 +41,29 @@ export class SelectionSystem implements System {
         return null;
     }
 
+    private getPositionWithinEntity(x: number, y: number, entity: Entity): PositionWithinElement | null {
+        const typeComponent = entity.getComponent<TypeComponent>('type');
+        const positionComponent = entity.getComponent<PositionComponent>('position');
+        if (!typeComponent || !positionComponent) return null;
+
+        return getPositionWithinElement(x, y, entity.element);
+    }
+
     private onMouseDown = () => {
         const mouse = this.engine.getSystem('InputSystem')?.getWorldMousePosition();
         if (!mouse) return;
         this.selectedEntity = this.getEntityAtPosition(mouse.x, mouse.y);
+        if (this.selectedEntity) {
+            this.interactionPoint = this.getPositionWithinEntity(mouse.x, mouse.y, this.selectedEntity);
+        } else {
+            this.interactionPoint = null;
+        }
     };
 
     private onMouseUp = () => {
-        this.selectedEntity = null
+        this.selectedEntity = null;
+        this.interactionPoint = null;
     };
-
 
     update() {
         const mouse = this.engine.getSystem('InputSystem')?.getWorldMousePosition();
@@ -53,7 +71,10 @@ export class SelectionSystem implements System {
         this.hoveredEntity = this.getEntityAtPosition(mouse.x, mouse.y);
 
         if (this.hoveredEntity) {
-            // console.log(this.hoveredElement)
+            this.interactionPoint = this.getPositionWithinEntity(mouse.x, mouse.y, this.hoveredEntity);
+            console.log(this.interactionPoint)
+        } else {
+            this.interactionPoint = null;
         }
     }
     draw() { }

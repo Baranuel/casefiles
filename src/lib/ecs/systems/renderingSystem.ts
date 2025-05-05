@@ -11,7 +11,15 @@ export class RenderingSystem implements System {
         this.engine = engine
     }
 
-    update() { }
+    update() {
+        if (this.engine.userIntent === 'move') {
+            this.engine.canvas.style.cursor = 'grabbing'
+        }
+        if (this, this.engine.userIntent === 'idle') {
+            this.engine.canvas.style.cursor = 'default'
+        }
+    }
+
 
     draw() {
         const input = this.engine.getSystem('InputSystem')
@@ -25,21 +33,17 @@ export class RenderingSystem implements System {
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        ctx.fillStyle = "red";
         ctx.scale(this.dpr * zoom, this.dpr * zoom)
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         ctx.translate(-x, -y)
 
-        
-        // Query all entities with a position component
         for (const entity of this.engine.entities.values()) {
-            
+
             const position = entity.getComponent<PositionComponent>('position');
             const style = entity.getComponent<StyleComponent>('style')
-            
-            if (position) {
 
+            if (position) {
                 ctx.fillStyle = style?.color || 'red'
                 const { x1, y1, x2, y2 } = position.position;
                 const width = x2 - x1;

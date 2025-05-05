@@ -9,12 +9,15 @@ import { MovableComponent } from "./components/MovableComponent";
 
 export class Engine {
     public canvas: HTMLCanvasElement;
+    public camera: Camera;
+    public entities: Map<string, Entity> = new Map();
+    public userIntent: 'idle' | 'move' | 'resize' = 'idle'
+
     private systems: Map<SystemsType, System> = new Map()
     private deltaTime: number;
     private lastTime: number;
-    public camera: Camera;
     private state: State
-    public entities: Map<string, Entity> = new Map();
+
 
     constructor(canvas: HTMLCanvasElement, initialState: State) {
         this.canvas = canvas;
@@ -61,7 +64,7 @@ export class Engine {
         this.entities.clear()
 
         for (const element of state.elements) {
-            const entity = new Entity(element.id)
+            const entity = new Entity(element.id, element)
             this.entities.set(element.id, entity)
 
             // every entity has a position
@@ -74,7 +77,6 @@ export class Engine {
                 case "PERSON":
                     entity.addComponent('type', new TypeComponent(entity, 'PERSON'))
                     entity.addComponent('movable', new MovableComponent(entity))
-
                     break;
                 case "LOCATION":
                     entity.addComponent('type', new TypeComponent(entity, 'LOCATION'))

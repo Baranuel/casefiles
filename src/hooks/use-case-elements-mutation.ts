@@ -5,7 +5,7 @@ import { useSocketContext } from "@/providers/SocketProvider";
 
 export const useCaseElementsMutation = (caseId: string) => {
     const {uniqueWsId} = useSocketContext()
-    const { createCaseElement, deleteCaseElements } = useCasesApi(uniqueWsId);
+    const { createCaseElement, deleteCaseElements, updateCaseElement } = useCasesApi(uniqueWsId);
     const queryClient = useQueryClient();
 
     const createMutation = useMutation({
@@ -32,6 +32,36 @@ export const useCaseElementsMutation = (caseId: string) => {
         },
     });
 
+    const updateMutation = useMutation({
+        mutationKey: ['element-mutation', caseId],
+        mutationFn: (payload: ElementDto) => updateCaseElement(caseId, payload),
+
+        onMutate: async (updatedElement) => {
+            await queryClient.cancelQueries({ queryKey: ['case-elements', caseId] });
+            const previousElements = queryClient.getQueryData<ElementDto[]>(['case-elements', caseId]);
+            
+            queryClient.setQueryData<ElementDto[]>(['case-elements', caseId], (old) => {
+                if (!old) return [updatedElement];
+                return old.map(element =>
+                    element.id === updatedElement.id ? { ...element, ...updatedElement } : element
+                );
+            });
+
+            return { previousElements };
+        },
+
+        onError: (_err, _newElement, context) => {
+            if (context?.previousElements) {
+                queryClient.setQueryData(['case-elements', caseId], context.previousElements);
+            }
+        },
+        onSettled: () => {
+            // queryClient.invalidateQueries({ queryKey: ['case-elements', caseId] });
+        },
+    });
+
+
+
     const deleteAllMutation = useMutation({
         mutationKey: ['element-delete-mutation', caseId],
         mutationFn: () => deleteCaseElements(caseId),
@@ -43,5 +73,5 @@ export const useCaseElementsMutation = (caseId: string) => {
 
 
 
-    return {createMutation, deleteAllMutation };
+    return {createMutation, deleteAllMutation, updateMutation };
 };

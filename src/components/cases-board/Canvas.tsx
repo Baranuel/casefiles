@@ -11,6 +11,8 @@ import { EventSystem } from "@/lib/ecs/systems/eventSystem";
 import { CameraSystem } from "@/lib/ecs/systems/cameraSystem";
 import { SelectionSystem } from "@/lib/ecs/systems/selectionSystem";
 import { MovingSystem } from "@/lib/ecs/systems/movingSystem";
+import { UserIntentSystem } from "@/lib/ecs/systems/userIntentSystem";
+// import { ResizeSystem } from "@/lib/ecs/systems/resizeSystem";
 
 export const Canvas = () => {
   const state = useCaseContext();
@@ -30,8 +32,9 @@ export const Canvas = () => {
     engine.addSystem("RenderingSystem", new RenderingSystem(engine));
     engine.addSystem("CameraSystem", new CameraSystem(engine));
     engine.addSystem("SelectionSystem", new SelectionSystem(engine));
-    engine.addSystem('MovingSystem', new MovingSystem(engine))
-
+    engine.addSystem("UserIntentSystem", new UserIntentSystem(engine));
+    engine.addSystem("MovingSystem", new MovingSystem(engine));
+    // engine.addSystem("ResizeSystem", new ResizeSystem(engine));
     engine.init();
 
     return () => {

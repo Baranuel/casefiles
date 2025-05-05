@@ -28,3 +28,5 @@ export type ElementDto = z.infer<typeof Element>
 export type ElementPosition = z.infer<typeof Position>
 export type ElementType = z.infer<typeof ElementType>
 export type Tool = z.infer<typeof Tool>
+
+export type PositionWithinElement = 'start' | 'end' | 'line_middle' | 'tl' | 'tr' | 'tm' | 'bl' | 'br' | 'bm' | 'ml' | 'mr' | 'inside' | null ;

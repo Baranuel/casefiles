@@ -10,7 +10,6 @@ export class MovingSystem implements System {
     constructor(engine: Engine) {
         this.engine = engine
         this.controller = new AbortController()
-
         this.engine.canvas.addEventListener('mousedown', this.onMouseDown, { signal: this.controller.signal })
         this.engine.canvas.addEventListener('mouseup', this.onMouseUp, { signal: this.controller.signal })
     }
@@ -35,14 +34,16 @@ export class MovingSystem implements System {
         if (!selectedEntity) return
 
         const movableComponent = selectedEntity.getComponent<MovableComponent>('movable')
+
         if (movableComponent) {
             movableComponent.moving = false
         }
+        this.engine.getState().updateElement(selectedEntity.element)
     }
 
     update() {
-        if(this.engine.getState().tool !== 'SELECT') return 
-        
+        if (this.engine.getState().tool !== 'SELECT' || this.engine.userIntent !== 'move') return
+
         for (const entity of this.engine.entities.values()) {
             if (!entity.hasComponent('movable')) continue
 
@@ -57,9 +58,8 @@ export class MovingSystem implements System {
             const width = position.x2 - position.x1;
             const height = position.y2 - position.y1;
 
-            // Use the stored offset
             const offset = movableComponent.mouseGrabOffset ?? { x: width / 2, y: height / 2 };
-            
+
             position.x1 = x - offset.x;
             position.y1 = y - offset.y;
             position.x2 = position.x1 + width;

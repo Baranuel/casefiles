@@ -83,6 +83,19 @@ export const useCasesApi = (uniqueWsId?: string) => {
         return await res.json()
     }
 
+    const updateCaseElement = async (caseId: string, payload: ElementDto): Promise<ElementDto> => {
+        const token = await getToken({ template: "casefiles" });
+        const res = await fetch(BASE_API_URL + "/cases/" + caseId + '/elements' + `?wsId=${uniqueWsId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload)
+        });
+        return await res.json()
+    }
+
     const deleteCaseElements = async (caseId: string): Promise<ElementDto> => {
         const token = await getToken({ template: "casefiles" });
         const res = await fetch(BASE_API_URL + "/cases/" + caseId + '/elements', {
@@ -98,5 +111,5 @@ export const useCasesApi = (uniqueWsId?: string) => {
 
 
 
-    return { getCases, createCase, deleteCase, getCaseElements, createCaseElement, deleteCaseElements };
+    return { getCases, createCase, deleteCase, getCaseElements, createCaseElement, deleteCaseElements,updateCaseElement };
 }

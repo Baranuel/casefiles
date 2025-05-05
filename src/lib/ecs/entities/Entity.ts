@@ -1,11 +1,14 @@
 import { Component } from "@/types/engine";
+import {  ElementDto } from "@/types/elements";
 
 export class Entity {
     public id: string;
+    public element:ElementDto
     private components: Map<string, Component>;
 
-    constructor(id?: string) {
+    constructor(id: string, element:ElementDto) {
         this.id = id ?? crypto.randomUUID();
+        this.element = element
         this.components = new Map();
     }
 
