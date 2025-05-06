@@ -11,6 +11,9 @@ import { EventSystem } from "@/lib/ecs/systems/eventSystem";
 import { CameraSystem } from "@/lib/ecs/systems/cameraSystem";
 import { SelectionSystem } from "@/lib/ecs/systems/selectionSystem";
 import { MovingSystem } from "@/lib/ecs/systems/movingSystem";
+import { UserActionSystem } from "@/lib/ecs/systems/userActionSystem";
+import { ResizeSystem } from "@/lib/ecs/systems/resizeSystem";
+// import { ResizeSystem } from "@/lib/ecs/systems/resizeSystem";
 
 export const Canvas = () => {
   const state = useCaseContext();
@@ -30,8 +33,9 @@ export const Canvas = () => {
     engine.addSystem("RenderingSystem", new RenderingSystem(engine));
     engine.addSystem("CameraSystem", new CameraSystem(engine));
     engine.addSystem("SelectionSystem", new SelectionSystem(engine));
-    engine.addSystem('MovingSystem', new MovingSystem(engine))
-
+    engine.addSystem("UserActionSystem", new UserActionSystem(engine));
+    engine.addSystem("MovingSystem", new MovingSystem(engine));
+    engine.addSystem("ResizeSystem", new ResizeSystem(engine));
     engine.init();
 
     return () => {
@@ -47,7 +51,7 @@ export const Canvas = () => {
     if (!engine) return;
 
     engine.updateEngineState(state);
-  }, [state]); // on every state change we update the engine state to sync with the database and rest of the react app
+  }, [state.elements, state.tool]); // on every state.elements change we update the engine state to sync with the database and rest of the react app
 
   return <canvas ref={canvasRef} className="flex-1 bg-background-700" />;
 };

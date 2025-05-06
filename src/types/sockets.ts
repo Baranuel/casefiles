@@ -10,16 +10,12 @@ const CreateMsg = z.object({
 
 const UpdateMsg = z.object({
   type: z.literal("UPDATE"),
-  payload: z.object({
-    id: z.string()
-  })
+  payload: Element
 })
 
 const DeleteMsg = z.object({
   type: z.literal("DELETE"),
-  payload: z.object({
-    id: z.string()
-  })
+  payload:Element
 })
 
 export const WsMessageSchema = z.discriminatedUnion("type", [

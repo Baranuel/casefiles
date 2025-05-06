@@ -6,11 +6,18 @@ export class InputSystem implements System {
     private canvas: HTMLCanvasElement
     private controller: AbortController
     public mousePosition: { x: number, y: number } = { x: 0, y: 0 }
+    public onMouseDownPositionSnapshot: { x: number, y: number } = { x: 0, y: 0 }
+
 
     constructor(engine: Engine) {
         this.controller = new AbortController()
         this.engine = engine
         this.canvas = this.engine.canvas
+        this.canvas.addEventListener(
+            'mousedown',
+            this.onMouseDown,
+            { signal: this.controller.signal }
+        )
         this.canvas.addEventListener(
             'mousemove',
             this.updateMousePosition,
@@ -38,8 +45,13 @@ export class InputSystem implements System {
     getWorldMousePosition() {
         return this.mousePosition
     }
+
     getScreenMousePosition() {
         return this.mousePosition
+    }
+
+    onMouseDown = () => {
+        this.onMouseDownPositionSnapshot = this.mousePosition
     }
 
     update() { }

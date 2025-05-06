@@ -1,16 +1,16 @@
 import { useQuery } from "@tanstack/react-query"
-import { useCasesApi } from "./use-cases-api"
 import { ElementDto } from "@/types/elements"
+import { useElementsApi } from "./use-elements-api"
 
 export const useCaseElementsQuery = (caseId: string) => {
-    const { getCaseElements } = useCasesApi()
+    const api = useElementsApi()
 
     return useQuery<ElementDto[]>({
         queryKey: ['case-elements', caseId],
-        queryFn: () => getCaseElements(caseId),
-        refetchOnMount:true,
-        refetchOnWindowFocus:true
+        queryFn: () => api.fetchElements(caseId),
+        refetchOnMount: true,
+        refetchOnWindowFocus: true
     })
-    
+
 
 }

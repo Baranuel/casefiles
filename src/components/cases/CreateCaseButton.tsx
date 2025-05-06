@@ -10,10 +10,10 @@ import { Button } from "../ui/button";
 
 export function CreateCaseButton() {
   const queryClient = useQueryClient();
-  const { createCase } = useCasesApi();
+  const api = useCasesApi();
 
   const mutation = useMutation({
-    mutationFn: (data: string) => createCase(data),
+    mutationFn: (data: string) => api.createCase(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cases"] });
     },

@@ -6,9 +6,9 @@ import { useCasesApi } from "@/hooks/use-cases-api";
 
 export const CasefileCard = ({ caseItem }: { caseItem: Case }) => {
   const queryClient = useQueryClient();
-  const { deleteCase } = useCasesApi();
+  const api = useCasesApi();
   const { mutate, isPending } = useMutation({
-    mutationFn: deleteCase,
+    mutationFn: (id:string) => api.deleteCase(id),
     onSuccess: () => {
       queryClient.setQueryData(["cases"], (old: Case[]) =>
         old.filter((c) => c.id !== caseItem.id)

@@ -5,16 +5,20 @@ import { PositionComponent } from "./components/PositionComponent";
 import { StyleComponent } from "./components/StyleComponent";
 import { TypeComponent } from "./components/TypeComponent";
 import { MovableComponent } from "./components/MovableComponent";
+import { ResizableComponent } from "./components/ResizableComponent";
 
 
 export class Engine {
     public canvas: HTMLCanvasElement;
+    public camera: Camera;
+    public entities: Map<string, Entity> = new Map();
+    public userAction: 'idle' | 'moving' | 'resizing' = 'idle'
+
     private systems: Map<SystemsType, System> = new Map()
     private deltaTime: number;
     private lastTime: number;
-    public camera: Camera;
     private state: State
-    public entities: Map<string, Entity> = new Map();
+
 
     constructor(canvas: HTMLCanvasElement, initialState: State) {
         this.canvas = canvas;
@@ -22,11 +26,12 @@ export class Engine {
         this.lastTime = 0;
         this.state = initialState
         this.camera = { x: 0, y: 0, zoom: 1 }
+
+        this.updateEngineState(initialState)
     }
 
     public init() {
         this.animate(0)
-        console.log(this.entities)
     }
 
 
@@ -61,7 +66,7 @@ export class Engine {
         this.entities.clear()
 
         for (const element of state.elements) {
-            const entity = new Entity(element.id)
+            const entity = new Entity(element.id, element)
             this.entities.set(element.id, entity)
 
             // every entity has a position
@@ -73,8 +78,8 @@ export class Engine {
             switch (element.type) {
                 case "PERSON":
                     entity.addComponent('type', new TypeComponent(entity, 'PERSON'))
+                    entity.addComponent('style', new StyleComponent(entity, 'green'))
                     entity.addComponent('movable', new MovableComponent(entity))
-
                     break;
                 case "LOCATION":
                     entity.addComponent('type', new TypeComponent(entity, 'LOCATION'))
@@ -88,6 +93,8 @@ export class Engine {
                     entity.addComponent('type', new TypeComponent(entity, 'NOTE'))
                     break;
                 case "POINTER":
+                    entity.addComponent('resizable', new ResizableComponent(entity))
+                    entity.addComponent('movable', new MovableComponent(entity))
                     entity.addComponent('type', new TypeComponent(entity, 'POINTER'))
                     break;
                 default:
@@ -95,7 +102,9 @@ export class Engine {
             }
         }
     }
-
+    public addEntity(entity: Entity) {
+        this.entities.set(entity.id, entity)
+    }
     public cleanup() {
         this.systems.forEach(s => s.destroy())
     }

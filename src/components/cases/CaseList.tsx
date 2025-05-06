@@ -5,18 +5,21 @@ import { useQuery } from "@tanstack/react-query";
 import { CasefileCard } from "./CasefileCard";
 
 export const CaseList = () => {
-  const { getCases } = useCasesApi();
+  const api = useCasesApi();
 
-  const { data, isError, isLoading } = useQuery({
+  const { data,error, isError, isLoading } = useQuery({
     queryKey: ["cases"],
-    queryFn: getCases,
+    queryFn: () => api.fetchCases(),
   });
+
+
 
   if (isLoading) {
     return <div className="text-center">Loading cases...</div>;
   }
 
   if (isError) {
+    console.log(error)
     return <div className="text-center">Error loading cases</div>;
   }
 

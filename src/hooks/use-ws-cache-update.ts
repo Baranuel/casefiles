@@ -15,8 +15,18 @@ export const useWsCacheUpdate = (caseId: string) => {
         queryClient.setQueryData([queryKey, caseId], updater)
     }
 
+    const wsElementUpdate = (queryKey: string, updatedElement: ElementDto) => {
+        const updater = (oldCachedElements: ElementDto[]) => {
+            if (!oldCachedElements.find(el => el.id === updatedElement.id)) return
+
+            return [...oldCachedElements.map(el => el.id === updatedElement.id ? {...el, ...updatedElement} : el)]
+        }
+        queryClient.setQueryData([queryKey, caseId], updater)
+    }
+
     return {
-        wsElementCreate
+        wsElementCreate,
+        wsElementUpdate
     }
 
 }
