@@ -5,13 +5,14 @@ import { PositionComponent } from "./components/PositionComponent";
 import { StyleComponent } from "./components/StyleComponent";
 import { TypeComponent } from "./components/TypeComponent";
 import { MovableComponent } from "./components/MovableComponent";
+import { ResizableComponent } from "./components/ResizableComponent";
 
 
 export class Engine {
     public canvas: HTMLCanvasElement;
     public camera: Camera;
     public entities: Map<string, Entity> = new Map();
-    public userIntent: 'idle' | 'move' | 'resize' = 'idle'
+    public userAction: 'idle' | 'moving' | 'resizing' = 'idle'
 
     private systems: Map<SystemsType, System> = new Map()
     private deltaTime: number;
@@ -25,7 +26,7 @@ export class Engine {
         this.lastTime = 0;
         this.state = initialState
         this.camera = { x: 0, y: 0, zoom: 1 }
-        
+
         this.updateEngineState(initialState)
     }
 
@@ -77,6 +78,7 @@ export class Engine {
             switch (element.type) {
                 case "PERSON":
                     entity.addComponent('type', new TypeComponent(entity, 'PERSON'))
+                    entity.addComponent('style', new StyleComponent(entity, 'green'))
                     entity.addComponent('movable', new MovableComponent(entity))
                     break;
                 case "LOCATION":
@@ -91,6 +93,8 @@ export class Engine {
                     entity.addComponent('type', new TypeComponent(entity, 'NOTE'))
                     break;
                 case "POINTER":
+                    entity.addComponent('resizable', new ResizableComponent(entity))
+                    entity.addComponent('movable', new MovableComponent(entity))
                     entity.addComponent('type', new TypeComponent(entity, 'POINTER'))
                     break;
                 default:
@@ -98,7 +102,9 @@ export class Engine {
             }
         }
     }
-
+    public addEntity(entity: Entity) {
+        this.entities.set(entity.id, entity)
+    }
     public cleanup() {
         this.systems.forEach(s => s.destroy())
     }

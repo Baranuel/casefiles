@@ -1,30 +1,30 @@
-import { Component } from "@/types/engine";
-import {  ElementDto } from "@/types/elements";
+import { Component, ComponentsType, GetComponent } from "@/types/engine";
+import { ElementDto } from "@/types/elements";
 
 export class Entity {
     public id: string;
-    public element:ElementDto
-    private components: Map<string, Component>;
+    public element: ElementDto;
+    private components: Map<ComponentsType, Component>;
 
-    constructor(id: string, element:ElementDto) {
+    constructor(id: string, element: ElementDto) {
         this.id = id ?? crypto.randomUUID();
-        this.element = element
+        this.element = element;
         this.components = new Map();
     }
 
-    addComponent<T extends Component>(name: string, component: T): void {
+    addComponent<K extends ComponentsType>(name: K, component: GetComponent<K>): void {
         this.components.set(name, component);
     }
 
-    removeComponent(name: string): void {
+    removeComponent(name: ComponentsType): void {
         this.components.delete(name);
     }
 
-    getComponent<T extends Component>(name: string): T | undefined {
-        return this.components.get(name) as T | undefined;
+    getComponent<K extends ComponentsType>(name: K): GetComponent<K> | undefined {
+        return this.components.get(name) as GetComponent<K> | undefined;
     }
 
-    hasComponent(name: string): boolean {
+    hasComponent(name: ComponentsType): boolean {
         return this.components.has(name);
     }
 

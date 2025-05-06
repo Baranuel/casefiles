@@ -33,12 +33,12 @@ export function CaseProvider({
 }) {
   const { data: elements, isLoading } = useCaseElementsQuery(caseId);
   const { createMutation, updateMutation } = useCaseElementsMutation(caseId);
-
   const [tool, setTool] = useState<Tool>("SELECT");
 
   const addElement = useCallback(
     (newElement: ElementDto) => {
       createMutation.mutate(newElement);
+      setTool('SELECT')
     },
     [createMutation]
   );
@@ -61,7 +61,6 @@ export function CaseProvider({
     [elements, tool, addElement, updateElement]
   );
 
-  console.log(isLoading);
   if (isLoading) {
     return "Loading...";
   }

@@ -1,9 +1,7 @@
 import { System } from "@/types/engine";
 import { Engine } from "..";
-import { PositionComponent } from "../components/PositionComponent";
 import { Entity } from "../entities/Entity";
 import { PositionWithinElement } from "@/types/elements";
-import { TypeComponent } from "../components/TypeComponent";
 import { getPositionWithinElement } from "@/utils/positions";
 
 export class SelectionSystem implements System {
@@ -11,7 +9,8 @@ export class SelectionSystem implements System {
     hoveredEntity: Entity | null = null;
     selectedEntity: Entity | null = null;
     interactionPoint: PositionWithinElement | null = null;
-    
+    grabElementMouseOffset: { x: number; y: number } | null = null;
+
     private controller = new AbortController();
 
     constructor(engine: Engine) {
@@ -19,14 +18,14 @@ export class SelectionSystem implements System {
         const canvas = this.engine.canvas;
 
         canvas.addEventListener('mousedown', this.onMouseDown, { signal: this.controller.signal });
-        // canvas.addEventListener('mouseup', this.onMouseUp, { signal: this.controller.signal });
+        canvas.addEventListener('mouseup', this.onMouseUp, { signal: this.controller.signal });
     }
 
-    private getEntityAtPosition(x: number, y: number): Entity | null {
+    public getEntityAtPosition(x: number, y: number): Entity | null {
         const entities = this.engine.entities.values();
 
         for (const entity of entities) {
-            const positionComponent = entity.getComponent<PositionComponent>('position')
+            const positionComponent = entity.getComponent('position')
             if (!positionComponent) continue;
 
             const { x1, y1, x2, y2 } = positionComponent.position;
@@ -42,8 +41,8 @@ export class SelectionSystem implements System {
     }
 
     private getPositionWithinEntity(x: number, y: number, entity: Entity): PositionWithinElement | null {
-        const typeComponent = entity.getComponent<TypeComponent>('type');
-        const positionComponent = entity.getComponent<PositionComponent>('position');
+        const typeComponent = entity.getComponent('type');
+        const positionComponent = entity.getComponent('position');
         if (!typeComponent || !positionComponent) return null;
 
         return getPositionWithinElement(x, y, entity.element);
@@ -52,7 +51,19 @@ export class SelectionSystem implements System {
     private onMouseDown = () => {
         const mouse = this.engine.getSystem('InputSystem')?.getWorldMousePosition();
         if (!mouse) return;
-        this.selectedEntity = this.getEntityAtPosition(mouse.x, mouse.y);
+
+        const entity = this.getEntityAtPosition(mouse.x, mouse.y);
+        this.setSelectedEntity(entity);
+
+        const positionComponent = this.selectedEntity?.getComponent('position')
+
+        if (positionComponent && this.selectedEntity) {
+            const { x, y } = mouse
+            const { x1, y1 } = positionComponent.position
+
+            this.grabElementMouseOffset = { x: x - x1, y: y - y1 };
+        }
+
         if (this.selectedEntity) {
             this.interactionPoint = this.getPositionWithinEntity(mouse.x, mouse.y, this.selectedEntity);
         } else {
@@ -61,20 +72,18 @@ export class SelectionSystem implements System {
     };
 
     private onMouseUp = () => {
-        this.selectedEntity = null;
         this.interactionPoint = null;
     };
+
+    public setSelectedEntity = (entity: Entity | null) => {
+        this.selectedEntity = entity;
+    }
 
     update() {
         const mouse = this.engine.getSystem('InputSystem')?.getWorldMousePosition();
         if (!mouse) return;
         this.hoveredEntity = this.getEntityAtPosition(mouse.x, mouse.y);
 
-        if (this.hoveredEntity) {
-            this.interactionPoint = this.getPositionWithinEntity(mouse.x, mouse.y, this.hoveredEntity);
-        } else {
-            this.interactionPoint = null;
-        }
     }
     draw() { }
 

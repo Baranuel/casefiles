@@ -19,28 +19,63 @@ export class CreationSystem implements System {
 
     onMouseDown = () => {
         const { tool, addElement } = this.engine.getState()
+        const selectionSystem = this.engine.getSystem('SelectionSystem')
+        const inputSystem = this.engine.getSystem('InputSystem')
 
-        if (tool === 'SELECT') return
-
-        const { x, y } = this.inputSystem!.getWorldMousePosition();
-        const width = 200;
-        const height = 300;
-        const x1 = x - width / 2;
-        const y1 = y - height / 2;
-        const x2 = x + width / 2;
-        const y2 = y + height / 2;
-
+        if (tool === 'SELECT' || !selectionSystem || !inputSystem) return
+        const { x, y } = inputSystem.getWorldMousePosition()
         const id = crypto.randomUUID()
-        const position = { x1, y1, x2, y2 };
-        const newElement = {
-            id,
-            type: tool,
-            position
-        };
-        addElement(newElement)
+
+        // Make this more organized, abstract away the default sizes and styles??
+        if (tool === 'PERSON') {
+            const width = 200;
+            const height = 300;
+            const x1 = x - width / 2;
+            const y1 = y - height / 2;
+            const x2 = x + width / 2;
+            const y2 = y + height / 2;
+
+            const position = { x1, y1, x2, y2 };
+            const newElement = {
+                id,
+                type: tool,
+                position
+            };
+            addElement(newElement)
+        }
+
+        if (tool === 'POINTER') {
+            const width = 5;
+            const height = 5;
+            const x1 = x - width / 2;
+            const y1 = y - height / 2;
+            const x2 = x + width / 2;
+            const y2 = y + height / 2;
+
+            const position = { x1, y1, x2, y2 };
+            const newElement = {
+                id,
+                type: tool,
+                position
+            };
+            addElement(newElement)
+            // Weird use-case but helps, we need to wait until the addElement re-renders our canvas entity state and adds the behaviour for the entity with components,
+            // then we immediately start drawing action on that element 
+            //SetTimeout is a "MacroTask" in the event loop and will be run after the browser empties callstack and paints.
+            setTimeout(() => {
+                const entity = this.engine.entities.get(id);
+                if (entity) {
+                    selectionSystem.setSelectedEntity(entity)
+                    selectionSystem.interactionPoint = "end";
+                    this.engine.userAction = "resizing";
+                }
+            })
+        }
+
     }
 
-    update() { }
+    update() {
+    }
 
     draw() { }
 

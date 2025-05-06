@@ -2,7 +2,7 @@ import { System } from "@/types/engine";
 import { Engine } from "..";
 import { SelectionSystem } from "./selectionSystem";
 
-export class UserIntentSystem implements System {
+export class UserActionSystem implements System {
     engine: Engine
     controller: AbortController
     selectionSystem: SelectionSystem | null
@@ -23,32 +23,43 @@ export class UserIntentSystem implements System {
     }
 
     onMouseUp = () => {
+        this.engine.userAction= 'idle'
         this.isMouseDown = false
-        this.engine.userIntent = 'idle'
     }
 
 
     update() {
         if (!this.selectionSystem || this.engine.getState().tool !== 'SELECT') return
 
-        const hoveredEntity = this.selectionSystem.hoveredEntity
+        const selectedEntity = this.selectionSystem.selectedEntity
         const interactionPoint = this.selectionSystem.interactionPoint
 
-        if(hoveredEntity && interactionPoint !== 'inside' && this.isMouseDown) {
-            return this.engine.userIntent = 'resize'
+        const resizeInteraction = interactionPoint === 'start' || interactionPoint === 'end'
+        const moveInteraction = !resizeInteraction
 
+        // RESIZE ACTION
+        if (selectedEntity && resizeInteraction &&  this.isMouseDown) {
+            return this.engine.userAction= 'resizing'
         }
 
-        if (hoveredEntity && interactionPoint === 'inside' && this.isMouseDown) {
-            return this.engine.userIntent = 'move'
+        // MOVE ACTION
+        if (selectedEntity && moveInteraction && this.isMouseDown) {
+            const input = this.engine.getSystem('InputSystem')
+            if (!input) return
+            const { onMouseDownPositionSnapshot, mousePosition } = input
+
+            if (
+                Math.abs(onMouseDownPositionSnapshot.x - mousePosition.x) >= 5 ||
+                Math.abs(onMouseDownPositionSnapshot.y - mousePosition.y) >= 5
+            ) {
+                return this.engine.userAction= 'moving'
+            }
         }
-        
         
 
     }
 
-    draw() {
-    }
+    draw() { }
 
     destroy() {
         this.controller.abort();

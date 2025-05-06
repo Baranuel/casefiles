@@ -8,7 +8,12 @@ import { MovingSystem } from "@/lib/ecs/systems/movingSystem"
 import { RenderingSystem } from "@/lib/ecs/systems/renderingSystem"
 import { ResizeSystem } from "@/lib/ecs/systems/resizeSystem"
 import { SelectionSystem } from "@/lib/ecs/systems/selectionSystem"
-import { UserIntentSystem } from "@/lib/ecs/systems/userIntentSystem"
+import { UserActionSystem} from "@/lib/ecs/systems/userActionSystem"
+import { PositionComponent } from "@/lib/ecs/components/PositionComponent";
+import { TypeComponent } from "@/lib/ecs/components/TypeComponent";
+import { StyleComponent } from "@/lib/ecs/components/StyleComponent";
+import { MovableComponent } from "@/lib/ecs/components/MovableComponent";
+import { ResizableComponent} from "@/lib/ecs/components/ResizableComponent"
 
 export interface System {
     engine: Engine
@@ -16,7 +21,6 @@ export interface System {
     draw: () => void
     destroy: () => void
 }
-
 
 export type Component = {
     owner: Entity
@@ -30,7 +34,7 @@ export type SystemsType =
     'CameraSystem' |
     'SelectionSystem'|
     'MovingSystem'|
-    'UserIntentSystem'|
+    'UserActionSystem'|
     'ResizeSystem'
 
 export type SystemsMap = {
@@ -41,12 +45,28 @@ export type SystemsMap = {
     'CameraSystem': CameraSystem
     'SelectionSystem': SelectionSystem
     'MovingSystem': MovingSystem,
-    'UserIntentSystem':UserIntentSystem
+    'UserActionSystem':UserActionSystem
     'ResizeSystem':ResizeSystem
 }
 
 export type GetSystem<K extends SystemsType> = SystemsMap[K]
 
+export type ComponentsType =
+    'position' |
+    'type' |
+    'style' |
+    'movable'|
+    'resizable'
+
+export type ComponentsMap = {
+    'position': PositionComponent,
+    'type': TypeComponent,
+    'style': StyleComponent,
+    'movable': MovableComponent,
+    'resizable': ResizableComponent
+}
+
+export type GetComponent<K extends ComponentsType> = ComponentsMap[K];
 
 export type Camera = {
     x: number;
