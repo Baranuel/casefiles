@@ -32,7 +32,6 @@ export class CasesApi {
 
   async fetchCases() {
     const headers = await this.authHeaders();
-    console.log('headers', headers)
     const response = await this.api.get<Case[]>("/cases", { headers });
     return response.data;
   }

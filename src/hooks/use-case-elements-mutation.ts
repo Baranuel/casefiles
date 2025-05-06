@@ -33,7 +33,7 @@ export const useCaseElementsMutation = (caseId: string) => {
 
     const updateMutation = useMutation({
         mutationKey: ['element-mutation', caseId],
-        mutationFn: (payload: ElementDto) => api.updateElement(caseId, payload),
+        mutationFn: (payload: ElementDto) => api.updateElement(payload.id, payload),
 
         onMutate: async (updatedElement) => {
             await queryClient.cancelQueries({ queryKey: ['case-elements', caseId] });
