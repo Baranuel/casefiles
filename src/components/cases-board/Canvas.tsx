@@ -50,7 +50,7 @@ export const Canvas = () => {
     if (!engine) return;
 
     engine.updateEngineState(state);
-  }, [state]); // on every state change we update the engine state to sync with the database and rest of the react app
+  }, [state.elements, state.tool]); // on every state.elements change we update the engine state to sync with the database and rest of the react app
 
   return <canvas ref={canvasRef} className="flex-1 bg-background-700" />;
 };

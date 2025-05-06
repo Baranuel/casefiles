@@ -1,24 +1,23 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCasesApi } from "./use-cases-api";
 import { ElementDto } from "@/types/elements";
 import { useSocketContext } from "@/providers/SocketProvider";
+import { useElementsApi } from "./use-elements-api";
 
 export const useCaseElementsMutation = (caseId: string) => {
-    const {uniqueWsId} = useSocketContext()
-    const { createCaseElement, deleteCaseElements, updateCaseElement } = useCasesApi(uniqueWsId);
     const queryClient = useQueryClient();
+    const { uniqueWsId } = useSocketContext()
+    const api = useElementsApi(uniqueWsId);
 
     const createMutation = useMutation({
         mutationKey: ['element-mutation', caseId],
-        mutationFn: (payload: ElementDto) => createCaseElement(caseId, payload),
+        mutationFn: (payload: ElementDto) => api.createElement(caseId, payload),
 
         onMutate: async (newElement) => {
             await queryClient.cancelQueries({ queryKey: ['case-elements', caseId] });
             const previousElements = queryClient.getQueryData<ElementDto[]>(['case-elements', caseId]);
             queryClient.setQueryData<ElementDto[]>(['case-elements', caseId], old =>
-                old ? [...old, { ...newElement }] : [{...newElement}]
+                old ? [...old, { ...newElement }] : [{ ...newElement }]
             );
-
             return { previousElements };
         },
 
@@ -34,12 +33,12 @@ export const useCaseElementsMutation = (caseId: string) => {
 
     const updateMutation = useMutation({
         mutationKey: ['element-mutation', caseId],
-        mutationFn: (payload: ElementDto) => updateCaseElement(caseId, payload),
+        mutationFn: (payload: ElementDto) => api.updateElement(caseId, payload),
 
         onMutate: async (updatedElement) => {
             await queryClient.cancelQueries({ queryKey: ['case-elements', caseId] });
             const previousElements = queryClient.getQueryData<ElementDto[]>(['case-elements', caseId]);
-            
+
             queryClient.setQueryData<ElementDto[]>(['case-elements', caseId], (old) => {
                 if (!old) return [updatedElement];
                 return old.map(element =>
@@ -62,16 +61,5 @@ export const useCaseElementsMutation = (caseId: string) => {
 
 
 
-    const deleteAllMutation = useMutation({
-        mutationKey: ['element-delete-mutation', caseId],
-        mutationFn: () => deleteCaseElements(caseId),
-        onSettled: () => {
-            // queryClient.setQueryData(['case-elements', caseId], [] as ElementDto[])
-            queryClient.invalidateQueries({ queryKey: ['case-elements', caseId] }); 
-        }
-    })
-
-
-
-    return {createMutation, deleteAllMutation, updateMutation };
+    return { createMutation, updateMutation };
 };

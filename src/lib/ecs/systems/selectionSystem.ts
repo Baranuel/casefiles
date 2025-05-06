@@ -4,7 +4,7 @@ import { PositionComponent } from "../components/PositionComponent";
 import { Entity } from "../entities/Entity";
 import { PositionWithinElement } from "@/types/elements";
 import { TypeComponent } from "../components/TypeComponent";
-import { getPositionWithinElement } from "@/lib/positions";
+import { getPositionWithinElement } from "@/utils/positions";
 
 export class SelectionSystem implements System {
     engine: Engine;
@@ -72,7 +72,6 @@ export class SelectionSystem implements System {
 
         if (this.hoveredEntity) {
             this.interactionPoint = this.getPositionWithinEntity(mouse.x, mouse.y, this.hoveredEntity);
-            console.log(this.interactionPoint)
         } else {
             this.interactionPoint = null;
         }

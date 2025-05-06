@@ -25,11 +25,12 @@ export class Engine {
         this.lastTime = 0;
         this.state = initialState
         this.camera = { x: 0, y: 0, zoom: 1 }
+        
+        this.updateEngineState(initialState)
     }
 
     public init() {
         this.animate(0)
-        console.log(this.entities)
     }
 
 

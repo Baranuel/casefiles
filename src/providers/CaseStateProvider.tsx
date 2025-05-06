@@ -32,7 +32,6 @@ export function CaseProvider({
   caseId: string;
 }) {
   const { data: elements, isLoading } = useCaseElementsQuery(caseId);
-
   const { createMutation, updateMutation } = useCaseElementsMutation(caseId);
 
   const [tool, setTool] = useState<Tool>("SELECT");
