@@ -1,5 +1,6 @@
 import { System } from "@/types/engine";
 import { Engine } from "..";
+import { ElementDto } from "@/types/elements";
 
 export class MovingSystem implements System {
     engine: Engine
@@ -13,13 +14,34 @@ export class MovingSystem implements System {
     }
 
 
-
     onMouseUp = () => {
         const selectedEntity = this.engine.getSystem('SelectionSystem')?.selectedEntity
         if (!selectedEntity) return
 
+        const nodeC = selectedEntity.getComponent('node')
+
+
         if (this.isMovingElement) {
             this.engine.getState().updateElement(selectedEntity.element)
+            //batch upload all attached elements to a node
+
+            if (nodeC) {
+                const attachedIds = Array.from(nodeC.attachedPoints.keys())
+                const elements = attachedIds
+                    .map(id => this.engine.entities.get(id)?.element)   
+                    .filter((e): e is ElementDto => Boolean(e))
+
+                this.engine.getState().updateBatchElements(elements)
+            }
+
+            const moveEnded = new CustomEvent('moveended', {
+                detail: { resizedEntity: selectedEntity },
+                bubbles: true,
+                cancelable: false,
+                composed: false
+            });
+
+            this.engine.canvas.dispatchEvent(moveEnded)
         }
         this.isMovingElement = false
     }
@@ -36,10 +58,10 @@ export class MovingSystem implements System {
         const movableComponent = selectedEntity.getComponent('movable')
         const positionComponent = selectedEntity.getComponent('position')
         const typeComponent = selectedEntity.getComponent('type')
-        
+
         if (!movableComponent || !positionComponent || !typeComponent) return
 
-        if(typeComponent.type === 'POINTER'){
+        if (typeComponent.type === 'POINTER') {
             // add move logic for pointer so we only it if we click on the line
         }
 

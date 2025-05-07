@@ -40,7 +40,7 @@ export const SocketProvider = ({
 }: SocketProviderProps) => {
   const { BASE_API_URL } = useConfig();
   const { parseSocketData } = useReceiveSocketMessage();
-  const { wsElementCreate, wsElementUpdate } = useWsCacheUpdate(caseId);
+  const { wsElementCreate, wsElementUpdate, wsElementsBatchUpdate } = useWsCacheUpdate(caseId);
 
   const pendingRef = useRef<WsMessage[]>([]);
   const timerRef = useRef<number>(0);
@@ -73,7 +73,7 @@ export const SocketProvider = ({
       const grabLastMessageMap = new Map<string, WsMessage>();
 
       for (const message of pendingRef.current) {
-        grabLastMessageMap.set(message.payload.id, message);
+        grabLastMessageMap.set(message.id, message);
       }
 
       for (const message of grabLastMessageMap.values()) {
@@ -82,6 +82,9 @@ export const SocketProvider = ({
         }
         if(message.type === 'UPDATE') {
           wsElementUpdate("case-elements", message.payload);
+        }
+        if(message.type === 'UPDATE_BATCH') {
+          wsElementsBatchUpdate("case-elements", message.payload);
         }
         // handle UPDATE / DELETE
       }
@@ -92,7 +95,7 @@ export const SocketProvider = ({
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [lastMessage, parseSocketData, wsElementCreate, wsElementUpdate]);
+  }, [lastMessage, parseSocketData, wsElementCreate, wsElementUpdate, wsElementsBatchUpdate]);
 
   const value = useMemo(
     () => ({ lastMessage, uniqueWsId }),

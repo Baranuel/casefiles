@@ -59,7 +59,44 @@ export const useCaseElementsMutation = (caseId: string) => {
         },
     });
 
+    const updateBatchMutation = useMutation({
+        mutationKey: ['element-mutation', caseId],
+        mutationFn: (payload: ElementDto[]) =>
+            api.updateBatchElements(caseId, payload),
+
+        onMutate: async (updatedElements) => {
+            // 1) Cancel any outgoing refetches (so they don’t overwrite our optimistic update)
+            await queryClient.cancelQueries({ queryKey: ['case-elements', caseId] });
+            const previousElements = queryClient.getQueryData<ElementDto[]>(['case-elements', caseId]);
+
+            queryClient.setQueryData<ElementDto[]>(['case-elements', caseId], (old = []) => {
+                const updatesById = new Map(updatedElements.map(el => [el.id, el]));
+
+                return old.map(el =>
+                    updatesById.has(el.id)
+                        ? { ...el, ...updatesById.get(el.id)! }
+                        : el
+                );
+            });
+
+            // 4) Return the snapshot so we can roll back on error
+            return { previousElements };
+        },
+
+        onError: (_err, _variables, context) => {
+            if (context?.previousElements) {
+                queryClient.setQueryData(['case-elements', caseId], context.previousElements);
+            }
+        },
+
+        onSettled: () => {
+            // finally, always refetch to ensure server state is in sync
+            queryClient.invalidateQueries({ queryKey: ['case-elements', caseId] });
+        },
+    });
 
 
-    return { createMutation, updateMutation };
+
+
+    return { createMutation, updateMutation, updateBatchMutation };
 };

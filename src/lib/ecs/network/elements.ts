@@ -58,6 +58,16 @@ export class ElementsApi {
         );
         return response.data;
     }
+    async updateBatchElements(caseId:string, payload: ElementDto[]) {
+        const headers = await this.authHeaders();
+        const wsIdParam = this.uniqueWsId ? `?wsId=${this.uniqueWsId}` : "";
+        const response = await this.api.put<ElementDto>(
+            `/elements/${caseId}/batch${wsIdParam}`,
+            payload,
+            { headers }
+        );
+        return response.data;
+    }
 
     async deleteElement( elementId: string) {
         const headers = await this.authHeaders();

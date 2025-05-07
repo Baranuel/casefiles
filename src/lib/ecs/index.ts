@@ -1,11 +1,12 @@
 import { State } from "@/providers/CaseStateProvider";
-import { Camera, GetSystem, System, SystemsType } from "@/types/engine";
+import { Camera,  ComponentsType, GetSystem, System, SystemsType } from "@/types/engine";
 import { Entity } from "./entities/Entity";
 import { PositionComponent } from "./components/PositionComponent";
 import { StyleComponent } from "./components/StyleComponent";
 import { TypeComponent } from "./components/TypeComponent";
 import { MovableComponent } from "./components/MovableComponent";
 import { ResizableComponent } from "./components/ResizableComponent";
+// import { NodeComponent } from "./components/NodeComponent";
 
 
 export class Engine {
@@ -65,6 +66,7 @@ export class Engine {
         this.state = state;
         this.entities.clear()
 
+
         for (const element of state.elements) {
             const entity = new Entity(element.id, element)
             this.entities.set(element.id, entity)
@@ -80,6 +82,7 @@ export class Engine {
                     entity.addComponent('type', new TypeComponent(entity, 'PERSON'))
                     entity.addComponent('style', new StyleComponent(entity, 'green'))
                     entity.addComponent('movable', new MovableComponent(entity))
+                    // entity.addComponent('node', new NodeComponent(entity))
                     break;
                 case "LOCATION":
                     entity.addComponent('type', new TypeComponent(entity, 'LOCATION'))
@@ -107,6 +110,18 @@ export class Engine {
     }
     public cleanup() {
         this.systems.forEach(s => s.destroy())
+    }
+    public getEntitiesWithComponents<
+        K extends readonly ComponentsType[]        // K is a tuple
+    >(
+        ...componentKeys: K
+    ): Entity[] {
+        const result = Array.from(this.entities.values()).filter((entity) =>
+            componentKeys.every((key) => entity.hasComponent(key))
+        )
+
+        // we assert here so TS will narrow the returned entities
+        return result 
     }
 
 

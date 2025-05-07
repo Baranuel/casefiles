@@ -2,7 +2,7 @@
 import {  useCaseContext } from "@/providers/CaseStateProvider";
 import { Tool } from "@/types/elements";
 
-import { Move, User, MapPin, StickyNote, ArrowUpToLine } from "lucide-react";
+import { Move, User, MapPin, StickyNote, ArrowUpFromDot } from "lucide-react";
 import { JSX } from "react";
 
 const tools: { id: Tool; icon: JSX.Element; label: string }[] = [
@@ -22,14 +22,14 @@ const tools: { id: Tool; icon: JSX.Element; label: string }[] = [
     label: "Location",
   },
   {
+    id: 'POINTER',
+    icon: <ArrowUpFromDot className="w-5 h-5" />,
+    label: "Line",
+  },
+  {
     id: 'NOTE',
     icon: <StickyNote className="w-5 h-5" />,
     label: "Note",
-  },
-  {
-    id: 'POINTER',
-    icon: <ArrowUpToLine className="w-5 h-5" />,
-    label: "Line",
   },
 ] as const;
 
