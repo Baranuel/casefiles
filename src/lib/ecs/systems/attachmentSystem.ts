@@ -70,6 +70,9 @@ export class AttachmentSystem implements System {
         const selectedEntity = this.engine.getSystem('SelectionSystem')!.selectedEntity
         const selectedEntityTypeC = selectedEntity?.getComponent('type')
         if(!selectedEntity || !selectedEntityTypeC) return 
+        
+
+        
         if (this.engine.userAction !== 'moving' || selectedEntityTypeC.type === 'POINTER' ) return
 
         const nodeEntities = this.engine.getEntitiesWithComponents('node')
@@ -158,11 +161,13 @@ export class AttachmentSystem implements System {
           const rel = this.getRelativePosition(x2, y2, nodePosC.position)
           attachedPts.set(pointer.id, { overlapsAt: 'end', x: rel.x, y: rel.y })
         }
-
+        else {
+            attachedPts.delete(pointer.id)
+        }
         console.log(attachedPts)
       }
     }
-    console.log(this.engine.entities)
+  
   }
 
     destroy() {

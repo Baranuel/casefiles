@@ -19,6 +19,7 @@ export type State = {
   tool: Tool;
   addElement: (element: ElementDto) => void;
   updateElement: (element: ElementDto) => void;
+  updateBatchElements: (elements: ElementDto[]) => void;
   setTool: Dispatch<SetStateAction<Tool>>;
 };
 
@@ -32,7 +33,7 @@ export function CaseProvider({
   caseId: string;
 }) {
   const { data: elements, isLoading } = useCaseElementsQuery(caseId);
-  const { createMutation, updateMutation } = useCaseElementsMutation(caseId);
+  const { createMutation, updateMutation, updateBatchMutation } = useCaseElementsMutation(caseId);
   const [tool, setTool] = useState<Tool>("SELECT");
 
   const addElement = useCallback(
@@ -50,15 +51,24 @@ export function CaseProvider({
     [updateMutation]
   );
 
+  const updateBatchElements = useCallback(
+    (elementsToUpdate: ElementDto[]) => {
+      updateBatchMutation.mutate(elementsToUpdate);
+    },
+    [updateBatchMutation]
+  );
+
+
   const contextStateValue = useMemo(
     (): State => ({
       elements: elements ?? [],
       tool,
       addElement,
       updateElement,
+      updateBatchElements,
       setTool,
     }),
-    [elements, tool, addElement, updateElement]
+    [elements, tool, addElement, updateElement, updateBatchElements]
   );
 
   if (isLoading) {

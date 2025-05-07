@@ -1,4 +1,4 @@
-import { MousePosition, System } from "@/types/engine";
+import { Layer, MousePosition, System } from "@/types/engine";
 import { Engine } from "..";
 import { Tool } from "@/types/elements";
 import { Entity } from "../entities/Entity";
@@ -6,6 +6,13 @@ import { Entity } from "../entities/Entity";
 export class RenderingSystem implements System {
     engine: Engine
     private dpr = window.devicePixelRatio || 1;
+
+    private layerMap: Record<string, Layer> = {
+        PERSON: Layer.PERSON,
+        LOCATION: Layer.LOCATION,
+        ITEM: Layer.ITEM,
+        POINTER: Layer.POINTER,
+    }
     constructor(engine: Engine) {
         this.engine = engine
     }
@@ -33,6 +40,8 @@ export class RenderingSystem implements System {
 
 
     draw() {
+        const { selectedEntity } = this.engine.getSystem('SelectionSystem')!
+        const selectedEntityTypeC = selectedEntity?.getComponent('type')
         const input = this.engine.getSystem('InputSystem')
         const state = this.engine.getState()
         const canvas = this.engine.canvas
@@ -49,13 +58,23 @@ export class RenderingSystem implements System {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         ctx.translate(-x, -y)
 
-        for (const entity of this.engine.entities.values()) {
+        const drawables = this.engine
+            .getEntitiesWithComponents("position", "type")
+
+        // sort by our layer map
+        drawables.sort((a, b) => {
+            const layerA = this.layerMap[a.getComponent("type")!.type]
+            const layerB = this.layerMap[b.getComponent("type")!.type]
+            return layerA - layerB
+        })
+
+        for (const entity of drawables) {
             const typeC = entity.getComponent('type')
             const positionC = entity.getComponent('position')
             const nodeC = entity.getComponent('node')
 
             if (nodeC && positionC) {
-                const shouldRenderNodeArea = this.engine.userAction === 'resizing' 
+                const shouldRenderNodeArea = this.engine.userAction === 'resizing' || this.engine.userAction === 'moving' && selectedEntityTypeC?.type === 'POINTER'
                 if (shouldRenderNodeArea) {
                     const { x1, y1, x2, y2 } = positionC.position;
                     const width = x2 - x1;

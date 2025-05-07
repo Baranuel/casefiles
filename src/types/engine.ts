@@ -84,3 +84,12 @@ export type MousePosition = {
     x: number,
     y: number
 }
+
+
+// 1) Define your layers (bottom → top)
+export enum Layer {
+    PERSON   = 0,
+    LOCATION = 1,
+    ITEM     = 2,
+    POINTER  = 3,
+  }

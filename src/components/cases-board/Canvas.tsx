@@ -51,7 +51,7 @@ export const Canvas = () => {
   useEffect(() => {
     const engine = engineRef.current;
     if (!engine) return;
-
+    
     engine.updateEngineState(state);
   }, [state.elements, state.tool]); // on every state.elements change we update the engine state to sync with the database and rest of the react app
 

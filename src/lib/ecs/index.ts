@@ -6,7 +6,7 @@ import { StyleComponent } from "./components/StyleComponent";
 import { TypeComponent } from "./components/TypeComponent";
 import { MovableComponent } from "./components/MovableComponent";
 import { ResizableComponent } from "./components/ResizableComponent";
-import { NodeComponent } from "./components/NodeComponent";
+// import { NodeComponent } from "./components/NodeComponent";
 
 
 export class Engine {
@@ -66,6 +66,7 @@ export class Engine {
         this.state = state;
         this.entities.clear()
 
+
         for (const element of state.elements) {
             const entity = new Entity(element.id, element)
             this.entities.set(element.id, entity)
@@ -81,7 +82,7 @@ export class Engine {
                     entity.addComponent('type', new TypeComponent(entity, 'PERSON'))
                     entity.addComponent('style', new StyleComponent(entity, 'green'))
                     entity.addComponent('movable', new MovableComponent(entity))
-                    entity.addComponent('node', new NodeComponent(entity))
+                    // entity.addComponent('node', new NodeComponent(entity))
                     break;
                 case "LOCATION":
                     entity.addComponent('type', new TypeComponent(entity, 'LOCATION'))
