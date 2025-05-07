@@ -35,8 +35,13 @@ export class MovingSystem implements System {
 
         const movableComponent = selectedEntity.getComponent('movable')
         const positionComponent = selectedEntity.getComponent('position')
+        const typeComponent = selectedEntity.getComponent('type')
         
-        if (!movableComponent || !positionComponent) return
+        if (!movableComponent || !positionComponent || !typeComponent) return
+
+        if(typeComponent.type === 'POINTER'){
+            // add move logic for pointer so we only it if we click on the line
+        }
 
         this.isMovingElement = true
 
