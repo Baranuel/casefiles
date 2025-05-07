@@ -13,8 +13,7 @@ import { SelectionSystem } from "@/lib/ecs/systems/selectionSystem";
 import { MovingSystem } from "@/lib/ecs/systems/movingSystem";
 import { UserActionSystem } from "@/lib/ecs/systems/userActionSystem";
 import { ResizeSystem } from "@/lib/ecs/systems/resizeSystem";
-import { AttachmentSystem } from "@/lib/ecs/systems/attachmentSystem";
-// import { ResizeSystem } from "@/lib/ecs/systems/resizeSystem";
+// import { AttachmentSystem } from "@/lib/ecs/systems/attachmentSystem";
 
 export const Canvas = () => {
   const state = useCaseContext();
@@ -38,7 +37,7 @@ export const Canvas = () => {
     engine.addSystem("UserActionSystem", new UserActionSystem(engine));
     engine.addSystem("MovingSystem", new MovingSystem(engine));
     engine.addSystem("ResizeSystem", new ResizeSystem(engine));
-    engine.addSystem("AttachmentSystem", new AttachmentSystem(engine));
+    // engine.addSystem("AttachmentSystem", new AttachmentSystem(engine));
 
     return () => {
       engine.cleanup();
