@@ -13,6 +13,7 @@ import { SelectionSystem } from "@/lib/ecs/systems/selectionSystem";
 import { MovingSystem } from "@/lib/ecs/systems/movingSystem";
 import { UserActionSystem } from "@/lib/ecs/systems/userActionSystem";
 import { ResizeSystem } from "@/lib/ecs/systems/resizeSystem";
+import { AttachmentSystem } from "@/lib/ecs/systems/attachmentSystem";
 // import { ResizeSystem } from "@/lib/ecs/systems/resizeSystem";
 
 export const Canvas = () => {
@@ -27,6 +28,7 @@ export const Canvas = () => {
     const engine = new Engine(canvas, state);
     engineRef.current = engine;
 
+    engine.init();
     engine.addSystem("EventSystem", new EventSystem(engine));
     engine.addSystem("InputSystem", new InputSystem(engine));
     engine.addSystem("CreationSystem", new CreationSystem(engine));
@@ -36,7 +38,7 @@ export const Canvas = () => {
     engine.addSystem("UserActionSystem", new UserActionSystem(engine));
     engine.addSystem("MovingSystem", new MovingSystem(engine));
     engine.addSystem("ResizeSystem", new ResizeSystem(engine));
-    engine.init();
+    engine.addSystem("AttachmentSystem", new AttachmentSystem(engine));
 
     return () => {
       engine.cleanup();

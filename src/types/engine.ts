@@ -14,6 +14,8 @@ import { TypeComponent } from "@/lib/ecs/components/TypeComponent";
 import { StyleComponent } from "@/lib/ecs/components/StyleComponent";
 import { MovableComponent } from "@/lib/ecs/components/MovableComponent";
 import { ResizableComponent} from "@/lib/ecs/components/ResizableComponent"
+import { NodeComponent } from "@/lib/ecs/components/NodeComponent"
+import { AttachmentSystem } from "@/lib/ecs/systems/attachmentSystem"
 
 export interface System {
     engine: Engine
@@ -35,7 +37,8 @@ export type SystemsType =
     'SelectionSystem'|
     'MovingSystem'|
     'UserActionSystem'|
-    'ResizeSystem'
+    'ResizeSystem'|
+    'AttachmentSystem'
 
 export type SystemsMap = {
     'InputSystem': InputSystem
@@ -47,6 +50,7 @@ export type SystemsMap = {
     'MovingSystem': MovingSystem,
     'UserActionSystem':UserActionSystem
     'ResizeSystem':ResizeSystem
+    'AttachmentSystem': AttachmentSystem
 }
 
 export type GetSystem<K extends SystemsType> = SystemsMap[K]
@@ -56,7 +60,8 @@ export type ComponentsType =
     'type' |
     'style' |
     'movable'|
-    'resizable'
+    'resizable'|
+    'node'
 
 export type ComponentsMap = {
     'position': PositionComponent,
@@ -64,6 +69,7 @@ export type ComponentsMap = {
     'style': StyleComponent,
     'movable': MovableComponent,
     'resizable': ResizableComponent
+    'node':NodeComponent
 }
 
 export type GetComponent<K extends ComponentsType> = ComponentsMap[K];

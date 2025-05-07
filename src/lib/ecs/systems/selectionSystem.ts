@@ -41,7 +41,7 @@ export class SelectionSystem implements System {
                         interactionPoint === 'inside' ||
                         interactionPoint === 'start' ||
                         interactionPoint === 'end';
-                        
+
                     if (!validInteraction) continue;
                 }
                 return entity;
@@ -70,11 +70,12 @@ export class SelectionSystem implements System {
             return
         }
         const positionComponent = entity.getComponent('position');
-        if (positionComponent) {
-            const { x1, y1 } = positionComponent.position;
-            this.grabElementMouseOffset = { x: mouse.x - x1, y: mouse.y - y1 };
-        }
-        this.interactionPoint = this.getPositionWithinEntity(mouse.x, mouse.y, entity); this.setSelectedEntity(entity);
+        if (!positionComponent) return 
+
+        const { x1, y1 } = positionComponent.position;
+        this.grabElementMouseOffset = { x: mouse.x - x1, y: mouse.y - y1 };
+        this.interactionPoint = this.getPositionWithinEntity(mouse.x, mouse.y, entity);
+        this.setSelectedEntity(entity);
     };
 
     private onMouseUp = () => {
@@ -91,10 +92,6 @@ export class SelectionSystem implements System {
         const mouse = this.engine.getSystem('InputSystem')?.getWorldMousePosition();
         if (!mouse) return;
         this.hoveredEntity = this.getEntityAtPosition(mouse.x, mouse.y);
-        // Debug: log position within hovered entity
-        // if (this.hoveredEntity) {
-        //     console.log(this.getPositionWithinEntity(mouse.x, mouse.y, this.hoveredEntity));
-        // }
     }
 
     draw() { }

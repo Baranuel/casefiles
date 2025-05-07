@@ -13,13 +13,21 @@ export class MovingSystem implements System {
     }
 
 
-
     onMouseUp = () => {
         const selectedEntity = this.engine.getSystem('SelectionSystem')?.selectedEntity
         if (!selectedEntity) return
 
         if (this.isMovingElement) {
             this.engine.getState().updateElement(selectedEntity.element)
+
+            const moveEnded = new CustomEvent('moveended', {
+                detail: { resizedEntity:selectedEntity },
+                bubbles: true,    
+                cancelable: false,
+                composed: false   
+              });
+        
+            this.engine.canvas.dispatchEvent(moveEnded)
         }
         this.isMovingElement = false
     }

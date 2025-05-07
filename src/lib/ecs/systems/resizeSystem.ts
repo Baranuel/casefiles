@@ -10,15 +10,26 @@ export class ResizeSystem implements System {
         this.engine = engine;
         this.controller = new AbortController();
         this.engine.canvas.addEventListener('mouseup', this.onMouseUp, { signal: this.controller.signal })
-    }
 
+    }
+    
     private onMouseUp = () => {
         const selectedEntity = this.engine.getSystem('SelectionSystem')?.selectedEntity
         if (!selectedEntity) return
-
+        
         if (this.isResizing) {
             this.engine.getState().updateElement(selectedEntity.element)
+            const resizeEnded = new CustomEvent('resizeended', {
+                detail: { resizedEntity:selectedEntity },
+                bubbles: true,    
+                cancelable: false,
+                composed: false   
+              });
+        
+            this.engine.canvas.dispatchEvent(resizeEnded)
         }
+        
+
         this.isResizing = false
     }
 
