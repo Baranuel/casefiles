@@ -110,7 +110,44 @@ export class RenderingSystem implements System {
                 }
             }
 
+        }
 
+        // Draw a rectangle around all selected entities
+        const selectedEntities = this.engine.getEntitiesWithComponents('selectable', 'position')
+            .filter(entity => entity.getComponent('selectable')?.selected);
+
+        if (selectedEntities.length > 1) { // Only draw group selection if multiple entities selected
+            let minX = Infinity;
+            let minY = Infinity;
+            let maxX = -Infinity;
+            let maxY = -Infinity;
+
+            // Find bounds of all selected entities
+            for (const entity of selectedEntities) {
+                const positionC = entity.getComponent('position')!;
+                const { x1, y1, x2, y2 } = positionC.position;
+
+                minX = Math.min(minX, Math.min(x1, x2));
+                minY = Math.min(minY, Math.min(y1, y2));
+                maxX = Math.max(maxX, Math.max(x1, x2));
+                maxY = Math.max(maxY, Math.max(y1, y2));
+            }
+
+            // Add padding around the bounding box
+            const padding = 10;
+            minX -= padding;
+            minY -= padding;
+            maxX += padding;
+            maxY += padding;
+
+            // Draw the group selection rectangle
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            ctx.strokeStyle = '#2196F3'; // Material blue
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 3]); // Dashed line
+            ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
+            ctx.restore();
         }
         this.drawIntentElement(input?.getScreenMousePosition(), state.tool, ctx)
         ctx.restore()

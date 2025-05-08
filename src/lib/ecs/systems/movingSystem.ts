@@ -1,87 +1,57 @@
 import { System } from "@/types/engine";
 import { Engine } from "..";
-import { ElementDto } from "@/types/elements";
+import { InputSystem } from "./inputSystem";
 
 export class MovingSystem implements System {
     engine: Engine
     controller: AbortController
     isMovingElement: boolean = false
+    inputSystem: InputSystem | null = null
 
     constructor(engine: Engine) {
         this.engine = engine
         this.controller = new AbortController()
+        this.inputSystem = this.engine.getSystem('InputSystem') || null
+
         this.engine.canvas.addEventListener('mouseup', this.onMouseUp, { signal: this.controller.signal })
     }
 
 
     onMouseUp = () => {
-        const selectedEntity = this.engine.getSystem('SelectionSystem')?.selectedEntity
-        if (!selectedEntity) return
+        const movingEntities = this.engine.getEntitiesWithComponents('movable', 'position')
+            .filter(entity => entity.getComponent('movable')!.moving);
 
-        const nodeC = selectedEntity.getComponent('node')
-
-
-        if (this.isMovingElement) {
-            this.engine.getState().updateElement(selectedEntity.element)
-            //batch upload all attached elements to a node
-
-            if (nodeC) {
-                const attachedIds = Array.from(nodeC.attachedPoints.keys())
-                const elements = attachedIds
-                    .map(id => this.engine.entities.get(id)?.element)   
-                    .filter((e): e is ElementDto => Boolean(e))
-
-                this.engine.getState().updateBatchElements(elements)
-            }
-
-            const moveEnded = new CustomEvent('moveended', {
-                detail: { resizedEntity: selectedEntity },
-                bubbles: true,
-                cancelable: false,
-                composed: false
-            });
-
-            this.engine.canvas.dispatchEvent(moveEnded)
+        for (const entity of movingEntities) {
+            const movableComponent = entity.getComponent('movable')!;
+            movableComponent.moving = false;
+            this.engine.getState().updateElement(entity.element);
         }
-        this.isMovingElement = false
     }
 
     update() {
-        if (this.engine.userAction !== 'moving') return
-        const selectionSystem = this.engine.getSystem('SelectionSystem')
+        if (!this.inputSystem) return
 
-        if (!selectionSystem) return
-        const { selectedEntity, grabElementMouseOffset } = selectionSystem
+        const { x, y } = this.inputSystem.getWorldMousePosition();
 
-        if (!selectedEntity) return
+        const movableEntities = this.engine.getEntitiesWithComponents('movable', 'position');
 
-        const movableComponent = selectedEntity.getComponent('movable')
-        const positionComponent = selectedEntity.getComponent('position')
-        const typeComponent = selectedEntity.getComponent('type')
+        for (const entity of movableEntities) {
+            const movableComponent = entity.getComponent('movable')!;
+            const positionComponent = entity.getComponent('position')!;
 
-        if (!movableComponent || !positionComponent || !typeComponent) return
+            if (!movableComponent.moving) continue;
 
-        if (typeComponent.type === 'POINTER') {
-            // add move logic for pointer so we only it if we click on the line
+            const { position } = positionComponent;
+            const width = position.x2 - position.x1;
+            const height = position.y2 - position.y1;
+
+            const offset = movableComponent.mouseGrabOffset ?? { x: width / 2, y: height / 2 };
+
+            position.x1 = x - offset.x;
+            position.y1 = y - offset.y;
+            position.x2 = position.x1 + width;
+            position.y2 = position.y1 + height;
         }
-
-        this.isMovingElement = true
-
-        const { position } = positionComponent
-        const { x, y } = this.engine.getSystem('InputSystem')!.getWorldMousePosition()
-
-        const width = position.x2 - position.x1;
-        const height = position.y2 - position.y1;
-
-        const offset = grabElementMouseOffset ?? { x: width / 2, y: height / 2 };
-
-        position.x1 = x - offset.x;
-        position.y1 = y - offset.y;
-        position.x2 = position.x1 + width;
-        position.y2 = position.y1 + height;
-
-
-
     }
     draw() { }
 

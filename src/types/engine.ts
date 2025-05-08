@@ -16,6 +16,7 @@ import { MovableComponent } from "@/lib/ecs/components/MovableComponent";
 import { ResizableComponent} from "@/lib/ecs/components/ResizableComponent"
 import { NodeComponent } from "@/lib/ecs/components/NodeComponent"
 import { AttachmentSystem } from "@/lib/ecs/systems/attachmentSystem"
+import { SelectableComponent } from "@/lib/ecs/components/SelectableComponent"
 
 export interface System {
     engine: Engine
@@ -61,7 +62,8 @@ export type ComponentsType =
     'style' |
     'movable'|
     'resizable'|
-    'node'
+    'node' | 
+    'selectable'
 
 export type ComponentsMap = {
     'position': PositionComponent,
@@ -70,6 +72,7 @@ export type ComponentsMap = {
     'movable': MovableComponent,
     'resizable': ResizableComponent
     'node':NodeComponent
+    'selectable': SelectableComponent
 }
 
 export type GetComponent<K extends ComponentsType> = ComponentsMap[K];
@@ -88,8 +91,8 @@ export type MousePosition = {
 
 // 1) Define your layers (bottom → top)
 export enum Layer {
-    PERSON   = 0,
-    LOCATION = 1,
-    ITEM     = 2,
-    POINTER  = 3,
+    PERSON   = 3,
+    LOCATION = 2,
+    ITEM     = 1,
+    POINTER  = 0,
   }
