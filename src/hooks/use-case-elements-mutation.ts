@@ -26,9 +26,7 @@ export const useCaseElementsMutation = (caseId: string) => {
                 queryClient.setQueryData(['case-elements', caseId], context.previousElements);
             }
         },
-        onSettled: () => {
-            // queryClient.invalidateQueries({ queryKey: ['case-elements', caseId] });
-        },
+ 
     });
 
     const updateMutation = useMutation({
@@ -53,9 +51,6 @@ export const useCaseElementsMutation = (caseId: string) => {
             if (context?.previousElements) {
                 queryClient.setQueryData(['case-elements', caseId], context.previousElements);
             }
-        },
-        onSettled: () => {
-            // queryClient.invalidateQueries({ queryKey: ['case-elements', caseId] });
         },
     });
 
@@ -87,11 +82,6 @@ export const useCaseElementsMutation = (caseId: string) => {
             if (context?.previousElements) {
                 queryClient.setQueryData(['case-elements', caseId], context.previousElements);
             }
-        },
-
-        onSettled: () => {
-            // finally, always refetch to ensure server state is in sync
-            queryClient.invalidateQueries({ queryKey: ['case-elements', caseId] });
         },
     });
 

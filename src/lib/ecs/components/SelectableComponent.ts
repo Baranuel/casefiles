@@ -1,10 +1,10 @@
 import { Component } from "@/types/engine";
 import { Entity } from "../entities/Entity";
 
-export class ResizableComponent implements Component {
+export class SelectableComponent implements Component {
     owner: Entity;
-    resizing: boolean = false;
-    
+    selected: boolean = false;
+
     constructor(owner:Entity) {
         this.owner = owner
     }

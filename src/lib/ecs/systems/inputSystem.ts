@@ -5,8 +5,11 @@ export class InputSystem implements System {
     engine: Engine
     private canvas: HTMLCanvasElement
     private controller: AbortController
+
     public mousePosition: { x: number, y: number } = { x: 0, y: 0 }
     public onMouseDownPositionSnapshot: { x: number, y: number } = { x: 0, y: 0 }
+    public isMouseDown: boolean = false
+    public isDragging: boolean = false
 
 
     constructor(engine: Engine) {
@@ -16,6 +19,11 @@ export class InputSystem implements System {
         this.canvas.addEventListener(
             'mousedown',
             this.onMouseDown,
+            { signal: this.controller.signal }
+        )
+        this.canvas.addEventListener(
+            'mouseup',
+            this.onMouseUp,
             { signal: this.controller.signal }
         )
         this.canvas.addEventListener(
@@ -40,6 +48,8 @@ export class InputSystem implements System {
         const clientY = (screenY / camera.zoom) + camera.y
 
         this.mousePosition = { x: clientX, y: clientY }
+
+
     }
 
     getWorldMousePosition() {
@@ -50,11 +60,26 @@ export class InputSystem implements System {
         return this.mousePosition
     }
 
+    onMouseUp = () => {
+        this.isMouseDown = false
+        this.isDragging = false
+    }
+
     onMouseDown = () => {
+        this.isMouseDown = true
         this.onMouseDownPositionSnapshot = this.mousePosition
     }
 
-    update() { }
+    update() {
+
+        if (this.mousePosition && this.onMouseDownPositionSnapshot && this.isMouseDown) {
+            const dx = this.mousePosition.x - this.onMouseDownPositionSnapshot.x
+            const dy = this.mousePosition.y - this.onMouseDownPositionSnapshot.y
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                this.isDragging = true
+            }
+        }
+    }
     draw() { }
 
     destroy() {

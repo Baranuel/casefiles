@@ -1,11 +1,12 @@
 import { State } from "@/providers/CaseStateProvider";
-import { Camera,  ComponentsType, GetSystem, System, SystemsType } from "@/types/engine";
+import { Camera, ComponentsType, GetSystem, System, SystemsType } from "@/types/engine";
 import { Entity } from "./entities/Entity";
 import { PositionComponent } from "./components/PositionComponent";
 import { StyleComponent } from "./components/StyleComponent";
 import { TypeComponent } from "./components/TypeComponent";
 import { MovableComponent } from "./components/MovableComponent";
 import { ResizableComponent } from "./components/ResizableComponent";
+import { SelectableComponent } from "./components/SelectableComponent";
 // import { NodeComponent } from "./components/NodeComponent";
 
 
@@ -82,12 +83,14 @@ export class Engine {
                     entity.addComponent('type', new TypeComponent(entity, 'PERSON'))
                     entity.addComponent('style', new StyleComponent(entity, 'green'))
                     entity.addComponent('movable', new MovableComponent(entity))
+                    entity.addComponent('selectable', new SelectableComponent(entity))
                     // entity.addComponent('node', new NodeComponent(entity))
                     break;
                 case "LOCATION":
                     entity.addComponent('type', new TypeComponent(entity, 'LOCATION'))
                     entity.addComponent('style', new StyleComponent(entity, 'blue'))
                     entity.addComponent('movable', new MovableComponent(entity))
+                    entity.addComponent('selectable', new SelectableComponent(entity))
                     break;
                 case "ITEM":
                     entity.addComponent('type', new TypeComponent(entity, 'ITEM'))
@@ -99,6 +102,7 @@ export class Engine {
                     entity.addComponent('resizable', new ResizableComponent(entity))
                     entity.addComponent('movable', new MovableComponent(entity))
                     entity.addComponent('type', new TypeComponent(entity, 'POINTER'))
+                    entity.addComponent('selectable', new SelectableComponent(entity))
                     break;
                 default:
                     break;
@@ -121,7 +125,7 @@ export class Engine {
         )
 
         // we assert here so TS will narrow the returned entities
-        return result 
+        return result
     }
 
 
