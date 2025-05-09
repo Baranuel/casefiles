@@ -1,70 +1,77 @@
 import { System } from "@/types/engine";
 import { Engine } from "..";
+import { EventSystem, EngineEvents } from "./eventSystem";
+import { resizedCoordinates } from "@/utils/positions";
 
 export class ResizeSystem implements System {
     engine: Engine;
-    controller: AbortController;
-    isResizing: boolean = false
+    eventSystem: EventSystem | null = null;
 
     constructor(engine: Engine) {
         this.engine = engine;
-        this.controller = new AbortController();
-        this.engine.canvas.addEventListener('mouseup', this.onMouseUp, { signal: this.controller.signal })
+        this.eventSystem = this.engine.getSystem('EventSystem') as EventSystem;
 
-    }
-    
-    private onMouseUp = () => {
-        const selectedEntity = this.engine.getSystem('SelectionSystem')?.selectedEntity
-        if (!selectedEntity) return
-        
-        if (this.isResizing) {
-            this.engine.getState().updateElement(selectedEntity.element)
-            const resizeEnded = new CustomEvent('resizeended', {
-                detail: { resizedEntity:selectedEntity },
-                bubbles: true,    
-                cancelable: false,
-                composed: false   
-              });
-        
-            this.engine.canvas.dispatchEvent(resizeEnded)
+        if (this.eventSystem) {
+            this.eventSystem.subscribe('action:resize:start', this.onResizeStart);
+            this.eventSystem.subscribe('action:resize', this.onResize);
+            this.eventSystem.subscribe('action:resize:end', this.onResizeEnd);
         }
+
+    }
+
+    private onResizeStart = (data: EngineEvents['action:resize:start']) => {
+        const resizableElements = this.engine.getEntitiesWithComponents('resizable', 'selectable')
+        if (resizableElements.length !== 1) return
         
 
-        this.isResizing = false
+        const [entityToResize] = resizableElements
+        const resizableC = entityToResize.getComponent('resizable')
+        if (!resizableC) return
+
+        resizableC.resizing = true
+        resizableC.interactionPoint = data.interactionPoint
+
     }
+    private onResize = (data: EngineEvents['action:resize']) => {
+        const resizableElements = this.engine.getEntitiesWithComponents('resizable', 'selectable', 'position').filter(e => e.getComponent('selectable')!.selected)
+        if (resizableElements.length > 1) return
+        const [entityToResize] = resizableElements
 
-    update() {
-        if (this.engine.userAction !== "resizing") return;
+        const posC = entityToResize.getComponent('position')!;
+        const resizableC = entityToResize.getComponent('resizable')!;
+        if (!resizableC.resizing || !resizableC.interactionPoint) return;
 
-        const selectionSystem = this.engine.getSystem("SelectionSystem");
-        const selectedEntity = selectionSystem?.selectedEntity;
-        const handle = selectionSystem?.interactionPoint
+        const { x, y } = data
+        const ip = resizableC.interactionPoint
 
-        if (!selectedEntity || !selectedEntity.hasComponent('resizable')) return;
+        const coordinates = resizedCoordinates(x, y, ip, posC.position)
+        if (!coordinates) return
+        posC.position.x1 = coordinates.x1
+        posC.position.x2 = coordinates.x2
+        posC.position.y1 = coordinates.y1
+        posC.position.y2 = coordinates.y2
 
-        const positionComponent = selectedEntity.getComponent("position");
-        if (!positionComponent) return;
 
-        const { x, y } = this.engine.getSystem("InputSystem")!.getWorldMousePosition();
-        this.isResizing = true
 
-        if (handle === "end") {
-            if (positionComponent.position.x2 !== x || positionComponent.position.y2 !== y) {
-                positionComponent.position.x2 = x;
-                positionComponent.position.y2 = y;
-            }
-        } else if (handle === "start") {
-            if (positionComponent.position.x1 !== x || positionComponent.position.y1 !== y) {
-                positionComponent.position.x1 = x;
-                positionComponent.position.y1 = y;
-            }
+    }
+    private onResizeEnd = () => {
+        const resizedEntities = this.engine.getEntitiesWithComponents('resizable').filter(entity => entity.getComponent('resizable')!.resizing);
+        for (const entity of resizedEntities) {
+            const resizableC = entity.getComponent('resizable')!;
+            resizableC.resizing = false
+            this.engine.getState().updateElement(entity.element);
         }
     }
+
+
+    update() { }
 
     draw() {
     }
 
     destroy() {
-        this.controller.abort();
+        this.eventSystem?.unsubscribe('action:resize:start', this.onResizeStart);
+        this.eventSystem?.unsubscribe('action:resize', this.onResize);
+        this.eventSystem?.unsubscribe('action:resize:end', this.onResizeEnd);
     }
 }

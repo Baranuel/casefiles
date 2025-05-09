@@ -1,168 +1,161 @@
-import { Layer, MousePosition, System } from "@/types/engine";
+import { Layer, System } from "@/types/engine";
 import { Engine } from "..";
-import { Tool } from "@/types/elements";
 import { Entity } from "../entities/Entity";
 
 export class RenderingSystem implements System {
-    engine: Engine
+    engine: Engine;
     private dpr = window.devicePixelRatio || 1;
-
     private layerMap: Record<string, Layer> = {
         PERSON: Layer.PERSON,
         LOCATION: Layer.LOCATION,
         ITEM: Layer.ITEM,
         POINTER: Layer.POINTER,
-    }
+    } as const;
+
     constructor(engine: Engine) {
-        this.engine = engine
+        this.engine = engine;
+
     }
 
-    update() {
+    update() { }
 
-        const { hoveredEntity } = this.engine.getSystem('SelectionSystem')!
-
-        if (this.engine.userAction === 'moving') {
-            return this.engine.canvas.style.cursor = 'grabbing'
-
-        }
-        if (this.engine.userAction === 'resizing') {
-            return this.engine.canvas.style.cursor = 'crosshair'
-        }
-
-        if (hoveredEntity) {
-            return this.engine.canvas.style.cursor = 'pointer'
-        }
-
-        if (this.engine.userAction === 'idle') {
-            this.engine.canvas.style.cursor = 'default'
-        }
+    private computeCursor(hovered: Entity | undefined): string {
+        const action = this.engine.userAction;
+        if (action === 'moving') return 'grabbing';
+        if (action === 'resizing') return 'crosshair';
+        if (hovered) return 'pointer';
+        return 'default';
     }
-
 
     draw() {
-        const { selectedEntity } = this.engine.getSystem('SelectionSystem')!
-        const selectedEntityTypeC = selectedEntity?.getComponent('type')
-        const input = this.engine.getSystem('InputSystem')
-        const state = this.engine.getState()
-        const canvas = this.engine.canvas
-        const { x, y, zoom } = this.engine.camera
+        const canvas = this.engine.canvas;
+        const ctx = this.prepareContext(canvas);
+        if (!ctx) return;
 
+        const entities = this.engine.getEntitiesWithComponents('position', 'type');
+        entities.sort((a, b) => this.layerMap[a.getComponent('type')!.type] - this.layerMap[b.getComponent('type')!.type]);
+
+        entities.forEach(entity => {
+            this.renderEntity(ctx, entity);
+            this.renderHoverOutline(ctx, entity);
+        });
+
+        const selected = this.engine.getEntitiesWithComponents('selectable', 'position')
+            .filter(e => e.getComponent('selectable')!.selected);
+
+        this.renderSelection(ctx, selected);
+        this.drawIntent(ctx);
+
+        ctx.restore();
+    }
+
+    private prepareContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {
+        const { x, y, zoom } = this.engine.camera;
         canvas.width = canvas.clientWidth * this.dpr;
         canvas.height = canvas.clientHeight * this.dpr;
 
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
 
-        ctx.scale(this.dpr * zoom, this.dpr * zoom)
+        ctx.scale(this.dpr * zoom, this.dpr * zoom);
         ctx.save();
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        ctx.translate(-x, -y)
-
-        const drawables = this.engine
-            .getEntitiesWithComponents("position", "type")
-
-        // sort by our layer map
-        drawables.sort((a, b) => {
-            const layerA = this.layerMap[a.getComponent("type")!.type]
-            const layerB = this.layerMap[b.getComponent("type")!.type]
-            return layerA - layerB
-        })
-
-        for (const entity of drawables) {
-            const typeC = entity.getComponent('type')
-            const positionC = entity.getComponent('position')
-            const nodeC = entity.getComponent('node')
-
-            if (nodeC && positionC) {
-                const shouldRenderNodeArea = this.engine.userAction === 'resizing' || this.engine.userAction === 'moving' && selectedEntityTypeC?.type === 'POINTER'
-                if (shouldRenderNodeArea) {
-                    const { x1, y1, x2, y2 } = positionC.position;
-                    const width = x2 - x1;
-                    const height = y2 - y1;
-
-                    ctx.save();
-                    ctx.globalAlpha = 0.18;
-                    ctx.fillStyle = "#2196F3"; // Material blue
-                    const padding = nodeC.areaPadding;
-
-                    ctx.fillRect(
-                        x1 - padding,
-                        y1 - padding,
-                        width + 2 * padding,
-                        height + 2 * padding
-                    );
-                    ctx.restore();
-                }
-            }
-
-            if (typeC) {
-                const { type } = typeC
-
-                switch (type) {
-                    case 'POINTER':
-                        this.renderArrow(ctx, entity)
-                        break
-                    case 'PERSON':
-                        this.renderPerson(ctx, entity)
-                        break
-                    case 'LOCATION':
-                        break
-                }
-            }
-
-        }
-
-        // Draw a rectangle around all selected entities
-        const selectedEntities = this.engine.getEntitiesWithComponents('selectable', 'position')
-            .filter(entity => entity.getComponent('selectable')?.selected);
-
-        if (selectedEntities.length > 1) { // Only draw group selection if multiple entities selected
-            let minX = Infinity;
-            let minY = Infinity;
-            let maxX = -Infinity;
-            let maxY = -Infinity;
-
-            // Find bounds of all selected entities
-            for (const entity of selectedEntities) {
-                const positionC = entity.getComponent('position')!;
-                const { x1, y1, x2, y2 } = positionC.position;
-
-                minX = Math.min(minX, Math.min(x1, x2));
-                minY = Math.min(minY, Math.min(y1, y2));
-                maxX = Math.max(maxX, Math.max(x1, x2));
-                maxY = Math.max(maxY, Math.max(y1, y2));
-            }
-
-            // Add padding around the bounding box
-            const padding = 10;
-            minX -= padding;
-            minY -= padding;
-            maxX += padding;
-            maxY += padding;
-
-            // Draw the group selection rectangle
-            ctx.save();
-            ctx.globalAlpha = 0.3;
-            ctx.strokeStyle = '#2196F3'; // Material blue
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 3]); // Dashed line
-            ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
-            ctx.restore();
-        }
-        this.drawIntentElement(input?.getScreenMousePosition(), state.tool, ctx)
-        ctx.restore()
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.translate(-x, -y);
+        return ctx;
     }
 
-    drawIntentElement(mousePos: MousePosition | undefined, tool: Tool, ctx: CanvasRenderingContext2D) {
-        if (!mousePos || tool === 'SELECT') return
-        const x1 = mousePos.x
-        const y1 = mousePos.y
-        const width = 100
-        const height = 100
-
-        ctx.strokeRect(x1 - (width / 2), y1 - (height / 2), width, height)
+    private renderEntity(ctx: CanvasRenderingContext2D, entity: Entity) {
+        const typeC = entity.getComponent('type');
+        if (!typeC) return;
+        switch (typeC.type) {
+            case 'POINTER':
+                this.renderArrow(ctx, entity);
+                break;
+            case 'PERSON':
+                this.renderPerson(ctx, entity);
+                break;
+            case 'LOCATION':
+            case 'ITEM':
+            default:
+                break;
+        }
     }
 
+    private renderHoverOutline(ctx: CanvasRenderingContext2D, entity: Entity) {
+        const sel = entity.getComponent('selectable');
+        const pos = entity.getComponent('position');
+        if (!sel?.hovered || !pos) return;
+        this.drawDashedRect(ctx, pos.position, { padding: 10, alpha: 0.4, width: 4, dash: [5, 5] });
+    }
+
+    private renderSelection(ctx: CanvasRenderingContext2D, selected: Entity[]) {
+        if (selected.length === 0) return;
+
+        if (selected.length === 1) {
+            const e = selected[0];
+            const pos = e.getComponent('position')!.position;
+            const type = e.getComponent('type')!.type;
+            if (type === 'POINTER') {
+                return
+            } else {
+                this.drawDashedRect(ctx, pos, { padding: 10, alpha: 1, width: 4, dash: [5, 5] });
+            }
+        } 
+        if( selected.length > 1) {
+            const bounds = selected.reduce((b, e) => {
+                const p = e.getComponent('position')!.position;
+                return {
+                    minX: Math.min(b.minX, p.x1, p.x2),
+                    minY: Math.min(b.minY, p.y1, p.y2),
+                    maxX: Math.max(b.maxX, p.x1, p.x2),
+                    maxY: Math.max(b.maxY, p.y1, p.y2),
+                };
+            }, { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity });
+
+            this.drawDashedRect(ctx,
+                { x1: bounds.minX, y1: bounds.minY, x2: bounds.maxX, y2: bounds.maxY },
+                { padding: 10, alpha: 0.7, width: 4, dash: [5, 3],fill: '#FFC940', fillAlpha: 0.03 }
+            );
+        }
+    }
+
+    private drawIntent(ctx: CanvasRenderingContext2D) {
+        const input = this.engine.getSystem('InputSystem');
+        const mouse = input?.getWorldMousePosition();
+        const tool = this.engine.getState().tool;
+        if (!mouse || tool === 'SELECT') return;
+        const size = 100;
+        ctx.strokeRect(mouse.x - size / 2, mouse.y - size / 2, size, size);
+    }
+
+    private drawDashedRect(
+        ctx: CanvasRenderingContext2D,
+        { x1, y1, x2, y2 }: { x1: number; y1: number; x2: number; y2: number },
+        { padding, alpha, width, dash, fill, fillAlpha }: { padding: number; alpha: number; width: number; dash: number[]; fill?: string; fillAlpha?: number }
+    ) {
+        const x = x1 - padding;
+        const y = y1 - padding;
+        const w = x2 - x1 + 2 * padding;
+        const h = y2 - y1 + 2 * padding;
+    
+        ctx.save();
+        ctx.setLineDash(dash);
+    
+        if (fill) {
+            ctx.globalAlpha = fillAlpha ?? alpha;
+            ctx.fillStyle = fill;
+            ctx.fillRect(x, y, w, h);
+        }
+    
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = '#FFC940';
+        ctx.lineWidth = width;
+        ctx.strokeRect(x, y, w, h);
+    
+        ctx.restore();
+      }
+
+ 
     private renderPerson(ctx: CanvasRenderingContext2D, entity: Entity) {
         const positionComponent = entity.getComponent('position')
 
@@ -181,64 +174,60 @@ export class RenderingSystem implements System {
         ctx: CanvasRenderingContext2D,
         entity: Entity
     ) {
+        const posC = entity.getComponent('position');
+        if (!posC) return;
+        const { x1, y1, x2, y2 } = posC.position;
 
-        const positionComponent = entity.getComponent('position')
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const angle = Math.atan2(dy, dx);
+        const length = Math.hypot(dx, dy);
+        const headLen = 20;
+        const arrowColor = '#FFC940';
 
-        if (!positionComponent) return
+        // Determine opacity based on selection
+        const isSelected = entity.getComponent('selectable')?.selected;
+        const alpha = isSelected ? 1 : 0.6;
 
-        const { x1, y1, x2, y2 } = positionComponent.position;
+        // Compute base of arrow head
+        const bx = x2 - headLen * Math.cos(angle);
+        const by = y2 - headLen * Math.sin(angle);
 
-        // Arrowhead dimensions
-        const arrowLength = 20;
-
-        // Calculate angle and element length
-        const angle = Math.atan2(y2 - y1, x2 - x1);
-        const elementLength = Math.hypot(x2 - x1, y2 - y1);
-
-        // Use a more pleasant yellow (e.g., goldenrod)
-        const arrowColor = "#FFC940"; // Soft golden yellow
-
-        // Calculate the point where the line should end (base of the arrowhead)
-        const lineEndX = x2 - arrowLength * Math.cos(angle);
-        const lineEndY = y2 - arrowLength * Math.sin(angle);
-
-        // Draw dashed line (ending at the base of the arrowhead if long enough, otherwise to x2/y2)
+        // Draw shaft
         ctx.save();
+        ctx.globalAlpha = alpha;
         ctx.setLineDash([8, 6]);
-        ctx.strokeStyle = arrowColor;
         ctx.lineWidth = 2.5;
+        ctx.strokeStyle = arrowColor;
         ctx.beginPath();
         ctx.moveTo(x1, y1);
-        if (elementLength >= 5) {
-            ctx.lineTo(lineEndX, lineEndY);
-        } else {
-            ctx.lineTo(x2, y2);
-        }
+        ctx.lineTo(length >= 5 ? bx : x2, length >= 5 ? by : y2);
         ctx.stroke();
-        ctx.setLineDash([]);
         ctx.restore();
 
-        // Draw wider arrowhead at the tip (x2, y2) only if long enough
-        if (elementLength >= 10) {
+        // Draw head
+        if (length >= 10) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = arrowColor;
+            ctx.shadowColor = arrowColor;
+            ctx.shadowBlur = 4;
             ctx.beginPath();
             ctx.moveTo(x2, y2);
             ctx.lineTo(
-                x2 - arrowLength * Math.cos(angle - Math.PI / 7),
-                y2 - arrowLength * Math.sin(angle - Math.PI / 7)
+                x2 - headLen * Math.cos(angle - Math.PI / 7),
+                y2 - headLen * Math.sin(angle - Math.PI / 7)
             );
             ctx.lineTo(
-                x2 - arrowLength * Math.cos(angle + Math.PI / 7),
-                y2 - arrowLength * Math.sin(angle + Math.PI / 7)
+                x2 - headLen * Math.cos(angle + Math.PI / 7),
+                y2 - headLen * Math.sin(angle + Math.PI / 7)
             );
-            ctx.lineTo(x2, y2);
             ctx.closePath();
-            ctx.fillStyle = arrowColor;
-            ctx.shadowColor = "#FFD700";
-            ctx.shadowBlur = 6;
             ctx.fill();
-            ctx.shadowBlur = 0;
+            ctx.restore();
         }
     }
+
 
     destroy() { }
 
