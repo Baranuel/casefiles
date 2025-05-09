@@ -140,7 +140,8 @@ export class InputSystem implements System {
             this.eventSystem.emit('mouse:down', {
                 x: mousePos.x,
                 y: mousePos.y,
-                modifier: e.shiftKey || e.ctrlKey || e.altKey
+                modifier: e.shiftKey || e.ctrlKey || e.altKey,
+                mouseDownSnapshot: this.onMouseDownPositionSnapshot
             })
         }
     }
