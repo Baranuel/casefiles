@@ -27,7 +27,6 @@ export class CreationSystem implements System {
         const { x, y } = inputSystem.getWorldMousePosition()
         const id = crypto.randomUUID()
 
-
         switch (tool) {
             case 'PERSON':
                 this.createPerson({ x, y, id, addElement })
@@ -59,11 +58,9 @@ export class CreationSystem implements System {
     }
 
     private createPointer({ x, y, id, addElement }: { x: number, y: number, id: string, addElement: (element: ElementDto) => void }) {
-        const selectionSystem = this.engine.getSystem('SelectionSystem')
-        if (!selectionSystem) return
 
-        const width = 0;
-        const height = 5;
+        const width = 20;
+        const height = 1;
         const x1 = x - width / 2;
         const y1 = y - height / 2;
         const x2 = x + width / 2;
@@ -80,14 +77,18 @@ export class CreationSystem implements System {
         // then we immediately start drawing action on that element 
         //SetTimeout is a "MacroTask" in the event loop and will be run after the browser empties callstack and paints.
         setTimeout(() => {
-            const entity = this.engine.entities.get(id);
-            if (entity) {
-                selectionSystem.setSelectedEntity(entity)
-                selectionSystem.interactionPoint = "end";
-                this.engine.userAction = "resizing";
+        const entity = this.engine.entities.get(id);
+        if (entity) {
+
+                this.eventSystem?.emit('selection:cleared', undefined)
+                const selectableC = entity.getComponent('selectable')!
+                const resizableC = entity.getComponent('resizable')!
+                selectableC.selected = true
+                resizableC.resizing = true
+                resizableC.interactionPoint = 'end'
+                this.eventSystem?.emit('action:change', { action: 'resizing' })
             }
         })
-
     }
 
     update() {

@@ -8,12 +8,12 @@ import { MovingSystem } from "@/lib/ecs/systems/movingSystem"
 import { RenderingSystem } from "@/lib/ecs/systems/renderingSystem"
 import { ResizeSystem } from "@/lib/ecs/systems/resizeSystem"
 import { SelectionSystem } from "@/lib/ecs/systems/selectionSystem"
-import { UserActionSystem} from "@/lib/ecs/systems/userActionSystem"
+import { UserActionSystem } from "@/lib/ecs/systems/userActionSystem"
 import { PositionComponent } from "@/lib/ecs/components/PositionComponent";
 import { TypeComponent } from "@/lib/ecs/components/TypeComponent";
 import { StyleComponent } from "@/lib/ecs/components/StyleComponent";
 import { MovableComponent } from "@/lib/ecs/components/MovableComponent";
-import { ResizableComponent} from "@/lib/ecs/components/ResizableComponent"
+import { ResizableComponent } from "@/lib/ecs/components/ResizableComponent"
 import { NodeComponent } from "@/lib/ecs/components/NodeComponent"
 import { AttachmentSystem } from "@/lib/ecs/systems/attachmentSystem"
 import { SelectableComponent } from "@/lib/ecs/components/SelectableComponent"
@@ -35,10 +35,10 @@ export type SystemsType =
     'RenderingSystem' |
     'EventSystem' |
     'CameraSystem' |
-    'SelectionSystem'|
-    'MovingSystem'|
-    'UserActionSystem'|
-    'ResizeSystem'|
+    'SelectionSystem' |
+    'MovingSystem' |
+    'UserActionSystem' |
+    'ResizeSystem' |
     'AttachmentSystem'
 
 export type SystemsMap = {
@@ -49,8 +49,8 @@ export type SystemsMap = {
     'CameraSystem': CameraSystem
     'SelectionSystem': SelectionSystem
     'MovingSystem': MovingSystem,
-    'UserActionSystem':UserActionSystem
-    'ResizeSystem':ResizeSystem
+    'UserActionSystem': UserActionSystem
+    'ResizeSystem': ResizeSystem
     'AttachmentSystem': AttachmentSystem
 }
 
@@ -60,9 +60,9 @@ export type ComponentsType =
     'position' |
     'type' |
     'style' |
-    'movable'|
-    'resizable'|
-    'node' | 
+    'movable' |
+    'resizable' |
+    'node' |
     'selectable'
 
 export type ComponentsMap = {
@@ -71,7 +71,7 @@ export type ComponentsMap = {
     'style': StyleComponent,
     'movable': MovableComponent,
     'resizable': ResizableComponent
-    'node':NodeComponent
+    'node': NodeComponent
     'selectable': SelectableComponent
 }
 
@@ -91,8 +91,26 @@ export type MousePosition = {
 
 // 1) Define your layers (bottom → top)
 export enum Layer {
-    PERSON   = 3,
+    PERSON = 3,
     LOCATION = 2,
-    ITEM     = 1,
-    POINTER  = 0,
-  }
+    ITEM = 1,
+    POINTER = 0,
+}
+
+
+
+export interface EngineEvents {
+    // Mouse events
+    'mouse:move': { x: number, y: number, worldX: number, worldY: number };
+    'mouse:down': { x: number, y: number, worldX: number, worldY: number, button: number };
+    'mouse:up': { x: number, y: number, worldX: number, worldY: number, button: number };
+
+    // Selection events
+    'entity:selected': { entity: Entity };
+    'entity:deselected': { entity: Entity };
+    'selection:cleared': undefined;
+
+    // Interaction events
+    'action:start': { action: 'moving' | 'resizing', entity: Entity };
+    'action:end': { action: 'moving' | 'resizing', entity: Entity };
+}

@@ -10,7 +10,6 @@ export function getPositionWithinElement(
 
     switch (type) {
         case 'POINTER':
-            // For lines, check endpoints and middle
             const onLine = onLineHelper(x1, y1, x2, y2, x, y, 5);
             const start = nearPointHelper(x, y, x1, y1, "start", 20);
             const end = nearPointHelper(x, y, x2, y2, "end", 20);

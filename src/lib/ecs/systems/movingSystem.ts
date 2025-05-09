@@ -1,38 +1,43 @@
 import { System } from "@/types/engine";
 import { Engine } from "..";
 import { InputSystem } from "./inputSystem";
+import { EngineEvents, EventSystem } from "./eventSystem";
 
 export class MovingSystem implements System {
     engine: Engine
-    controller: AbortController
     isMovingElement: boolean = false
     inputSystem: InputSystem | null = null
+    eventSystem: EventSystem | null = null
 
     constructor(engine: Engine) {
         this.engine = engine
-        this.controller = new AbortController()
         this.inputSystem = this.engine.getSystem('InputSystem') || null
+        this.eventSystem = this.engine.getSystem('EventSystem') || null
 
-        this.engine.canvas.addEventListener('mouseup', this.onMouseUp, { signal: this.controller.signal })
+        if (this.eventSystem) {
+            this.eventSystem.subscribe('action:move:start', this.onMoveStart)
+            this.eventSystem.subscribe('action:move', this.onMove)
+            this.eventSystem.subscribe('action:move:end', this.onMoveEnd)
+        }
+
     }
 
 
-    onMouseUp = () => {
-        const movingEntities = this.engine.getEntitiesWithComponents('movable', 'position')
-            .filter(entity => entity.getComponent('movable')!.moving);
+    onMoveStart = (data: EngineEvents['action:move:start']) => {
+        const movableEntities = this.engine.getEntitiesWithComponents('selectable', 'position', 'movable').filter(entity => entity.getComponent('selectable')?.selected);
 
-        for (const entity of movingEntities) {
+        for (const entity of movableEntities) {
             const movableComponent = entity.getComponent('movable')!;
-            movableComponent.moving = false;
-            this.engine.getState().updateElement(entity.element);
+            movableComponent.moving = true
+            movableComponent.mouseGrabOffset = {
+                x: data.mouseDownSnapshot?.x - entity.getComponent('position')!.position.x1,
+                y: data.mouseDownSnapshot?.y - entity.getComponent('position')!.position.y1
+            }
         }
     }
 
-    update() {
-        if (!this.inputSystem) return
-
-        const { x, y } = this.inputSystem.getWorldMousePosition();
-
+    onMove = (data: EngineEvents['action:move']) => {
+        const { x, y } = data
         const movableEntities = this.engine.getEntitiesWithComponents('movable', 'position');
 
         for (const entity of movableEntities) {
@@ -53,9 +58,27 @@ export class MovingSystem implements System {
             position.y2 = position.y1 + height;
         }
     }
+
+    onMoveEnd = () => {
+        const movableEntities = this.engine.getEntitiesWithComponents('movable', 'position').filter(entity => entity.getComponent('movable')!.moving);
+        for (const entity of movableEntities) {
+            const movableComponent = entity.getComponent('movable')!;
+            movableComponent.moving = false
+        }
+        const elements = movableEntities.map(entity => entity.element);
+        this.engine.getState().updateBatchElements(elements);
+
+
+    }
+
+    update() { }
     draw() { }
 
     destroy() {
-        this.controller.abort()
+        if (this.eventSystem) {
+            this.eventSystem.unsubscribe('action:move:start', this.onMoveStart)
+            this.eventSystem.unsubscribe('action:move', this.onMove)
+            this.eventSystem.unsubscribe('action:move:end', this.onMoveEnd)
+        }
     }
 }

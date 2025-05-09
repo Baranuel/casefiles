@@ -5,8 +5,9 @@ import { PositionComponent } from "./components/PositionComponent";
 import { StyleComponent } from "./components/StyleComponent";
 import { TypeComponent } from "./components/TypeComponent";
 import { MovableComponent } from "./components/MovableComponent";
-import { ResizableComponent } from "./components/ResizableComponent";
+// import { ResizableComponent } from "./components/ResizableComponent";
 import { SelectableComponent } from "./components/SelectableComponent";
+import { ResizableComponent } from "./components/ResizableComponent";
 // import { NodeComponent } from "./components/NodeComponent";
 
 
@@ -63,49 +64,55 @@ export class Engine {
         return this.state
     }
 
-    public updateEngineState(state: State) {
-        this.state = state;
-        this.entities.clear()
+    public updateEngineState(newState: State) {
+        this.state = newState;
+
+        const newIds = new Set(newState.elements.map(e => e.id));
+        const oldIds = new Set(this.entities.keys());
+
+        for (const id of oldIds) {
+            if (!newIds.has(id)) this.entities.delete(id);
+        }
 
 
-        for (const element of state.elements) {
-            const entity = new Entity(element.id, element)
-            this.entities.set(element.id, entity)
+        // 2. Add new entities and update existing ones
+        for (const element of newState.elements) {
+            const { id } = element;
+            
+            if (this.entities.has(id)) {
+                const entity = this.entities.get(id)!;
+                entity.element = element;
+                entity.getComponent('position')!.position = element.position
+            } else {
+                const entity = new Entity(id, element);
+                this.entities.set(id, entity);
 
-            // every entity has a position
-            entity.addComponent(
-                "position",
-                new PositionComponent(entity, element.position)
-            );
+                entity.addComponent(
+                    'position',
+                    new PositionComponent(entity, element.position)
+                );
+                switch (element.type) {
+                    case 'PERSON':
+                        entity.addComponent('type', new TypeComponent(entity, 'PERSON'));
+                        entity.addComponent('style', new StyleComponent(entity, 'green'));
+                        entity.addComponent('movable', new MovableComponent(entity));
+                        entity.addComponent('selectable', new SelectableComponent(entity));
+                        break;
+                    case 'LOCATION':
+                        entity.addComponent('type', new TypeComponent(entity, 'LOCATION'));
+                        entity.addComponent('style', new StyleComponent(entity, 'blue'));
+                        entity.addComponent('movable', new MovableComponent(entity));
+                        entity.addComponent('selectable', new SelectableComponent(entity));
+                        break;
+                        case 'POINTER':
+                        entity.addComponent('type', new TypeComponent(entity, 'POINTER'));
+                        entity.addComponent('movable', new MovableComponent(entity));
+                        entity.addComponent('selectable', new SelectableComponent(entity));
+                        entity.addComponent('resizable', new ResizableComponent(entity));
 
-            switch (element.type) {
-                case "PERSON":
-                    entity.addComponent('type', new TypeComponent(entity, 'PERSON'))
-                    entity.addComponent('style', new StyleComponent(entity, 'green'))
-                    entity.addComponent('movable', new MovableComponent(entity))
-                    entity.addComponent('selectable', new SelectableComponent(entity))
-                    // entity.addComponent('node', new NodeComponent(entity))
-                    break;
-                case "LOCATION":
-                    entity.addComponent('type', new TypeComponent(entity, 'LOCATION'))
-                    entity.addComponent('style', new StyleComponent(entity, 'blue'))
-                    entity.addComponent('movable', new MovableComponent(entity))
-                    entity.addComponent('selectable', new SelectableComponent(entity))
-                    break;
-                case "ITEM":
-                    entity.addComponent('type', new TypeComponent(entity, 'ITEM'))
-                    break;
-                case "NOTE":
-                    entity.addComponent('type', new TypeComponent(entity, 'NOTE'))
-                    break;
-                case "POINTER":
-                    entity.addComponent('resizable', new ResizableComponent(entity))
-                    entity.addComponent('movable', new MovableComponent(entity))
-                    entity.addComponent('type', new TypeComponent(entity, 'POINTER'))
-                    entity.addComponent('selectable', new SelectableComponent(entity))
-                    break;
-                default:
-                    break;
+                    default:
+                        break;
+                }
             }
         }
     }
