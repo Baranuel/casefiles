@@ -1,6 +1,9 @@
 import { System } from "@/types/engine"
 import { Engine } from ".."
-import { EngineEvents, EventSystem } from "./eventSystem"
+import { EventSystem } from "./eventSystem"
+import { EngineEvents } from "@/types/events"
+import { getEntityAtPosition } from "@/utils/calculations"
+import { getPositionWithinElement } from "@/utils/positions"
 
 export class InputSystem implements System {
     engine: Engine
@@ -57,8 +60,7 @@ export class InputSystem implements System {
         // Emit mouse move event
         if (this.eventSystem) {
             this.eventSystem.emit('mouse:move', {
-                x: screenX,
-                y: screenY,
+                mouse: { x: clientX, y: clientY },
                 modifier: e.shiftKey || e.ctrlKey || e.altKey
             })
         }
@@ -67,12 +69,51 @@ export class InputSystem implements System {
         if (this.isMouseDown && this.isDragging) {
             this.emitDragEvent()
         }
+
+        if(!this.isMouseDown && !this.isDragging) {
+            this.emitEntityHoverEvent()
+        }
+        
+    }
+
+    private emitEntityHoverEndEvent = () => {
+        if (!this.eventSystem) return
+        const selectableEntities = this.engine.getEntitiesWithComponents('selectable')
+        const hoveredEntity = getEntityAtPosition(selectableEntities, this.mousePosition.x, this.mousePosition.y)
+
+        if(!hoveredEntity) {
+            this.eventSystem.emit('action:hover:end',null)
+        }
+    }
+
+    private emitEntityHoverEvent = () => {
+        if (!this.eventSystem) return
+
+        const selectableEntities = this.engine.getEntitiesWithComponents('selectable')
+        const hoveredEntity = getEntityAtPosition(selectableEntities, this.mousePosition.x, this.mousePosition.y)
+
+        if (hoveredEntity) {
+            const interactionPoint = getPositionWithinElement(this.mousePosition.x, this.mousePosition.y, hoveredEntity.element)
+
+            if (interactionPoint) {
+                const hoverData: EngineEvents['action:hover'] = {
+                    mouse: this.mousePosition,
+                    entityId: hoveredEntity.id,
+                    interactionPoint: interactionPoint,
+                    isMouseDown: this.isMouseDown
+                }
+                this.eventSystem.emit('action:hover', hoverData)
+            }
+        }
+
+            this.emitEntityHoverEndEvent()
+
     }
 
     private emitDragEvent() {
         if (!this.eventSystem) return
 
-        const dragData:EngineEvents['mouse:drag'] = {
+        const dragData: EngineEvents['mouse:drag'] = {
             x: this.mousePosition.x,
             y: this.mousePosition.y,
             mouseDownSnapshot: this.onMouseDownPositionSnapshot,
@@ -99,7 +140,7 @@ export class InputSystem implements System {
         return this.mousePosition
     }
 
-    onMouseUp = (e:MouseEvent) => {
+    onMouseUp = (e: MouseEvent) => {
         this.isMouseDown = false
 
         if (this.eventSystem) {
@@ -110,8 +151,9 @@ export class InputSystem implements System {
                 y: mousePos.y,
                 mouseDownSnapshot: this.onMouseDownPositionSnapshot,
                 modifier: e.shiftKey || e.ctrlKey || e.altKey
-
             })
+
+            this.emitEntityHoverEvent()
         }
 
         if (this.isDragging && this.eventSystem) {
@@ -129,6 +171,7 @@ export class InputSystem implements System {
         this.isDragging = false
     }
 
+
     onMouseDown = (e: MouseEvent) => {
         this.isMouseDown = true
         this.mouseButton = e.button
@@ -143,6 +186,7 @@ export class InputSystem implements System {
                 modifier: e.shiftKey || e.ctrlKey || e.altKey,
                 mouseDownSnapshot: this.onMouseDownPositionSnapshot
             })
+
         }
     }
 

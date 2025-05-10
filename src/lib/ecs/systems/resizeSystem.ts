@@ -1,7 +1,8 @@
 import { System } from "@/types/engine";
 import { Engine } from "..";
-import { EventSystem, EngineEvents } from "./eventSystem";
+import { EventSystem } from "./eventSystem";
 import { resizedCoordinates } from "@/utils/positions";
+import { EngineEvents } from "@/types/events";
 
 export class ResizeSystem implements System {
     engine: Engine;
@@ -20,9 +21,8 @@ export class ResizeSystem implements System {
     }
 
     private onResizeStart = (data: EngineEvents['action:resize:start']) => {
-        const resizableElements = this.engine.getEntitiesWithComponents('resizable', 'selectable')
+        const resizableElements = this.engine.getEntitiesWithComponents('resizable', 'selectable').filter(e => e.getComponent('selectable')!.selected)
         if (resizableElements.length !== 1) return
-        
 
         const [entityToResize] = resizableElements
         const resizableC = entityToResize.getComponent('resizable')
@@ -34,7 +34,7 @@ export class ResizeSystem implements System {
     }
     private onResize = (data: EngineEvents['action:resize']) => {
         const resizableElements = this.engine.getEntitiesWithComponents('resizable', 'selectable', 'position').filter(e => e.getComponent('selectable')!.selected)
-        if (resizableElements.length > 1) return
+        if (resizableElements.length !== 1) return
         const [entityToResize] = resizableElements
 
         const posC = entityToResize.getComponent('position')!;

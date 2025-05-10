@@ -17,6 +17,7 @@ import { ResizableComponent } from "@/lib/ecs/components/ResizableComponent"
 import { NodeComponent } from "@/lib/ecs/components/NodeComponent"
 import { AttachmentSystem } from "@/lib/ecs/systems/attachmentSystem"
 import { SelectableComponent } from "@/lib/ecs/components/SelectableComponent"
+import { PositionWithinElement } from "./elements"
 
 export interface System {
     engine: Engine
@@ -88,6 +89,8 @@ export type MousePosition = {
     y: number
 }
 
+export type PointerHandle = Extract<PositionWithinElement, 'start'|'end'>;
+
 
 // 1) Define your layers (bottom → top)
 export enum Layer {
@@ -99,18 +102,3 @@ export enum Layer {
 
 
 
-export interface EngineEvents {
-    // Mouse events
-    'mouse:move': { x: number, y: number, worldX: number, worldY: number };
-    'mouse:down': { x: number, y: number, worldX: number, worldY: number, button: number };
-    'mouse:up': { x: number, y: number, worldX: number, worldY: number, button: number };
-
-    // Selection events
-    'entity:selected': { entity: Entity };
-    'entity:deselected': { entity: Entity };
-    'selection:cleared': undefined;
-
-    // Interaction events
-    'action:start': { action: 'moving' | 'resizing', entity: Entity };
-    'action:end': { action: 'moving' | 'resizing', entity: Entity };
-}

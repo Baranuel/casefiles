@@ -16,6 +16,7 @@ export const Position = z.object({
     y2: z.number()
 })
 
+
 export const Tool = ElementType.or(z.literal('SELECT'))
 
 export const Element = z.object({
@@ -24,9 +25,18 @@ export const Element = z.object({
     position: Position
 })
 
+
+
 export type ElementDto = z.infer<typeof Element>
 export type ElementPosition = z.infer<typeof Position>
 export type ElementType = z.infer<typeof ElementType>
 export type Tool = z.infer<typeof Tool>
 
-export type PositionWithinElement = 'start' | 'end' | 'line_middle' | 'tl' | 'tr' | 'tm' | 'bl' | 'br' | 'bm' | 'ml' | 'mr' | 'inside' | null ;
+export type BaseElementConfiguration = {
+    [key in ElementType]: {
+        width: number,
+        height: number,
+        color?: string,
+    }
+}
+export type PositionWithinElement = 'start' | 'end' | 'line_middle' | 'tl' | 'tr' | 'tm' | 'bl' | 'br' | 'bm' | 'ml' | 'mr' | 'inside' | null;

@@ -1,7 +1,8 @@
 import { System } from "@/types/engine";
 import { Engine } from "..";
 import { InputSystem } from "./inputSystem";
-import { EngineEvents, EventSystem } from "./eventSystem";
+import {  EventSystem } from "./eventSystem";
+import { EngineEvents } from "@/types/events";
 
 export class MovingSystem implements System {
     engine: Engine
@@ -25,7 +26,7 @@ export class MovingSystem implements System {
 
     onMoveStart = (data: EngineEvents['action:move:start']) => {
         const movableEntities = this.engine.getEntitiesWithComponents('selectable', 'position', 'movable').filter(entity => entity.getComponent('selectable')?.selected);
-
+        
         for (const entity of movableEntities) {
             const movableComponent = entity.getComponent('movable')!;
             movableComponent.moving = true

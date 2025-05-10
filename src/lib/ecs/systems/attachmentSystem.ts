@@ -11,16 +11,6 @@ export class AttachmentSystem implements System {
         this.engine = engine
         this.controller = new AbortController();
 
-        this.engine.canvas.addEventListener(
-          'resizeended',
-          this.onResizeEnded,
-          { signal: this.controller.signal }
-        )
-        this.engine.canvas.addEventListener(
-          'moveended',
-          this.onResizeEnded,
-          { signal: this.controller.signal }
-        )
 
         setTimeout(() => this.initializeAttachments())
     }

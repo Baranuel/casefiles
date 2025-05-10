@@ -1,9 +1,25 @@
 import { Layer, System } from "@/types/engine";
 import { Engine } from "..";
 import { Entity } from "../entities/Entity";
+import { EventSystem } from "./eventSystem";
+import { EngineEvents } from "@/types/events";
+import { PositionWithinElement, Tool } from "@/types/elements";
+import { ELEMENT_CONFIGURATION } from "../configurations";
 
+
+type HoverProperties = {
+    interactionPoint?: PositionWithinElement
+    currentCursor: string
+    entityId?: Entity['id'],
+
+} | null
 export class RenderingSystem implements System {
     engine: Engine;
+    eventSystem: EventSystem | null = null;
+    currentCursor: string | null = null;
+    hoverProperties: HoverProperties = null
+    hoverEventPrecedence?: boolean = true
+
     private dpr = window.devicePixelRatio || 1;
     private layerMap: Record<string, Layer> = {
         PERSON: Layer.PERSON,
@@ -14,23 +30,84 @@ export class RenderingSystem implements System {
 
     constructor(engine: Engine) {
         this.engine = engine;
+        this.eventSystem = this.engine.getSystem('EventSystem') || null;
+
+        if (this.eventSystem) {
+            this.eventSystem.subscribe('action:resize:start', this.onResizeStart);
+            this.eventSystem.subscribe('action:move:start', this.onMoveStart);
+            this.eventSystem.subscribe('action:move:end', this.onMoveEnd);
+            this.eventSystem.subscribe('action:resize:end', this.onResizeEnd);
+            this.eventSystem.subscribe('action:hover', this.onHover);
+            this.eventSystem.subscribe('action:hover:end', this.onHoverEnd);
+        }
+    }
+
+
+    onHover = (data: EngineEvents['action:hover']) => {
+        if (!this.hoverEventPrecedence) return
+
+        this.hoverProperties = {
+            interactionPoint: data.interactionPoint,
+            entityId: data.entityId,
+            currentCursor: 'pointer',
+        }
+
+        const selected = this.engine.getEntitiesWithComponents('selectable', 'position').filter(entity => entity.getComponent('selectable')!.selected);
+        if (selected.length !== 1) return
+
+        if (selected[0].id !== data.entityId) return
+
+        if (data.interactionPoint === 'start' || data.interactionPoint === 'end') {
+            return this.hoverProperties = {
+                interactionPoint: data.interactionPoint,
+                entityId: data.entityId,
+                currentCursor: 'grab',
+            }
+        }
+    };
+
+    onHoverEnd = () => {
+        this.hoverProperties = null
+    }
+
+    onMoveStart = () => {
+        this.hoverEventPrecedence = false
+        this.hoverProperties = {
+            currentCursor: 'grabbing',
+        }
+    }
+
+    onMoveEnd = () => {
+        this.hoverEventPrecedence = true
+        this.hoverProperties = null
+    }
+    onResizeStart = (data: EngineEvents['action:resize:start']) => {
+        this.hoverEventPrecedence = false
+        this.hoverProperties = {
+            interactionPoint: data.interactionPoint,
+            entityId: data.entityId,
+            currentCursor: 'grabbing',
+        }
 
     }
+    onResizeEnd = () => {
+        this.hoverEventPrecedence = true
+        this.hoverProperties = null
+    }
+
 
     update() { }
 
-    private computeCursor(hovered: Entity | undefined): string {
-        const action = this.engine.userAction;
-        if (action === 'moving') return 'grabbing';
-        if (action === 'resizing') return 'crosshair';
-        if (hovered) return 'pointer';
-        return 'default';
-    }
+
 
     draw() {
         const canvas = this.engine.canvas;
         const ctx = this.prepareContext(canvas);
+        const tool = this.engine.getState().tool;
         if (!ctx) return;
+
+        ctx.canvas.style.cursor = this.hoverProperties?.currentCursor || 'default';
+
 
         const entities = this.engine.getEntitiesWithComponents('position', 'type');
         entities.sort((a, b) => this.layerMap[a.getComponent('type')!.type] - this.layerMap[b.getComponent('type')!.type]);
@@ -44,7 +121,7 @@ export class RenderingSystem implements System {
             .filter(e => e.getComponent('selectable')!.selected);
 
         this.renderSelection(ctx, selected);
-        this.drawIntent(ctx);
+        this.drawIntent(ctx, tool);
 
         ctx.restore();
     }
@@ -100,8 +177,8 @@ export class RenderingSystem implements System {
             } else {
                 this.drawDashedRect(ctx, pos, { padding: 10, alpha: 1, width: 4, dash: [5, 5] });
             }
-        } 
-        if( selected.length > 1) {
+        }
+        if (selected.length > 1) {
             const bounds = selected.reduce((b, e) => {
                 const p = e.getComponent('position')!.position;
                 return {
@@ -114,18 +191,22 @@ export class RenderingSystem implements System {
 
             this.drawDashedRect(ctx,
                 { x1: bounds.minX, y1: bounds.minY, x2: bounds.maxX, y2: bounds.maxY },
-                { padding: 10, alpha: 0.7, width: 4, dash: [5, 3],fill: '#FFC940', fillAlpha: 0.03 }
+                { padding: 10, alpha: 0.7, width: 4, dash: [5, 3], fill: '#FFC940', fillAlpha: 0.03 }
             );
         }
     }
 
-    private drawIntent(ctx: CanvasRenderingContext2D) {
+    private drawIntent(ctx: CanvasRenderingContext2D, tool:Tool) {
         const input = this.engine.getSystem('InputSystem');
         const mouse = input?.getWorldMousePosition();
-        const tool = this.engine.getState().tool;
         if (!mouse || tool === 'SELECT') return;
-        const size = 100;
-        ctx.strokeRect(mouse.x - size / 2, mouse.y - size / 2, size, size);
+
+        const {width, height} = ELEMENT_CONFIGURATION[tool]
+        ctx.save();
+        ctx.fillStyle = '#FFC940';
+        ctx.globalAlpha = 0.2;
+        ctx.fillRect(mouse.x - width / 2, mouse.y - height / 2, width, height);
+        ctx.restore()
     }
 
     private drawDashedRect(
@@ -137,38 +218,68 @@ export class RenderingSystem implements System {
         const y = y1 - padding;
         const w = x2 - x1 + 2 * padding;
         const h = y2 - y1 + 2 * padding;
-    
+
         ctx.save();
         ctx.setLineDash(dash);
-    
+
         if (fill) {
             ctx.globalAlpha = fillAlpha ?? alpha;
             ctx.fillStyle = fill;
             ctx.fillRect(x, y, w, h);
         }
-    
+
         ctx.globalAlpha = alpha;
         ctx.strokeStyle = '#FFC940';
         ctx.lineWidth = width;
         ctx.strokeRect(x, y, w, h);
-    
+
         ctx.restore();
-      }
-
- 
-    private renderPerson(ctx: CanvasRenderingContext2D, entity: Entity) {
-        const positionComponent = entity.getComponent('position')
-
-        if (!positionComponent) return
-
-        const { x1, y1, x2, y2 } = positionComponent.position;
-        const width = x2 - x1;
-        const height = y2 - y1;
-
-
-        ctx.fillStyle = 'red'
-        ctx.fillRect(x1, y1, width, height);
     }
+
+
+ private renderPerson(ctx: CanvasRenderingContext2D, entity: Entity) {
+    const posC = entity.getComponent('position');
+    if (!posC) return;
+
+    const { x1, y1, x2, y2 } = posC.position;
+    const width  = x2 - x1;
+    const height = y2 - y1;
+
+    const PORTRAIT_RATIO = 0.8;
+    const PADDING        = 5;
+
+    // inner box, inset for portrait + name
+    const innerX = x1 + PADDING;
+    const innerY = y1 + PADDING;
+    const innerW = width  - 2 * PADDING;
+    const innerH = height - 2 * PADDING;
+    const portraitH = innerH * PORTRAIT_RATIO;
+    const nameH     = innerH - portraitH;
+    const nameY     = innerY + portraitH;
+
+    ctx.save();
+    ctx.fillStyle   = '#F8DCB2';     
+    ctx.fillRect(x1, y1, width, height);
+    ctx.restore();
+
+
+    ctx.save();
+    ctx.fillStyle   = '#000';
+    ctx.fillRect(innerX, innerY, innerW, portraitH);
+    // TODO: drawImage(person.image, innerX + 2, innerY + 2, innerW - 4, portraitH - 4);
+    ctx.restore();
+
+    // 4) name tag area at bottom
+    this.drawWrappedTextInBox(
+      ctx,
+      'Philomena Cunk',
+      innerX,
+      nameY,
+      innerW,
+      nameH)
+}
+
+
 
     private renderArrow(
         ctx: CanvasRenderingContext2D,
@@ -187,6 +298,7 @@ export class RenderingSystem implements System {
 
         // Determine opacity based on selection
         const isSelected = entity.getComponent('selectable')?.selected;
+        const isHovered = this.hoverProperties?.entityId === entity.id;
         const alpha = isSelected ? 1 : 0.6;
 
         // Compute base of arrow head
@@ -226,9 +338,174 @@ export class RenderingSystem implements System {
             ctx.fill();
             ctx.restore();
         }
+
+
+
+        // —— Draw interaction handles ——
+        if (isSelected || isHovered && isSelected) {
+            if (this.engine.getEntitiesWithComponents('selectable', 'position').filter(e => e.getComponent('selectable')!.selected).length > 1) return
+
+            ctx.save();
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#FFFFFF';      // white fill
+            ctx.strokeStyle = arrowColor;   // same outline color
+            ctx.lineWidth = 2;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+            ctx.shadowBlur = 4;
+
+
+            this.drawHandle(ctx, this.hoverProperties?.interactionPoint, x1, y1, 'start', entity.id);
+            this.drawHandle(ctx, this.hoverProperties?.interactionPoint, x2, y2, 'end', entity.id);
+
+            ctx.restore();
+        }
     }
 
+    // utility to draw one handle
+    // …existing code…
+    private drawHandle = (
+        ctx: CanvasRenderingContext2D,
+        activeHandle: PositionWithinElement | undefined,
+        cx: number,
+        cy: number,
+        name: 'start' | 'end',
+        entityId: Entity['id']
+    ) => {
+        const isActive = activeHandle === name && this.hoverProperties?.entityId === entityId;
+        const baseR = 10;
+        const r = baseR
 
-    destroy() { }
+        if (isActive) {
+            const glowR = r + 12;
+            const glowGrad = ctx.createRadialGradient(
+                cx, cy, glowR * 0.5,
+                cx, cy, glowR
+            );
+            glowGrad.addColorStop(0, 'rgba(255, 201, 64, 0.2)');
+            glowGrad.addColorStop(1, 'rgba(255, 201, 64, 0)');
+            ctx.save();
+            ctx.fillStyle = glowGrad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        const grad = ctx.createRadialGradient(
+            cx, cy, r * 0.1,
+            cx, cy, r
+        );
+        if (isActive) {
+            grad.addColorStop(0, '#FFF8E1');
+            grad.addColorStop(1, '#FFC940');
+        } else {
+            grad.addColorStop(0, '#FFFFFF');
+            grad.addColorStop(1, '#F0F0F0');
+        }
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.strokeStyle = '#8B4513';  // saddle‐brown stroke
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+    }
+
+    /**
+ * Draw multi-line, ellipsis-truncated text centered inside a rectangular box.
+ */
+ drawWrappedTextInBox(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  boxX: number,
+  boxY: number,
+  boxWidth: number,
+  boxHeight: number,
+  options: {
+    font?: string;
+    fillStyle?: string;
+    textAlign?: CanvasTextAlign;
+    textBaseline?: CanvasTextBaseline;
+    maxLines?: number;
+    lineHeight?: number;
+    paddingX?: number;
+  } = {}
+): void {
+  const {
+    font = 'bold 18px serif',
+    fillStyle = '#333',
+    textAlign = 'center',
+    textBaseline = 'middle',
+    maxLines = 2,
+    lineHeight = 18,
+    paddingX = 2,
+  } = options;
+
+  ctx.save();
+  ctx.font = font;
+  ctx.fillStyle = fillStyle;
+  ctx.textAlign = textAlign;
+  ctx.textBaseline = textBaseline;
+
+  const maxTextWidth = boxWidth - 2 * paddingX;
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = words.shift() || '';
+
+  // Build lines
+  for (const word of words) {
+    const testLine = currentLine + ' ' + word;
+    if (ctx.measureText(testLine).width <= maxTextWidth) {
+      currentLine = testLine;
+    } else {
+      lines.push(currentLine);
+      currentLine = word;
+      if (lines.length === maxLines) break;
+    }
+  }
+  lines.push(currentLine);
+
+  if (lines.length > maxLines) {
+    lines.length = maxLines;
+    let last = lines[maxLines - 1];
+    while (ctx.measureText(last + '…').width > maxTextWidth && last.length > 0) {
+      last = last.slice(0, -1);
+    }
+    lines[maxLines - 1] = last + '…';
+  }
+
+  // Vertical centering
+  const drawCount = Math.min(lines.length, maxLines);
+  const totalTextHeight = drawCount * lineHeight;
+  const startY =
+    boxY +
+    (boxHeight - totalTextHeight) / 2 +
+    lineHeight / 2;
+
+  // Draw each line
+  const centerX = boxX + boxWidth / 2;
+  for (let i = 0; i < drawCount; i++) {
+    ctx.fillText(lines[i], centerX, startY + i * lineHeight);
+  }
+
+  ctx.restore();
+}
+
+
+
+
+    destroy() {
+        if (this.eventSystem) {
+            this.eventSystem.unsubscribe('action:hover', this.onHover);
+            this.eventSystem.unsubscribe('action:hover:end', this.onHoverEnd);
+            this.eventSystem.unsubscribe('action:resize:start', this.onResizeStart);
+            this.eventSystem.unsubscribe('action:resize:end', this.onResizeEnd);
+            this.eventSystem.unsubscribe('action:move:start', this.onMoveStart);
+            this.eventSystem.unsubscribe('action:move:end', this.onMoveEnd);
+        }
+    }
 
 }
