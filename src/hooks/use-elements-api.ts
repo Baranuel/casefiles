@@ -1,4 +1,4 @@
-import { ElementsApi } from "@/lib/ecs/network/elements"
+import { ElementsApi } from "@/network/elements"
 import { useConfig } from "@/providers/ConfigProvider"
 import { useAuth } from "@clerk/nextjs"
 

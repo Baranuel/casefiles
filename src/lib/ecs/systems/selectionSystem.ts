@@ -2,8 +2,9 @@ import { System } from "@/types/engine";
 import { Engine } from "..";
 import { Entity } from "../entities/Entity";
 import { PositionWithinElement } from "@/types/elements";
-import { EventSystem, EngineEvents } from "./eventSystem";
+import { EventSystem} from "./eventSystem";
 import { getEntityAtPosition, isPointInSelectionArea } from "@/utils/calculations";
+import { EngineEvents } from "@/types/events";
 
 export class SelectionSystem implements System {
     engine: Engine;
@@ -18,7 +19,7 @@ export class SelectionSystem implements System {
         this.eventSystem = this.engine.getSystem('EventSystem') as EventSystem;
 
         if (this.eventSystem) {
-            this.eventSystem.subscribe('mouse:down', this.onMouseDown);
+            this.eventSystem.subscribe('action:select', this.onActionSelect);
             this.eventSystem.subscribe('mouse:up', this.onMouseUp);
             this.eventSystem.subscribe('selection:cleared', this.clearSelection);
         }
@@ -43,16 +44,15 @@ export class SelectionSystem implements System {
     }
 
 
-    onMouseDown = (data: EngineEvents['mouse:down']) => {
-        if(this.engine.getState().tool !== 'SELECT') return
-
+    onActionSelect = (data: EngineEvents['action:select']) => {
         const selectableEntities = this.engine.getEntitiesWithComponents('selectable');
-        const entityHit = getEntityAtPosition(selectableEntities, data.x, data.y);
-        const selectedEntities = selectableEntities.filter(entity => entity.getComponent('selectable')?.selected);
+        const entityHit = getEntityAtPosition(selectableEntities, data.mouse.x, data.mouse.y);
 
-        const clickedInSelectionArea = isPointInSelectionArea(selectedEntities, data.x, data.y);
+        const selectedEntities = selectableEntities.filter(entity => entity.getComponent('selectable')?.selected);
+        const clickedInSelectionArea = isPointInSelectionArea(selectedEntities, data.mouse.x, data.mouse.y);
 
         if (clickedInSelectionArea && !data.modifier) {
+            console.log('Clicked in selection area, but no modifier key pressed');
             return
         }
         if (!entityHit && selectedEntities.length === 1) {
@@ -92,7 +92,7 @@ export class SelectionSystem implements System {
     draw() { }
     destroy() {
         if (this.eventSystem) {
-            this.eventSystem.unsubscribe('mouse:down', this.onMouseDown);
+            this.eventSystem.unsubscribe('action:select', this.onActionSelect);
             this.eventSystem.unsubscribe('mouse:up', this.onMouseUp);
             this.eventSystem.unsubscribe('selection:cleared', this.clearSelection);
 

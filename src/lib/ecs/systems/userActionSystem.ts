@@ -1,12 +1,13 @@
-import { System } from "@/types/engine";
+import {  System } from "@/types/engine";
 import { Engine } from "..";
 import { SelectionSystem } from "./selectionSystem";
 import { InputSystem } from "./inputSystem";
-import { EngineEvents, EventSystem } from "./eventSystem";
+import { EventSystem } from "./eventSystem";
 import { getEntityAtPosition, isPointInSelectionArea } from "@/utils/calculations";
 import { Entity } from "../entities/Entity";
 import { getPositionWithinElement } from "@/utils/positions";
 import { PositionWithinElement } from "@/types/elements";
+import { EngineEvents } from "@/types/events";
 
 export class UserActionSystem implements System {
     engine: Engine
@@ -33,13 +34,36 @@ export class UserActionSystem implements System {
 
     onMouseDown = (data: EngineEvents['mouse:down']) => {
         const { x, y } = data
-        const entities = this.engine.getEntitiesWithComponents('resizable', 'selectable').filter(e => e.getComponent('selectable')!.selected)
-        const interactionPoint = this.checkForResizeInteraction({ x, y }, entities)
-        if (interactionPoint !== null) {
-            this.emitStartResizeAction({ x, y }, data.mouseDownSnapshot, interactionPoint)
-            return 
+        const tool = this.engine.getState().tool
+
+        if (tool === 'SELECT') {
+            //handle the interaction here
+            const selectedEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
+            this.eventSystem?.emit('action:select', { mouse: { x, y }, onMouseDownSnapshot: data.mouseDownSnapshot, modifier: data.modifier })
+
+            if (selectedEntities.length < 1) return
+
+            // Here we're clicking on the select entity again so probably want extra interaction like resize
+            const interactionData = this.checkForResizeInteraction({ x, y }, selectedEntities)
+            if (!interactionData) return
+            const { entity, interactionPoint } = interactionData
+
+            if (interactionPoint !== null) {
+                this.emitStartResizeAction({ x, y }, data.mouseDownSnapshot, interactionPoint, entity.id )
+                return
+            }
+
         }
+
+        if (tool !== 'SELECT') {
+            // Probably emit a create action here
+            this.eventSystem?.emit('action:create', { x, y,  tool })
+        }
+
     }
+
+
+
 
     onDrag = (data: EngineEvents['mouse:drag']) => {
         const selectableEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
@@ -51,7 +75,7 @@ export class UserActionSystem implements System {
             }
         }
 
-        /// This is were we actually keep the current action dragging event going
+        /// This is were we actually keep the current dragging event going
         switch (this.currentAction) {
             case 'moving':
                 this.eventSystem?.emit('action:move', { x: data.x, y: data.y })
@@ -73,7 +97,7 @@ export class UserActionSystem implements System {
                 this.eventSystem?.emit('action:resize:end', null)
                 break;
         }
-        
+
         this.currentAction = 'idle'
     }
 
@@ -81,20 +105,29 @@ export class UserActionSystem implements System {
 
     private checkForMoveInteraction(mouse: { x: number, y: number }, entities: Entity[]) {
         const { x, y } = mouse
+
+        if(entities.length <= 1) {
+            const entityHit = getEntityAtPosition(entities, x, y)
+            return !!entityHit
+        }
+
         const selectedAreaHit = isPointInSelectionArea(entities, x, y)
 
         return !!selectedAreaHit
     }
 
-    private checkForResizeInteraction(mouse: { x: number, y: number }, entities: Entity[]): PositionWithinElement | null {
+    private checkForResizeInteraction(mouse: { x: number, y: number }, entities: Entity[]){
         const { x, y } = mouse
         const entityHit = getEntityAtPosition(entities, x, y)
         if (!entityHit) return null
 
         const interactionPoint = getPositionWithinElement(x, y, entityHit.element)
-        
+
         if (interactionPoint === 'start' || interactionPoint === 'end') {
-            return interactionPoint
+            return {
+                entity: entityHit,
+                interactionPoint: interactionPoint
+            }
         }
         return null
     }
@@ -110,10 +143,10 @@ export class UserActionSystem implements System {
         this.eventSystem?.emit('action:move:start', { x, y, mouseDownSnapshot })
     }
 
-    private emitStartResizeAction(mouse: { x: number, y: number }, mouseDownSnapshot: { x: number, y: number }, interactionPoint: PositionWithinElement) {
+    private emitStartResizeAction(mouse: { x: number, y: number }, mouseDownSnapshot: { x: number, y: number }, interactionPoint: PositionWithinElement, entityId: Entity['id']) {
         const { x, y } = mouse
         this.currentAction = 'resizing'
-        this.eventSystem?.emit('action:resize:start', { x, y, mouseDownSnapshot, interactionPoint })
+        this.eventSystem?.emit('action:resize:start', { x, y, mouseDownSnapshot, interactionPoint, entityId })
     }
 
 

@@ -1,4 +1,4 @@
-import { CasesApi } from "@/lib/ecs/network/cases";
+import { CasesApi } from "@/network/cases";
 import { useConfig } from "@/providers/ConfigProvider";
 // import { Case } from "@/types/cases";
 // import { ElementDto } from "@/types/elements";
