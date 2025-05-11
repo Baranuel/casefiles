@@ -1,4 +1,4 @@
-import {  System } from "@/types/engine";
+import { System } from "@/types/engine";
 import { Engine } from "..";
 import { SelectionSystem } from "./selectionSystem";
 import { InputSystem } from "./inputSystem";
@@ -27,10 +27,13 @@ export class UserActionSystem implements System {
             this.eventSystem.subscribe('mouse:down', this.onMouseDown)
             this.eventSystem.subscribe('mouse:drag', this.onDrag)
             this.eventSystem.subscribe('mouse:up', this.onMouseUp)
+            this.eventSystem.subscribe('touch:move', this.onTouchMove)
+            this.eventSystem.subscribe('touch:end', this.onMouseUp)
             this.eventSystem.subscribe('action:change', this.updateAction)
         }
 
     }
+
 
     onMouseDown = (data: EngineEvents['mouse:down']) => {
         const { x, y } = data
@@ -49,7 +52,7 @@ export class UserActionSystem implements System {
             const { entity, interactionPoint } = interactionData
 
             if (interactionPoint !== null) {
-                this.emitStartResizeAction({ x, y }, data.mouseDownSnapshot, interactionPoint, entity.id )
+                this.emitStartResizeAction({ x, y }, data.mouseDownSnapshot, interactionPoint, entity.id)
                 return
             }
 
@@ -57,13 +60,27 @@ export class UserActionSystem implements System {
 
         if (tool !== 'SELECT') {
             // Probably emit a create action here
-            this.eventSystem?.emit('action:create', { x, y,  tool })
+            this.eventSystem?.emit('action:create', { x, y, tool })
         }
 
     }
 
 
 
+    onTouchMove = (data: EngineEvents['touch:move']) => {
+        const selectableEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
+
+        if (this.checkForMoveInteraction(data, selectableEntities)) {
+            if (this.currentAction === 'idle') {
+                this.emitStartMoveAction(data, data.mouseDownSnapshot)
+            }
+        }
+        switch (this.currentAction) {
+            case 'moving':
+                this.eventSystem?.emit('action:move', { x: data.x, y: data.y })
+                break;
+        }
+    }
 
     onDrag = (data: EngineEvents['mouse:drag']) => {
         const selectableEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
@@ -88,7 +105,6 @@ export class UserActionSystem implements System {
     }
 
     onMouseUp = () => {
-
         switch (this.currentAction) {
             case 'moving':
                 this.eventSystem?.emit('action:move:end', null)
@@ -106,7 +122,7 @@ export class UserActionSystem implements System {
     private checkForMoveInteraction(mouse: { x: number, y: number }, entities: Entity[]) {
         const { x, y } = mouse
 
-        if(entities.length <= 1) {
+        if (entities.length <= 1) {
             const entityHit = getEntityAtPosition(entities, x, y)
             return !!entityHit
         }
@@ -116,7 +132,7 @@ export class UserActionSystem implements System {
         return !!selectedAreaHit
     }
 
-    private checkForResizeInteraction(mouse: { x: number, y: number }, entities: Entity[]){
+    private checkForResizeInteraction(mouse: { x: number, y: number }, entities: Entity[]) {
         const { x, y } = mouse
         const entityHit = getEntityAtPosition(entities, x, y)
         if (!entityHit) return null
@@ -159,6 +175,8 @@ export class UserActionSystem implements System {
             this.eventSystem.unsubscribe('mouse:down', this.onMouseDown)
             this.eventSystem.unsubscribe('mouse:drag', this.onDrag)
             this.eventSystem.unsubscribe('mouse:up', this.onMouseUp)
+            this.eventSystem.unsubscribe('touch:move', this.onTouchMove)
+            this.eventSystem.unsubscribe('touch:end', this.onMouseUp)
             this.eventSystem.unsubscribe('action:change', this.updateAction)
         }
     }

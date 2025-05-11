@@ -13,6 +13,10 @@ export interface EngineEvents {
     'mouse:up': { x: number, y: number, mouseDownSnapshot?: { x: number, y: number }, modifier?: boolean };
     'mouse:drag': { x: number, y: number, mouseDownSnapshot: { x: number, y: number }, modifier?: boolean };
 
+    'touch:start': TouchEvent;
+    'touch:move': TouchEvent; 
+    'touch:end': TouchEvent;
+
     // Selection events
     'entity:deselected': { entity: Entity };
     'selection:cleared': undefined;
@@ -31,6 +35,15 @@ export interface EngineEvents {
 
     // Keep this for backward compatibility with any existing code
     [key: string]: unknown;
+}
+
+type TouchEvent = {
+    x: number;
+    y: number;
+    screenX: number;
+    screenY: number;
+    touches: TouchList;
+    mouseDownSnapshot: MousePosition;
 }
 
 type ActionResizeStartDto = {

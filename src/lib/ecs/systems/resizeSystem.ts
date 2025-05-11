@@ -17,7 +17,6 @@ export class ResizeSystem implements System {
             this.eventSystem.subscribe('action:resize', this.onResize);
             this.eventSystem.subscribe('action:resize:end', this.onResizeEnd);
         }
-
     }
 
     private onResizeStart = (data: EngineEvents['action:resize:start']) => {
