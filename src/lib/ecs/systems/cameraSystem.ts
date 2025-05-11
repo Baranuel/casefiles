@@ -1,19 +1,27 @@
 import { Camera, System } from "@/types/engine";
 import { Engine } from "..";
+import { EventSystem } from "./eventSystem";
+import { EngineEvents } from "@/types/events";
 
 export class CameraSystem implements System {
     private lastTouchPos: { x: number; y: number } | null = null;
     private pinch = { startDist: null as number | null, startCam: null as Camera | null, center: { x: 0, y: 0 } };
+
+    private eventSystem: EventSystem | null = null;
     private controller = new AbortController();
 
     constructor(public engine: Engine) {
         const { canvas } = engine;
 
+        this.eventSystem = engine.getSystem("EventSystem") as EventSystem;
         canvas.addEventListener("wheel", this.onWheel, { passive: false, signal: this.controller.signal });
 
-        canvas.addEventListener("touchstart", this.onTouchStart, { passive: false, signal: this.controller.signal });
-        canvas.addEventListener("touchmove", this.onTouchMove, { passive: false, signal: this.controller.signal });
         canvas.addEventListener("touchend", this.onTouchEnd, { signal: this.controller.signal });
+
+        if (this.eventSystem) {
+            this.eventSystem.subscribe("touch:start", this.onTouchStart);
+            this.eventSystem.subscribe("touch:move", this.onTouchMove);
+        }
     }
 
     private onWheel = (e: WheelEvent) => {
@@ -45,8 +53,8 @@ export class CameraSystem implements System {
         this.engine.camera = updateCamera;
     }
 
-    private onTouchStart = (e: TouchEvent) => {
-        const t = e.touches;
+    private onTouchStart = (data:EngineEvents['touch:start']) => {
+        const t = data.touches;
         if (t.length === 2) {
             const d = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
             this.pinch.startDist = d;
@@ -61,10 +69,12 @@ export class CameraSystem implements System {
         }
     };
 
-    private onTouchMove = (e: TouchEvent) => {
-        e.preventDefault();
+    private onTouchMove = (data:EngineEvents['touch:move']) => {
+
+        const selectedEntities = this.engine.getEntitiesWithComponents("selectable").filter(entity => entity.getComponent("selectable")?.selected);
+        if(selectedEntities.length > 0)  return
         const { camera } = this.engine;
-        const t = e.touches;
+        const t = data.touches;
 
         if (t.length === 2 && this.pinch.startDist && this.pinch.startCam) {
             const newD = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
@@ -113,5 +123,9 @@ export class CameraSystem implements System {
     draw() { }
     destroy() {
         this.controller.abort();
+        if (this.eventSystem) {
+            this.eventSystem.unsubscribe("touch:start", this.onTouchStart);
+            this.eventSystem.unsubscribe("touch:move", this.onTouchMove);
+        }
     }
 }
