@@ -135,6 +135,9 @@ export class InputSystem implements System {
     
 
     if (this.eventSystem) {
+
+      if (e.touches.length > 1) this.eventSystem.emit('selection:cleared', undefined)
+
       const touch = e.touches[0]
       const rect = this.canvas.getBoundingClientRect()
       const screenX = touch.clientX - rect.left
