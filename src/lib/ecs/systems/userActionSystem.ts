@@ -79,6 +79,10 @@ export class UserActionSystem implements System {
             case 'moving':
                 this.eventSystem?.emit('action:move', { x: data.x, y: data.y })
                 break;
+            
+            case 'resizing':
+                this.eventSystem?.emit('action:resize', { x: data.x, y: data.y })
+                break;
         }
     }
 
