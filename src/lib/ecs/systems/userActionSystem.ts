@@ -68,6 +68,7 @@ export class UserActionSystem implements System {
 
 
     onTouchMove = (data: EngineEvents['touch:move']) => {
+        if(data.touches.length > 1) return
         const selectableEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
 
         if (this.checkForMoveInteraction(data, selectableEntities)) {
