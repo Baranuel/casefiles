@@ -303,7 +303,7 @@ export class InputSystem implements System {
   // —————————————————————————————
   //  Helpers
   // —————————————————————————————
-  private getWorldMousePosition() {
+ public getWorldMousePosition() {
     return this.mousePosition
   }
 }
