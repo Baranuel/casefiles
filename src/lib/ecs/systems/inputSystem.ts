@@ -154,13 +154,6 @@ export class InputSystem implements System {
         touches: e.touches,
         mouseDownSnapshot: this.onMouseDownPositionSnapshot
       })
-
-      this.eventSystem.emit('mouse:down', {
-        x: clientX,
-        y: clientY,
-        modifier: false,
-        mouseDownSnapshot: this.onMouseDownPositionSnapshot
-      })
     }
   }
 
