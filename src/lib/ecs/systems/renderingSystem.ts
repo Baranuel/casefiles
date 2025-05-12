@@ -9,9 +9,7 @@ import { ELEMENT_CONFIGURATION } from "../configurations";
 
 type HoverProperties = {
     interactionPoint?: PositionWithinElement
-    currentCursor: string
     entityId?: Entity['id'],
-
 } | null
 export class RenderingSystem implements System {
     engine: Engine;
@@ -19,6 +17,7 @@ export class RenderingSystem implements System {
     currentCursor: string | null = null;
     hoverProperties: HoverProperties = null
     hoverEventPrecedence?: boolean = true
+
 
     private dpr = window.devicePixelRatio || 1;
     private layerMap: Record<string, Layer> = {
@@ -33,67 +32,51 @@ export class RenderingSystem implements System {
         this.eventSystem = this.engine.getSystem('EventSystem') || null;
 
         if (this.eventSystem) {
-            this.eventSystem.subscribe('action:resize:start', this.onResizeStart);
-            this.eventSystem.subscribe('action:move:start', this.onMoveStart);
-            this.eventSystem.subscribe('action:move:end', this.onMoveEnd);
-            this.eventSystem.subscribe('action:resize:end', this.onResizeEnd);
-            this.eventSystem.subscribe('action:hover', this.onHover);
+            this.eventSystem.subscribe('action:change', this.onActionChange);
             this.eventSystem.subscribe('action:hover:end', this.onHoverEnd);
+            this.eventSystem.subscribe('action:hover', this.onHover);
+        }
+    }
+
+    private onActionChange = (data: EngineEvents['action:change']) => {
+        const { action } = data
+        switch (action) {
+            case 'moving':
+                this.currentCursor = 'move'
+                break
+            case 'resizing':
+                this.currentCursor = 'grabbing'
+                break
+            case 'idle':
+                this.currentCursor = 'default'
+                break
+            default:
+                this.currentCursor = 'default'
+                break
         }
     }
 
 
     onHover = (data: EngineEvents['action:hover']) => {
-        if (!this.hoverEventPrecedence) return
-
-        this.hoverProperties = {
-            interactionPoint: data.interactionPoint,
-            entityId: data.entityId,
-            currentCursor: 'pointer',
-        }
-
+        this.currentCursor = 'pointer'
         const selected = this.engine.getEntitiesWithComponents('selectable', 'position').filter(entity => entity.getComponent('selectable')!.selected);
         if (selected.length !== 1) return
 
         if (selected[0].id !== data.entityId) return
 
         if (data.interactionPoint === 'start' || data.interactionPoint === 'end') {
-            return this.hoverProperties = {
+            this.hoverProperties = {
                 interactionPoint: data.interactionPoint,
                 entityId: data.entityId,
-                currentCursor: 'grab',
             }
+            return this.currentCursor = 'grab'
         }
     };
 
     onHoverEnd = () => {
+        this.eventSystem?.emit('action:change', { action: 'idle' })
         this.hoverProperties = null
-    }
-
-    onMoveStart = () => {
-        this.hoverEventPrecedence = false
-        this.hoverProperties = {
-            currentCursor: 'grabbing',
-        }
-    }
-
-    onMoveEnd = () => {
-        this.hoverEventPrecedence = true
-        this.hoverProperties = null
-    }
-    onResizeStart = (data: EngineEvents['action:resize:start']) => {
-        this.hoverEventPrecedence = false
-        this.hoverProperties = {
-            interactionPoint: data.interactionPoint,
-            entityId: data.entityId,
-            currentCursor: 'grabbing',
-        }
-
-    }
-    onResizeEnd = () => {
-        this.hoverEventPrecedence = true
-        this.hoverProperties = null
-    }
+    };
 
 
     update() { }
@@ -106,7 +89,7 @@ export class RenderingSystem implements System {
         const tool = this.engine.getState().tool;
         if (!ctx) return;
 
-        ctx.canvas.style.cursor = this.hoverProperties?.currentCursor || 'default';
+        ctx.canvas.style.cursor = this.currentCursor || 'default';
 
 
         const entities = this.engine.getEntitiesWithComponents('position', 'type');
@@ -196,12 +179,12 @@ export class RenderingSystem implements System {
         }
     }
 
-    private drawIntent(ctx: CanvasRenderingContext2D, tool:Tool) {
+    private drawIntent(ctx: CanvasRenderingContext2D, tool: Tool) {
         const input = this.engine.getSystem('InputSystem');
         const mouse = input?.getWorldMousePosition();
         if (!mouse || tool === 'SELECT') return;
 
-        const {width, height} = ELEMENT_CONFIGURATION[tool]
+        const { width, height } = ELEMENT_CONFIGURATION[tool]
         ctx.save();
         ctx.fillStyle = '#FFC940';
         ctx.globalAlpha = 0.2;
@@ -237,47 +220,47 @@ export class RenderingSystem implements System {
     }
 
 
- private renderPerson(ctx: CanvasRenderingContext2D, entity: Entity) {
-    const posC = entity.getComponent('position');
-    if (!posC) return;
+    private renderPerson(ctx: CanvasRenderingContext2D, entity: Entity) {
+        const posC = entity.getComponent('position');
+        if (!posC) return;
 
-    const { x1, y1, x2, y2 } = posC.position;
-    const width  = x2 - x1;
-    const height = y2 - y1;
+        const { x1, y1, x2, y2 } = posC.position;
+        const width = x2 - x1;
+        const height = y2 - y1;
 
-    const PORTRAIT_RATIO = 0.8;
-    const PADDING        = 5;
+        const PORTRAIT_RATIO = 0.8;
+        const PADDING = 5;
 
-    // inner box, inset for portrait + name
-    const innerX = x1 + PADDING;
-    const innerY = y1 + PADDING;
-    const innerW = width  - 2 * PADDING;
-    const innerH = height - 2 * PADDING;
-    const portraitH = innerH * PORTRAIT_RATIO;
-    const nameH     = innerH - portraitH;
-    const nameY     = innerY + portraitH;
+        // inner box, inset for portrait + name
+        const innerX = x1 + PADDING;
+        const innerY = y1 + PADDING;
+        const innerW = width - 2 * PADDING;
+        const innerH = height - 2 * PADDING;
+        const portraitH = innerH * PORTRAIT_RATIO;
+        const nameH = innerH - portraitH;
+        const nameY = innerY + portraitH;
 
-    ctx.save();
-    ctx.fillStyle   = '#F8DCB2';     
-    ctx.fillRect(x1, y1, width, height);
-    ctx.restore();
+        ctx.save();
+        ctx.fillStyle = '#F8DCB2';
+        ctx.fillRect(x1, y1, width, height);
+        ctx.restore();
 
 
-    ctx.save();
-    ctx.fillStyle   = '#000';
-    ctx.fillRect(innerX, innerY, innerW, portraitH);
-    // TODO: drawImage(person.image, innerX + 2, innerY + 2, innerW - 4, portraitH - 4);
-    ctx.restore();
+        ctx.save();
+        ctx.fillStyle = '#000';
+        ctx.fillRect(innerX, innerY, innerW, portraitH);
+        // TODO: drawImage(person.image, innerX + 2, innerY + 2, innerW - 4, portraitH - 4);
+        ctx.restore();
 
-    // 4) name tag area at bottom
-    this.drawWrappedTextInBox(
-      ctx,
-      'Philomena Cunk',
-      innerX,
-      nameY,
-      innerW,
-      nameH)
-}
+        // 4) name tag area at bottom
+        this.drawWrappedTextInBox(
+            ctx,
+            'Philomena Cunk',
+            innerX,
+            nameY,
+            innerW,
+            nameH)
+    }
 
 
 
@@ -417,82 +400,82 @@ export class RenderingSystem implements System {
     /**
  * Draw multi-line, ellipsis-truncated text centered inside a rectangular box.
  */
- drawWrappedTextInBox(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  boxX: number,
-  boxY: number,
-  boxWidth: number,
-  boxHeight: number,
-  options: {
-    font?: string;
-    fillStyle?: string;
-    textAlign?: CanvasTextAlign;
-    textBaseline?: CanvasTextBaseline;
-    maxLines?: number;
-    lineHeight?: number;
-    paddingX?: number;
-  } = {}
-): void {
-  const {
-    font = 'bold 18px serif',
-    fillStyle = '#333',
-    textAlign = 'center',
-    textBaseline = 'middle',
-    maxLines = 2,
-    lineHeight = 18,
-    paddingX = 2,
-  } = options;
+    drawWrappedTextInBox(
+        ctx: CanvasRenderingContext2D,
+        text: string,
+        boxX: number,
+        boxY: number,
+        boxWidth: number,
+        boxHeight: number,
+        options: {
+            font?: string;
+            fillStyle?: string;
+            textAlign?: CanvasTextAlign;
+            textBaseline?: CanvasTextBaseline;
+            maxLines?: number;
+            lineHeight?: number;
+            paddingX?: number;
+        } = {}
+    ): void {
+        const {
+            font = 'bold 18px serif',
+            fillStyle = '#333',
+            textAlign = 'center',
+            textBaseline = 'middle',
+            maxLines = 2,
+            lineHeight = 18,
+            paddingX = 2,
+        } = options;
 
-  ctx.save();
-  ctx.font = font;
-  ctx.fillStyle = fillStyle;
-  ctx.textAlign = textAlign;
-  ctx.textBaseline = textBaseline;
+        ctx.save();
+        ctx.font = font;
+        ctx.fillStyle = fillStyle;
+        ctx.textAlign = textAlign;
+        ctx.textBaseline = textBaseline;
 
-  const maxTextWidth = boxWidth - 2 * paddingX;
-  const words = text.split(' ');
-  const lines: string[] = [];
-  let currentLine = words.shift() || '';
+        const maxTextWidth = boxWidth - 2 * paddingX;
+        const words = text.split(' ');
+        const lines: string[] = [];
+        let currentLine = words.shift() || '';
 
-  // Build lines
-  for (const word of words) {
-    const testLine = currentLine + ' ' + word;
-    if (ctx.measureText(testLine).width <= maxTextWidth) {
-      currentLine = testLine;
-    } else {
-      lines.push(currentLine);
-      currentLine = word;
-      if (lines.length === maxLines) break;
+        // Build lines
+        for (const word of words) {
+            const testLine = currentLine + ' ' + word;
+            if (ctx.measureText(testLine).width <= maxTextWidth) {
+                currentLine = testLine;
+            } else {
+                lines.push(currentLine);
+                currentLine = word;
+                if (lines.length === maxLines) break;
+            }
+        }
+        lines.push(currentLine);
+
+        if (lines.length > maxLines) {
+            lines.length = maxLines;
+            let last = lines[maxLines - 1];
+            while (ctx.measureText(last + '…').width > maxTextWidth && last.length > 0) {
+                last = last.slice(0, -1);
+            }
+            lines[maxLines - 1] = last + '…';
+        }
+
+        // Vertical centering
+        const drawCount = Math.min(lines.length, maxLines);
+        const totalTextHeight = drawCount * lineHeight;
+        const startY =
+            boxY +
+            (boxHeight - totalTextHeight) / 2 +
+            lineHeight / 2;
+
+        // Draw each line
+        const centerX = boxX + boxWidth / 2;
+        for (let i = 0; i < drawCount; i++) {
+            ctx.fillText(lines[i], centerX, startY + i * lineHeight);
+        }
+
+        ctx.restore();
     }
-  }
-  lines.push(currentLine);
-
-  if (lines.length > maxLines) {
-    lines.length = maxLines;
-    let last = lines[maxLines - 1];
-    while (ctx.measureText(last + '…').width > maxTextWidth && last.length > 0) {
-      last = last.slice(0, -1);
-    }
-    lines[maxLines - 1] = last + '…';
-  }
-
-  // Vertical centering
-  const drawCount = Math.min(lines.length, maxLines);
-  const totalTextHeight = drawCount * lineHeight;
-  const startY =
-    boxY +
-    (boxHeight - totalTextHeight) / 2 +
-    lineHeight / 2;
-
-  // Draw each line
-  const centerX = boxX + boxWidth / 2;
-  for (let i = 0; i < drawCount; i++) {
-    ctx.fillText(lines[i], centerX, startY + i * lineHeight);
-  }
-
-  ctx.restore();
-}
 
 
 
@@ -501,10 +484,6 @@ export class RenderingSystem implements System {
         if (this.eventSystem) {
             this.eventSystem.unsubscribe('action:hover', this.onHover);
             this.eventSystem.unsubscribe('action:hover:end', this.onHoverEnd);
-            this.eventSystem.unsubscribe('action:resize:start', this.onResizeStart);
-            this.eventSystem.unsubscribe('action:resize:end', this.onResizeEnd);
-            this.eventSystem.unsubscribe('action:move:start', this.onMoveStart);
-            this.eventSystem.unsubscribe('action:move:end', this.onMoveEnd);
         }
     }
 

@@ -8,7 +8,7 @@ export interface MousePosition {
 
 export interface EngineEvents {
     // Mouse events
-    'mouse:move': { mouse:MousePosition, modifier?: boolean };
+    'mouse:move': { mouse:MousePosition, modifier: boolean };
     'mouse:down': { x: number, y: number, modifier?: boolean, mouseDownSnapshot:{x:number, y:number} };
     'mouse:up': { x: number, y: number, mouseDownSnapshot?: { x: number, y: number }, modifier?: boolean };
     'mouse:drag': { x: number, y: number, mouseDownSnapshot: { x: number, y: number }, modifier?: boolean };

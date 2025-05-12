@@ -27,6 +27,7 @@ export class UserActionSystem implements System {
             this.eventSystem.subscribe('mouse:down', this.onMouseDown)
             this.eventSystem.subscribe('mouse:drag', this.onDrag)
             this.eventSystem.subscribe('mouse:up', this.onMouseUp)
+            this.eventSystem.subscribe('touch:start', this.onTouchStart)
             this.eventSystem.subscribe('touch:move', this.onTouchMove)
             this.eventSystem.subscribe('touch:end', this.onMouseUp)
             this.eventSystem.subscribe('action:change', this.updateAction)
@@ -35,78 +36,23 @@ export class UserActionSystem implements System {
     }
 
 
-    onMouseDown = (data: EngineEvents['mouse:down']) => {
-        const { x, y } = data
-        const tool = this.engine.getState().tool
-
-        if (tool === 'SELECT') {
-            //handle the interaction here
-            const selectedEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
-            this.eventSystem?.emit('action:select', { mouse: { x, y }, onMouseDownSnapshot: data.mouseDownSnapshot, modifier: data.modifier })
-
-            if (selectedEntities.length < 1) return
-
-            // Here we're clicking on the select entity again so probably want extra interaction like resize
-            const interactionData = this.checkForResizeInteraction({ x, y }, selectedEntities)
-            if (!interactionData) return
-            const { entity, interactionPoint } = interactionData
-
-            if (interactionPoint !== null) {
-                this.emitStartResizeAction({ x, y }, data.mouseDownSnapshot, interactionPoint, entity.id)
-                return
-            }
-
-        }
-
-        if (tool !== 'SELECT') {
-            // Probably emit a create action here
-            this.eventSystem?.emit('action:create', { x, y, tool })
-        }
-
+    onTouchStart = (data: EngineEvents['touch:start']) => {
+        this.handleSelectionEvent(data.x, data.y, data.mouseDownSnapshot)
+        if(data.touches.length > 1) return this.eventSystem?.emit('selection:cleared', undefined)
     }
 
+    onMouseDown = (data: EngineEvents['mouse:down']) => {
+        this.handleSelectionEvent(data.x, data.y, data.mouseDownSnapshot, data.modifier)
+    }
 
 
     onTouchMove = (data: EngineEvents['touch:move']) => {
-        if(data.touches.length > 1) return
-        const selectableEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
-
-        if (this.checkForMoveInteraction(data, selectableEntities)) {
-            if (this.currentAction === 'idle') {
-                this.emitStartMoveAction(data, data.mouseDownSnapshot)
-            }
-        }
-        switch (this.currentAction) {
-            case 'moving':
-                this.eventSystem?.emit('action:move', { x: data.x, y: data.y })
-                break;
-            
-            case 'resizing':
-                this.eventSystem?.emit('action:resize', { x: data.x, y: data.y })
-                break;
-        }
+        if (data.touches.length > 1) return
+        this.handleDragEvent(data.x, data.y, data.mouseDownSnapshot)
     }
 
     onDrag = (data: EngineEvents['mouse:drag']) => {
-        const selectableEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
-
-        // Bock shooting a start event even during a drag
-        if (this.checkForMoveInteraction(data, selectableEntities)) {
-            if (this.currentAction === 'idle') {
-                this.emitStartMoveAction(data, data.mouseDownSnapshot)
-            }
-        }
-
-        /// This is were we actually keep the current dragging event going
-        switch (this.currentAction) {
-            case 'moving':
-                this.eventSystem?.emit('action:move', { x: data.x, y: data.y })
-                break;
-
-            case 'resizing':
-                this.eventSystem?.emit('action:resize', { x: data.x, y: data.y })
-                break;
-        }
+        this.handleDragEvent(data.x, data.y, data.mouseDownSnapshot)
     }
 
     onMouseUp = () => {
@@ -119,9 +65,59 @@ export class UserActionSystem implements System {
                 break;
         }
 
-        this.currentAction = 'idle'
+        this.eventSystem?.emit('action:change', { action: 'idle' })
     }
 
+
+    private handleSelectionEvent(x: number, y: number, mouseDownSnapshot: { x: number, y: number }, modifier?: boolean) {
+        const tool = this.engine.getState().tool
+
+        if (tool === 'SELECT') {
+            //handle the interaction here
+            const selectedEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
+            this.eventSystem?.emit('action:select', { mouse: { x, y }, onMouseDownSnapshot: mouseDownSnapshot, modifier: modifier })
+
+            if (selectedEntities.length < 1) return
+
+            // Here we're clicking on the select entity again so probably want extra interaction like resize
+            const interactionData = this.checkForResizeInteraction({ x, y }, selectedEntities)
+            if (!interactionData) return
+            const { entity, interactionPoint } = interactionData
+
+            if (interactionPoint !== null) {
+                this.emitStartResizeAction({ x, y }, mouseDownSnapshot, interactionPoint, entity.id)
+                return
+            }
+
+        }
+
+        if (tool !== 'SELECT') {
+            // Probably emit a create action here
+            this.eventSystem?.emit('action:create', { x, y, tool })
+        }
+    }
+
+    private handleDragEvent(x: number, y: number, mouseDownSnapshot: { x: number, y: number }) {
+        const selectableEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
+
+        // Bock shooting a start event even during a drag
+        if (this.checkForMoveInteraction({ x, y }, selectableEntities)) {
+            if (this.currentAction === 'idle') {
+                this.emitStartMoveAction({ x, y }, mouseDownSnapshot)
+            }
+        }
+
+        /// This is were we actually keep the current dragging event going
+        switch (this.currentAction) {
+            case 'moving':
+                this.eventSystem?.emit('action:move', { x: x, y: y })
+                break;
+
+            case 'resizing':
+                this.eventSystem?.emit('action:resize', { x: x, y: y })
+                break;
+        }
+    }
 
 
     private checkForMoveInteraction(mouse: { x: number, y: number }, entities: Entity[]) {
@@ -159,13 +155,13 @@ export class UserActionSystem implements System {
 
     private emitStartMoveAction(mouse: { x: number, y: number }, mouseDownSnapshot: { x: number, y: number }) {
         const { x, y } = mouse
-        this.currentAction = 'moving'
+        this.eventSystem?.emit('action:change', { action: 'moving' })
         this.eventSystem?.emit('action:move:start', { x, y, mouseDownSnapshot })
     }
 
     private emitStartResizeAction(mouse: { x: number, y: number }, mouseDownSnapshot: { x: number, y: number }, interactionPoint: PositionWithinElement, entityId: Entity['id']) {
         const { x, y } = mouse
-        this.currentAction = 'resizing'
+        this.eventSystem?.emit('action:change', { action: 'resizing' })
         this.eventSystem?.emit('action:resize:start', { x, y, mouseDownSnapshot, interactionPoint, entityId })
     }
 
@@ -179,6 +175,7 @@ export class UserActionSystem implements System {
             this.eventSystem.unsubscribe('mouse:down', this.onMouseDown)
             this.eventSystem.unsubscribe('mouse:drag', this.onDrag)
             this.eventSystem.unsubscribe('mouse:up', this.onMouseUp)
+            this.eventSystem.unsubscribe('touch:start', this.onTouchStart)
             this.eventSystem.unsubscribe('touch:move', this.onTouchMove)
             this.eventSystem.unsubscribe('touch:end', this.onMouseUp)
             this.eventSystem.unsubscribe('action:change', this.updateAction)
