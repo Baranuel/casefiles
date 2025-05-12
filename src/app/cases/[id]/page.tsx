@@ -4,6 +4,7 @@ import { CaseProvider } from "@/providers/CaseStateProvider";
 import { Toolbar } from "@/components/cases-board/Toolbar";
 import { SocketProvider } from "@/providers/SocketProvider";
 import { randomUUID } from "crypto";
+import { Preview } from "@/components/cases-board/Preview";
 
 type CasePageProps = {
   params: Promise<{ id: string }>;
@@ -19,6 +20,7 @@ export default async function CasePage({ params }: CasePageProps) {
         <PageWrapper>
           <Canvas />
           <Toolbar/>
+          <Preview/>
         </PageWrapper>
       </CaseProvider>
     </SocketProvider>

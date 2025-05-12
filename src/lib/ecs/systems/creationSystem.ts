@@ -27,6 +27,15 @@ export class CreationSystem implements System {
             case 'PERSON':
                 this.createPerson({ x, y, id, addElement })
                 break
+            case 'LOCATION':
+                this.createLocation({ x, y, id, addElement })
+                break
+            case 'ITEM': 
+                this.createItem({ x, y, id, addElement })
+                break
+            case 'NOTE':
+                this.createNote({ x, y, id, addElement })
+                break
             case 'POINTER':
                 this.createPointer({ x, y, id, addElement })
                 break
@@ -80,6 +89,53 @@ export class CreationSystem implements System {
                 this.eventSystem?.emit('action:change', { action: 'resizing' })
             }
         })
+    }
+
+    private createLocation({ x, y, id, addElement }: { x: number, y: number, id: string, addElement: (element: ElementDto) => void }) {
+        const { width, height } = ELEMENT_CONFIGURATION['LOCATION']
+        const x1 = x - width / 2;
+        const y1 = y - height / 2;
+        const x2 = x + width / 2;
+        const y2 = y + height / 2;
+
+        const position = { x1, y1, x2, y2 };
+        const newElement: ElementDto = {
+            id,
+            type: 'LOCATION',
+            position
+        };
+        addElement(newElement)
+    }
+
+    private createItem({ x, y, id, addElement }: { x: number, y: number, id: string, addElement: (element: ElementDto) => void }) {
+        const { width, height } = ELEMENT_CONFIGURATION['ITEM']
+        const x1 = x - width / 2;
+        const y1 = y - height / 2;
+        const x2 = x + width / 2;
+        const y2 = y + height / 2;
+
+        const position = { x1, y1, x2, y2 };
+        const newElement: ElementDto = {
+            id,
+            type: 'ITEM',
+            position
+        };
+        addElement(newElement)
+    }
+
+    private createNote({ x, y, id, addElement }: { x: number, y: number, id: string, addElement: (element: ElementDto) => void }) {
+        const { width, height } = ELEMENT_CONFIGURATION['NOTE']
+        const x1 = x - width / 2;
+        const y1 = y - height / 2;
+        const x2 = x + width / 2;
+        const y2 = y + height / 2;
+        const position = { x1, y1, x2, y2 };
+        const newElement: ElementDto = {
+            id,
+            type: 'NOTE',
+            position
+        };
+        addElement(newElement)
     }
 
     update() {

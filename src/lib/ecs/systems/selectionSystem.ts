@@ -2,7 +2,7 @@ import { System } from "@/types/engine";
 import { Engine } from "..";
 import { Entity } from "../entities/Entity";
 import { PositionWithinElement } from "@/types/elements";
-import { EventSystem} from "./eventSystem";
+import { EventSystem } from "./eventSystem";
 import { getEntityAtPosition, isPointInSelectionArea } from "@/utils/calculations";
 import { EngineEvents } from "@/types/events";
 
@@ -26,16 +26,23 @@ export class SelectionSystem implements System {
     }
 
     onMouseUp = (data: EngineEvents['mouse:up']) => {
-        if(this.engine.getState().tool !== 'SELECT') return
+        if (this.engine.getState().tool !== 'SELECT') return
 
         const { x, y, mouseDownSnapshot, modifier } = data
         const selectedEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
         const finishedClickInSelectionArea = isPointInSelectionArea(selectedEntities, data.x, data.y);
         const movedMouseSinceMouseDown = mouseDownSnapshot && (Math.abs(x - mouseDownSnapshot.x) > 5 || Math.abs(y - mouseDownSnapshot.y) > 5);
 
-        if (finishedClickInSelectionArea && selectedEntities.length > 1 && !data.modifier && !movedMouseSinceMouseDown) {
+        if (finishedClickInSelectionArea && !data.modifier && !movedMouseSinceMouseDown) {
             const entityHit = getEntityAtPosition(selectedEntities, data.x, data.y);
-            if (entityHit) return this.selectEntity(entityHit, false);
+            if (entityHit && selectedEntities.length > 1) {
+                this.selectEntity(entityHit, false)
+            }
+        }
+
+        if(!finishedClickInSelectionArea && !movedMouseSinceMouseDown) {
+            const entityHit = getEntityAtPosition(this.engine.getEntitiesWithComponents('selectable'), data.x, data.y);
+                this.handleSelectPreviewEntity(entityHit);
         }
 
         if (!movedMouseSinceMouseDown && !modifier && selectedEntities.length > 1) {
@@ -77,6 +84,14 @@ export class SelectionSystem implements System {
             selectableComponent.selected = true;
         }
     }
+
+    private handleSelectPreviewEntity (entity: Entity | null) {
+        const el = entity ? entity.element : null;
+       const {setPreviewElement} = this.engine.getState();
+        
+       setPreviewElement(el)
+    }
+
 
 
     private clearSelection = () => {
