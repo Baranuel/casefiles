@@ -61,7 +61,11 @@ export class UserActionSystem implements System {
         this.handleCleanup()
     }
 
-    handleCleanup = () => {
+
+    
+
+
+    private handleCleanup = () => {
         switch (this.currentAction) {
             case 'moving':
                 this.eventSystem?.emit('action:move:end', null)
