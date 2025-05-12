@@ -29,7 +29,7 @@ export class UserActionSystem implements System {
             this.eventSystem.subscribe('mouse:up', this.onMouseUp)
             this.eventSystem.subscribe('touch:start', this.onTouchStart)
             this.eventSystem.subscribe('touch:move', this.onTouchMove)
-            this.eventSystem.subscribe('touch:end', this.onMouseUp)
+            this.eventSystem.subscribe('touch:end', this.onTouchEnd)
             this.eventSystem.subscribe('action:change', this.updateAction)
         }
 
@@ -37,14 +37,13 @@ export class UserActionSystem implements System {
 
 
     onTouchStart = (data: EngineEvents['touch:start']) => {
-        this.handleSelectionEvent(data.x, data.y, data.mouseDownSnapshot)
         if(data.touches.length > 1) return this.eventSystem?.emit('selection:cleared', undefined)
+        this.handleSelectionEvent(data.x, data.y, data.mouseDownSnapshot)
     }
 
     onMouseDown = (data: EngineEvents['mouse:down']) => {
         this.handleSelectionEvent(data.x, data.y, data.mouseDownSnapshot, data.modifier)
     }
-
 
     onTouchMove = (data: EngineEvents['touch:move']) => {
         if (data.touches.length > 1) return
@@ -55,7 +54,14 @@ export class UserActionSystem implements System {
         this.handleDragEvent(data.x, data.y, data.mouseDownSnapshot)
     }
 
+    onTouchEnd = () => {
+        this.handleCleanup()
+    }
     onMouseUp = () => {
+        this.handleCleanup()
+    }
+
+    handleCleanup = () => {
         switch (this.currentAction) {
             case 'moving':
                 this.eventSystem?.emit('action:move:end', null)
@@ -177,7 +183,7 @@ export class UserActionSystem implements System {
             this.eventSystem.unsubscribe('mouse:up', this.onMouseUp)
             this.eventSystem.unsubscribe('touch:start', this.onTouchStart)
             this.eventSystem.unsubscribe('touch:move', this.onTouchMove)
-            this.eventSystem.unsubscribe('touch:end', this.onMouseUp)
+            this.eventSystem.unsubscribe('touch:end', this.onTouchEnd)
             this.eventSystem.unsubscribe('action:change', this.updateAction)
         }
     }
