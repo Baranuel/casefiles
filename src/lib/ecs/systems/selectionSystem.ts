@@ -19,8 +19,8 @@ export class SelectionSystem implements System {
         this.eventSystem = this.engine.getSystem('EventSystem') as EventSystem;
 
         if (this.eventSystem) {
-            this.eventSystem.subscribe('action:select', this.onActionSelect);
             this.eventSystem.subscribe('mouse:up', this.onMouseUp);
+            this.eventSystem.subscribe('action:select', this.onActionSelect);
             this.eventSystem.subscribe('selection:cleared', this.clearSelection);
         }
     }
