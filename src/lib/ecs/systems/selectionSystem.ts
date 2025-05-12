@@ -1,4 +1,4 @@
-import { System } from "@/types/engine";
+import { MousePosition, System } from "@/types/engine";
 import { Engine } from "..";
 import { Entity } from "../entities/Entity";
 import { PositionWithinElement } from "@/types/elements";
@@ -19,35 +19,20 @@ export class SelectionSystem implements System {
         this.eventSystem = this.engine.getSystem('EventSystem') as EventSystem;
 
         if (this.eventSystem) {
+            this.eventSystem.subscribe('touch:end', this.onTouchEnd);
             this.eventSystem.subscribe('mouse:up', this.onMouseUp);
             this.eventSystem.subscribe('action:select', this.onActionSelect);
             this.eventSystem.subscribe('selection:cleared', this.clearSelection);
         }
     }
 
+    onTouchEnd = (data: EngineEvents['touch:end']) => {
+        const { x, y } = data;
+        this.onSelectCleanup(x, y, data.mouseDownSnapshot);
+    }
+
     onMouseUp = (data: EngineEvents['mouse:up']) => {
-        if (this.engine.getState().tool !== 'SELECT') return
-
-        const { x, y, mouseDownSnapshot, modifier } = data
-        const selectedEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
-        const finishedClickInSelectionArea = isPointInSelectionArea(selectedEntities, data.x, data.y);
-        const movedMouseSinceMouseDown = mouseDownSnapshot && (Math.abs(x - mouseDownSnapshot.x) > 5 || Math.abs(y - mouseDownSnapshot.y) > 5);
-
-        if (finishedClickInSelectionArea && !data.modifier && !movedMouseSinceMouseDown) {
-            const entityHit = getEntityAtPosition(selectedEntities, data.x, data.y);
-            if (entityHit && selectedEntities.length > 1) {
-                this.selectEntity(entityHit, false)
-            }
-        }
-
-        if(!finishedClickInSelectionArea && !movedMouseSinceMouseDown) {
-            const entityHit = getEntityAtPosition(this.engine.getEntitiesWithComponents('selectable'), data.x, data.y);
-                this.handleSelectPreviewEntity(entityHit);
-        }
-
-        if (!movedMouseSinceMouseDown && !modifier && selectedEntities.length > 1) {
-            return this.clearSelection()
-        }
+        this.onSelectCleanup(data.x, data.y, data.mouseDownSnapshot, data.modifier);
     }
 
 
@@ -69,6 +54,28 @@ export class SelectionSystem implements System {
         }
     }
 
+    onSelectCleanup = (x: number, y: number, mouseDownSnapshot?: MousePosition, modifier?: boolean) => {
+        const selectedEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
+        const finishedClickInSelectionArea = isPointInSelectionArea(selectedEntities, x, y);
+        const movedMouseSinceMouseDown = mouseDownSnapshot && (Math.abs(x - mouseDownSnapshot.x) > 5 || Math.abs(y - mouseDownSnapshot.y) > 5);
+
+        if (finishedClickInSelectionArea && !modifier && !movedMouseSinceMouseDown) {
+            const entityHit = getEntityAtPosition(selectedEntities, x, y);
+            if (entityHit && selectedEntities.length > 1) {
+                this.selectEntity(entityHit, false)
+            }
+        }
+
+        if (!finishedClickInSelectionArea && !movedMouseSinceMouseDown) {
+            const entityHit = getEntityAtPosition(this.engine.getEntitiesWithComponents('selectable'), x, y);
+            this.handleSelectPreviewEntity(entityHit);
+        }
+
+        if (!movedMouseSinceMouseDown && !modifier && selectedEntities.length > 1) {
+            return this.clearSelection()
+        }
+    }
+
 
 
     private selectEntity(entity: Entity, modifier: boolean = false) {
@@ -85,11 +92,16 @@ export class SelectionSystem implements System {
         }
     }
 
-    private handleSelectPreviewEntity (entity: Entity | null) {
+    private handleSelectPreviewEntity(entity: Entity | null) {
+        const { setPreviewElement } = this.engine.getState();
+        const typeC = entity?.getComponent('type')
+        if (!typeC || !entity) return setPreviewElement(null)
+
+        if (typeC.type === 'POINTER') return setPreviewElement(null)
+
         const el = entity ? entity.element : null;
-       const {setPreviewElement} = this.engine.getState();
-        
-       setPreviewElement(el)
+
+        setPreviewElement(el)
     }
 
 
@@ -108,6 +120,7 @@ export class SelectionSystem implements System {
     destroy() {
         if (this.eventSystem) {
             this.eventSystem.unsubscribe('action:select', this.onActionSelect);
+            this.eventSystem.unsubscribe('touch:end', this.onTouchEnd);
             this.eventSystem.unsubscribe('mouse:up', this.onMouseUp);
             this.eventSystem.unsubscribe('selection:cleared', this.clearSelection);
 
