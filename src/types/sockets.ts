@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { Element } from "./elements";
+import { ContentDto } from "./contents";
 
-export const WsMessageTypeSchema = z.enum(['CREATE', 'UPDATE', 'DELETE', 'UPDATE_BATCH']);
+export const WsMessageTypeSchema = z.enum(['CREATE', 'UPDATE', 'DELETE', 'UPDATE_BATCH', 'CONTENT_UPDATE']);
 
 const CreateMsg = z.object({
   type: z.literal("CREATE"),
@@ -26,11 +27,18 @@ const DeleteMsg = z.object({
   payload:Element
 })
 
+const ContentUpdateMsg = z.object({
+    type: z.literal("CONTENT_UPDATE"),
+    id: z.string(),
+    payload: ContentDto
+})
+
 export const WsMessageSchema = z.discriminatedUnion("type", [
   CreateMsg,
   UpdateMsg,
   DeleteMsg,
-  UpdateBatchMsg
+  UpdateBatchMsg,
+  ContentUpdateMsg
 ])
 
 export const RawWsMessageSchema = z.preprocess((raw) => {

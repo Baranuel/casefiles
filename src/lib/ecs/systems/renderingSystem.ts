@@ -255,7 +255,7 @@ export class RenderingSystem implements System {
         // 4) name tag area at bottom
         this.drawWrappedTextInBox(
             ctx,
-            'Philomena Cunk',
+            entity.element.content?.name || 'Unknown',
             innerX,
             nameY,
             innerW,

@@ -93,15 +93,15 @@ export class SelectionSystem implements System {
     }
 
     private handleSelectPreviewEntity(entity: Entity | null) {
-        const { setPreviewElement } = this.engine.getState();
+        const { setPreviewElementId } = this.engine.getState();
         const typeC = entity?.getComponent('type')
-        if (!typeC || !entity) return setPreviewElement(null)
+        if (!typeC || !entity) return setPreviewElementId(null)
 
-        if (typeC.type === 'POINTER') return setPreviewElement(null)
+        if (typeC.type === 'POINTER') return setPreviewElementId(null)
 
-        const el = entity ? entity.element : null;
+        const elementId = entity ? entity.element.id : null;
 
-        setPreviewElement(el)
+        setPreviewElementId(elementId)
     }
 
 
