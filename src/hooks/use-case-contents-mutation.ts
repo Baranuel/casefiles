@@ -2,10 +2,12 @@ import { UpdateContentDto } from "@/types/contents";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useContentsApi } from "./use-contents-api";
 import { ElementDto } from "@/types/elements";
+import { useSocketContext } from "@/providers/SocketProvider";
 
 export const useCaseContentsMutation = (caseId: string) => {
     const queryClient = useQueryClient();
-    const contentsApi = useContentsApi();
+    const { uniqueWsId } = useSocketContext()
+    const contentsApi = useContentsApi(uniqueWsId);
 
     const updateMutation = useMutation({
         mutationFn: (content: UpdateContentDto) => {

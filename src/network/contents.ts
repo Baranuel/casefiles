@@ -34,7 +34,7 @@ export class ContentsApi {
 
     async updateContent(caseId: string, content: UpdateContentDto) {
         const headers = await this.authHeaders();
-        const response = await this.api.put<Content>(`/contents/${caseId}`, content, { headers });
+        const response = await this.api.put<Content>(`/contents/${caseId}?wsId=${this.uniqueWsId}`, content, { headers });
         return response.data;
     }
 }

@@ -1,12 +1,13 @@
 "use client";
+import { useDebouncedCallback } from "use-debounce";
 import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useCaseContext } from "@/providers/CaseStateProvider";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { Switch } from "../ui/switch";
-import { Content, UpdateContentDto } from "@/types/contents";
+import { Content } from "@/types/contents";
 import { usePreviewElement } from "@/hooks/use-preview-element";
 import { useCaseContentsMutation } from "@/hooks/use-case-contents-mutation";
 
@@ -19,7 +20,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
 
   const previewElement = getPreviewElement(previewElementId);
 
-  const { register, handleSubmit } = useForm<Content>({
+  const { register, getValues } = useForm<Content>({
     values: {
       id: previewElement?.content?.id || null,
       name: previewElement?.content?.name || "",
@@ -32,18 +33,15 @@ export const Preview = ({ caseId }: { caseId: string }) => {
     if (!open) setPreviewElementId(null);
   };
 
-  const handleUpdateContent = useCallback(
-    async (contentPayload: Content) => {
-      if (!previewElement) return;
-
-      const payload: UpdateContentDto = {
-        element_id: previewElement.id,
-        value: contentPayload,
-      };
-      updateMutation.mutate(payload);
-    },
-    [previewElement, updateMutation]
-  );
+  const debounce = useDebouncedCallback((newState: Partial<Content>) => {
+    updateMutation.mutate({
+      element_id: previewElement!.id,
+      value: {
+        ...getValues(),
+        ...newState,
+      },
+    });
+  }, 700);
 
   const renderPreviewContent = useMemo(() => {
     return (
@@ -85,6 +83,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
               title="name"
               type="text"
               {...register("name")}
+              onChange={(e) => debounce({ name: e.target.value })}
               className="border border-amber-800/40 rounded-sm bg-background-500/60 p-1 focus:outline-none focus:bg-background focus:border-amber-800"
             />
           </div>
@@ -98,10 +97,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
             >
               Victim
             </label>
-            <Switch
-              onCheckedChange={() => handleSubmit(handleUpdateContent)()}
-              className="my-1 "
-            />
+            <Switch className="my-1 " />
           </div>
           <div className="w-2/3 rounded-sm">
             <div className="flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
@@ -131,8 +127,8 @@ export const Preview = ({ caseId }: { caseId: string }) => {
               Notes
             </label>
             <textarea
-              name="name"
-              title="name"
+              {...register("text")}
+              onChange={(e) => debounce({ text: e.target.value })}
               className="h-full min-h-[300px] p-3 border border-amber-800/40 rounded-sm bg-background-500/60 focus:outline-none focus:bg-background focus:border-amber-800"
             />
           </div>
@@ -140,13 +136,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
         {/* {previewElement} */}
       </div>
     );
-  }, [
-    previewElementId,
-    previewElement?.content?.name,
-    register,
-    handleSubmit,
-    handleUpdateContent,
-  ]);
+  }, [previewElementId, previewElement?.content?.name, register, debounce]);
 
   if (isMobile) {
     return (
