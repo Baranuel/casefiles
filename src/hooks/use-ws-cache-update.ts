@@ -1,3 +1,4 @@
+import { Content } from "@/types/contents"
 import { ElementDto } from "@/types/elements"
 import { useQueryClient } from "@tanstack/react-query"
 
@@ -24,6 +25,7 @@ export const useWsCacheUpdate = (caseId: string) => {
         }
         queryClient.setQueryData([queryKey, caseId], updater)
     }
+
     const wsElementsBatchUpdate = (queryKey: string, updatedElements: ElementDto[]) => {
         const updater = (oldCachedElements: ElementDto[]) => {
             const updatesById = new Map(updatedElements.map(el => [el.id, el]));
@@ -37,10 +39,20 @@ export const useWsCacheUpdate = (caseId: string) => {
         queryClient.setQueryData([queryKey, caseId], updater)
     }
 
+    const wsContentUpdate = (queryKey: string, updatedContent: Content) => {
+         const updater = (oldCachedElements: ElementDto[]) => {
+            if (!oldCachedElements.find(el => el.id === updatedContent.element_id)) return
+
+            return [...oldCachedElements.map(el => el.id === updatedContent.element_id ? { ...el, content: updatedContent } : el)]
+        }
+        queryClient.setQueryData([queryKey, caseId], updater)
+    }
+
     return {
         wsElementCreate,
         wsElementUpdate,
-        wsElementsBatchUpdate
+        wsElementsBatchUpdate,
+        wsContentUpdate
     }
 
 }

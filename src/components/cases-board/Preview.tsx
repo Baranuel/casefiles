@@ -1,24 +1,54 @@
 "use client";
+import { useDebouncedCallback } from "use-debounce";
+import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useCaseContext } from "@/providers/CaseStateProvider";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
 import { useMemo } from "react";
 import { Switch } from "../ui/switch";
+import { Content } from "@/types/contents";
+import { usePreviewElement } from "@/hooks/use-preview-element";
+import { useCaseContentsMutation } from "@/hooks/use-case-contents-mutation";
 
-export const Preview = () => {
-  const { previewElement, setPreviewElement } = useCaseContext();
+export const Preview = ({ caseId }: { caseId: string }) => {
+  const { previewElementId, setPreviewElementId } = useCaseContext();
+  const { getPreviewElement } = usePreviewElement(caseId);
+  const { updateMutation } = useCaseContentsMutation(caseId);
+
   const isMobile = useMediaQuery("(max-width: 768px)");
 
+  const previewElement = getPreviewElement(previewElementId);
+
+  const { register, getValues } = useForm<Content>({
+    values: {
+      id: previewElement?.content?.id || null,
+      name: previewElement?.content?.name || "",
+      text: previewElement?.content?.text || "no value",
+    },
+  });
   const isOpen = Boolean(previewElement);
 
   const handleOpenChange = (open: boolean) => {
-    if (!open) setPreviewElement(null);
+    if (!open) setPreviewElementId(null);
   };
+
+  const debounce = useDebouncedCallback((newState: Partial<Content>) => {
+    updateMutation.mutate({
+      element_id: previewElement!.id,
+      value: {
+        ...getValues(),
+        ...newState,
+      },
+    });
+  }, 700);
 
   const renderPreviewContent = useMemo(() => {
     return (
-      <div className="flex flex-col gap-3 px-3 md:px-6 pt-3 md:pt-6 h-full overflow-auto  bg-[#F1E1CF] shadow-xl">
+      <div
+        key={previewElementId}
+        className="flex flex-col gap-3 px-3 md:px-6 pt-3 md:pt-6 h-full overflow-auto  bg-[#F1E1CF] shadow-xl"
+      >
         <div className="flex gap-4 ">
           <Image
             src={"/avatar-m.svg"}
@@ -30,7 +60,9 @@ export const Preview = () => {
           <div className="flex flex-col gap-4 w-1/2 text-black p-2">
             <div className="flex flex-col">
               <h5 className="text-sm font-semibold ">Name</h5>
-              <span className="text-xl font-bold">Jeremy Collins</span>
+              <span className="text-xl font-bold">
+                {previewElement?.content?.name}
+              </span>
             </div>
             <div className="flex flex-col">
               <h5 className="text-sm font-semibold">Status</h5>
@@ -48,9 +80,10 @@ export const Preview = () => {
               Name
             </label>
             <input
-              name="name"
               title="name"
               type="text"
+              {...register("name")}
+              onChange={(e) => debounce({ name: e.target.value })}
               className="border border-amber-800/40 rounded-sm bg-background-500/60 p-1 focus:outline-none focus:bg-background focus:border-amber-800"
             />
           </div>
@@ -75,7 +108,7 @@ export const Preview = () => {
                 Time of death
               </label>
               <input
-              disabled
+                disabled
                 type="datetime-local"
                 id="timeOfDeath"
                 name="timeOfDeath"
@@ -94,8 +127,8 @@ export const Preview = () => {
               Notes
             </label>
             <textarea
-              name="name"
-              title="name"
+              {...register("text")}
+              onChange={(e) => debounce({ text: e.target.value })}
               className="h-full min-h-[300px] p-3 border border-amber-800/40 rounded-sm bg-background-500/60 focus:outline-none focus:bg-background focus:border-amber-800"
             />
           </div>
@@ -103,11 +136,15 @@ export const Preview = () => {
         {/* {previewElement} */}
       </div>
     );
-  }, []);
+  }, [previewElementId, previewElement?.content?.name, register, debounce]);
 
   if (isMobile) {
     return (
-      <Drawer open={isOpen} onOpenChange={handleOpenChange}>
+      <Drawer
+        key={previewElementId}
+        open={isOpen}
+        onOpenChange={handleOpenChange}
+      >
         <DrawerContent className="h-full bg-[#E4C18E] p-1.5 border border-muted ">
           <DrawerHeader className="p-1.5">
             <DrawerTitle className="hidden">Preview</DrawerTitle>

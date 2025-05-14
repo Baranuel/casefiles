@@ -20,7 +20,7 @@ export default async function CasePage({ params }: CasePageProps) {
         <PageWrapper>
           <Canvas />
           <Toolbar/>
-          <Preview/>
+          <Preview caseId={id}/>
         </PageWrapper>
       </CaseProvider>
     </SocketProvider>

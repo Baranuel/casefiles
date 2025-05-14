@@ -1,4 +1,5 @@
 import z from 'zod'
+import { ContentDto } from './contents'
 
 
 const ElementType = z.union([
@@ -22,7 +23,8 @@ export const Tool = ElementType.or(z.literal('SELECT'))
 export const Element = z.object({
     id: z.string(),
     type: ElementType,
-    position: Position
+    position: Position,
+    content:ContentDto.optional(),
 })
 
 

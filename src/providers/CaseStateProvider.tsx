@@ -17,8 +17,8 @@ import { useCaseElementsMutation } from "@/hooks/use-case-elements-mutation";
 export type State = {
   elements: ElementDto[];
   tool: Tool;
-  previewElement: ElementDto | null;
-  setPreviewElement: Dispatch<SetStateAction<ElementDto | null>>;
+  previewElementId: ElementDto['id'] | null;
+  setPreviewElementId: Dispatch<SetStateAction<ElementDto['id'] | null>>;
   addElement: (element: ElementDto) => void;
   updateElement: (element: ElementDto) => void;
   updateBatchElements: (elements: ElementDto[]) => void;
@@ -38,7 +38,7 @@ export function CaseProvider({
   const { createMutation, updateMutation, updateBatchMutation } = useCaseElementsMutation(caseId);
   const [tool, setTool] = useState<Tool>("SELECT");
 
-  const [previewElement, setPreviewElement] = useState<ElementDto | null>(null);
+  const [previewElementId, setPreviewElementId] = useState<ElementDto['id'] | null>(null);
 
   const addElement = useCallback(
     (newElement: ElementDto) => {
@@ -67,14 +67,14 @@ export function CaseProvider({
     (): State => ({
       elements: elements ?? [],
       tool,
-      previewElement,
-      setPreviewElement,
+      previewElementId,
+      setPreviewElementId,
       addElement,
       updateElement,
       updateBatchElements,
       setTool,
     }),
-    [elements, tool, previewElement, addElement, updateElement, updateBatchElements]
+    [elements, tool, previewElementId, addElement, updateElement, updateBatchElements]
   );
 
   if (isLoading) {
