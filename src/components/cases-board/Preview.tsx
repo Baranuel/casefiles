@@ -4,22 +4,62 @@ import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useCaseContext } from "@/providers/CaseStateProvider";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
 import { useMemo } from "react";
 import { Switch } from "../ui/switch";
 import { Content } from "@/types/contents";
 import { usePreviewElement } from "@/hooks/use-preview-element";
 import { useCaseContentsMutation } from "@/hooks/use-case-contents-mutation";
+import { BottomDrawer } from "./MobileDrawer";
+
+const CustomDrawer = ({
+  open,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) => {
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  return (
+    <BottomDrawer isMobile={isMobile} open={open} onClose={onClose}>
+      {children}
+    </BottomDrawer>
+  );
+
+  return (
+    <div
+      className={`hidden md:flex absolute h-[calc(100vh-64px-64px)] top-[calc(64px+32px)] rounded-b-sm bg-[#E4C18E] p-6 border border-muted w-1/3 min-w-[450px] max-w-[650px] ${
+        !open ? "-translate-x-[90%] rotate-6" : "translate-x-0 rotate-0"
+      }  transition-transform duration-250  z-30 `}
+    >
+      {/**Top Cover */}
+      <div
+        className={`${
+          open
+            ? "-translate-x-[103%] -translate-y-5"
+            : " -translate-x-15  -translate-y-5 shadow-lg"
+        } w-full h-full absolute bg-[#E4C18E] p-6 z-50 rounded-sm transition-transform duration-250 border border-muted`}
+      >
+        <div className="w-full h-full bg-background/20 rounded-sm border border-muted "></div>
+      </div>
+      {/**Tongue */}
+      <div className="h-24 w-12 flex items-center justify-center bg-[#E4C18E] absolute -right-8 -top-[0.85px] border-r border-t border-muted p-2 rounded-r-md ">
+        <div className="h-full w-2 rounded-xl ml-3 bg-muted"></div>
+      </div>
+      {children}
+      {/* {previewElement} */}
+    </div>
+  );
+};
 
 export const Preview = ({ caseId }: { caseId: string }) => {
   const { previewElementId, setPreviewElementId } = useCaseContext();
   const { getPreviewElement } = usePreviewElement(caseId);
   const { updateMutation } = useCaseContentsMutation(caseId);
 
-  const isMobile = useMediaQuery("(max-width: 768px)");
-
   const previewElement = getPreviewElement(previewElementId);
-
+  const isOpen = Boolean(previewElement);
   const { register, getValues } = useForm<Content>({
     values: {
       id: previewElement?.content?.id || null,
@@ -27,52 +67,44 @@ export const Preview = ({ caseId }: { caseId: string }) => {
       text: previewElement?.content?.text || "no value",
     },
   });
-  const isOpen = Boolean(previewElement);
 
-  const handleOpenChange = (open: boolean) => {
-    if (!open) setPreviewElementId(null);
-  };
+  const handleClose = () => setPreviewElementId(null);
 
   const debounce = useDebouncedCallback((newState: Partial<Content>) => {
+    if (!previewElement) return;
     updateMutation.mutate({
-      element_id: previewElement!.id,
-      value: {
-        ...getValues(),
-        ...newState,
-      },
+      element_id: previewElement.id,
+      value: { ...getValues(), ...newState },
     });
   }, 700);
 
   const renderPreviewContent = useMemo(() => {
     return (
-      <div
-        key={previewElementId}
-        className="flex flex-col gap-3 px-3 md:px-6 pt-3 md:pt-6 h-full overflow-auto  bg-[#F1E1CF] shadow-xl"
-      >
-        <div className="flex gap-4 ">
+      <div className="flex flex-col gap-3 px-3 md:px-6 pt-3 md:pt-6 z-40 overflow-scroll bg-[#F1E1CF] shadow-xl">
+        <div className="flex gap-4">
           <Image
-            src={"/avatar-m.svg"}
+            src="/avatar-m.svg"
             width={100}
             height={100}
             alt="head-shot image"
-            className="w-1/2 -rotate-1 rounded-sm shadow-md aspect-square border border-muted "
+            className="w-1/2 -rotate-1 rounded-sm shadow-md aspect-square border border-muted"
           />
           <div className="flex flex-col gap-4 w-1/2 text-black p-2">
             <div className="flex flex-col">
-              <h5 className="text-sm font-semibold ">Name</h5>
+              <h5 className="text-sm font-semibold">Name</h5>
               <span className="text-xl font-bold">
                 {previewElement?.content?.name}
               </span>
             </div>
             <div className="flex flex-col">
               <h5 className="text-sm font-semibold">Status</h5>
-              <span className="text-xl font-bold ">Suspect</span>
+              <span className="text-xl font-bold">Suspect</span>
             </div>
           </div>
         </div>
         {/* Second Row */}
-        <div className=" flex gap-2 mt-3">
-          <div className=" flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
+        <div className="flex gap-2 mt-3">
+          <div className="flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
             <label
               htmlFor="name"
               className="text-sm font-semibold text-amber-800"
@@ -89,15 +121,15 @@ export const Preview = ({ caseId }: { caseId: string }) => {
           </div>
         </div>
         {/* Third Row */}
-        <div className=" flex gap-2 ">
-          <div className="w-1/3 flex flex-col gap-1 p-3  bg-amber-900/20 rounded-sm">
+        <div className="flex gap-2">
+          <div className="w-1/3 flex flex-col gap-1 p-3 bg-amber-900/20 rounded-sm">
             <label
-              htmlFor="name"
+              htmlFor="victim"
               className="text-sm font-semibold text-amber-800"
             >
               Victim
             </label>
-            <Switch className="my-1 " />
+            <Switch className="my-1" />
           </div>
           <div className="w-2/3 rounded-sm">
             <div className="flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
@@ -118,10 +150,10 @@ export const Preview = ({ caseId }: { caseId: string }) => {
           </div>
         </div>
         {/* Fourth Row */}
-        <div className="mb-3 md:mb-6 h-full gap-2 ">
-          <div className=" flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
+        <div className="mb-3 md:mb-6 h-full gap-2">
+          <div className="flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
             <label
-              htmlFor="name"
+              htmlFor="text"
               className="text-sm font-semibold text-amber-800"
             >
               Notes
@@ -133,50 +165,13 @@ export const Preview = ({ caseId }: { caseId: string }) => {
             />
           </div>
         </div>
-        {/* {previewElement} */}
       </div>
     );
-  }, [previewElementId, previewElement?.content?.name, register, debounce]);
-
-  if (isMobile) {
-    return (
-      <Drawer
-        key={previewElementId}
-        open={isOpen}
-        onOpenChange={handleOpenChange}
-      >
-        <DrawerContent className="h-full bg-[#E4C18E] p-1.5 border border-muted ">
-          <DrawerHeader className="p-1.5">
-            <DrawerTitle className="hidden">Preview</DrawerTitle>
-          </DrawerHeader>
-          {renderPreviewContent}
-        </DrawerContent>
-      </Drawer>
-    );
-  }
+  }, [previewElement, register, debounce]);
 
   return (
-    <div
-      className={`hidden md:flex absolute h-[calc(100vh-64px-64px)] top-[calc(64px+32px)] rounded-b-sm bg-[#E4C18E] p-6 border border-muted w-1/3 min-w-[450px] max-w-[650px] ${
-        !isOpen ? "-translate-x-[90%] rotate-6" : "translate-x-0 rotate-0"
-      }  transition-transform duration-250  z-50 `}
-    >
-      {/**Top Cover */}
-      <div
-        className={`${
-          isOpen
-            ? "-translate-x-[103%] -translate-y-5"
-            : " -translate-x-15  -translate-y-5 shadow-lg"
-        } w-full h-full absolute bg-[#E4C18E] p-6 z-50 rounded-sm transition-transform duration-250 border border-muted`}
-      >
-        <div className="w-full h-full bg-background/20 rounded-sm border border-muted "></div>
-      </div>
-      {/**Tongue */}
-      <div className="h-24 w-12 flex items-center justify-center bg-[#E4C18E] absolute -right-8 -top-[0.85px] border-r border-t border-muted p-2 rounded-r-md ">
-        <div className="h-full w-2 rounded-xl ml-3 bg-muted"></div>
-      </div>
+    <CustomDrawer open={isOpen} onClose={handleClose}>
       {renderPreviewContent}
-      {/* {previewElement} */}
-    </div>
+    </CustomDrawer>
   );
 };
