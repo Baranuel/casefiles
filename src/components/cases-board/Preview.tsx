@@ -59,6 +59,8 @@ export const Preview = ({ caseId }: { caseId: string }) => {
             </div>
           </div>
         </div>
+
+        
         {/* Second Row */}
         <div className="flex gap-2 mt-3">
           <div className="flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
@@ -77,6 +79,8 @@ export const Preview = ({ caseId }: { caseId: string }) => {
             />
           </div>
         </div>
+
+
         {/* Third Row */}
         <div className="flex gap-2">
           <div className="w-1/3 flex flex-col gap-1 p-3 bg-amber-900/20 rounded-sm">
@@ -106,8 +110,11 @@ export const Preview = ({ caseId }: { caseId: string }) => {
             </div>
           </div>
         </div>
+
+
+
         {/* Fourth Row */}
-        <div className="mb-3 md:mb-6 h-full gap-2">
+        <div className="flex-1 mb-3 md:mb-6 h-full gap-2">
           <div className="flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
             <label
               htmlFor="text"
@@ -118,7 +125,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
             <textarea
               {...register("text")}
               onChange={(e) => debounce({ text: e.target.value })}
-              className="h-full min-h-[300px] p-3 border border-amber-800/40 rounded-sm bg-background-500/60 focus:outline-none focus:bg-background focus:border-amber-800"
+              className="h-full min-h-[50vh] p-3 border border-amber-800/40 rounded-sm bg-background-500/60 focus:outline-none focus:bg-background focus:border-amber-800"
             />
           </div>
         </div>
