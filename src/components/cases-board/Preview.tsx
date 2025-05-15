@@ -2,56 +2,13 @@
 import { useDebouncedCallback } from "use-debounce";
 import { useForm } from "react-hook-form";
 import Image from "next/image";
-import { useMediaQuery } from "@/hooks/use-media-query";
 import { useCaseContext } from "@/providers/CaseStateProvider";
 import { useMemo } from "react";
 import { Switch } from "../ui/switch";
 import { Content } from "@/types/contents";
 import { usePreviewElement } from "@/hooks/use-preview-element";
 import { useCaseContentsMutation } from "@/hooks/use-case-contents-mutation";
-import { BottomDrawer } from "./MobileDrawer";
-
-const CustomDrawer = ({
-  open,
-  onClose,
-  children,
-}: {
-  open: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-}) => {
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  return (
-    <BottomDrawer isMobile={isMobile} open={open} onClose={onClose}>
-      {children}
-    </BottomDrawer>
-  );
-
-  return (
-    <div
-      className={`hidden md:flex absolute h-[calc(100vh-64px-64px)] top-[calc(64px+32px)] rounded-b-sm bg-[#E4C18E] p-6 border border-muted w-1/3 min-w-[450px] max-w-[650px] ${
-        !open ? "-translate-x-[90%] rotate-6" : "translate-x-0 rotate-0"
-      }  transition-transform duration-250  z-30 `}
-    >
-      {/**Top Cover */}
-      <div
-        className={`${
-          open
-            ? "-translate-x-[103%] -translate-y-5"
-            : " -translate-x-15  -translate-y-5 shadow-lg"
-        } w-full h-full absolute bg-[#E4C18E] p-6 z-50 rounded-sm transition-transform duration-250 border border-muted`}
-      >
-        <div className="w-full h-full bg-background/20 rounded-sm border border-muted "></div>
-      </div>
-      {/**Tongue */}
-      <div className="h-24 w-12 flex items-center justify-center bg-[#E4C18E] absolute -right-8 -top-[0.85px] border-r border-t border-muted p-2 rounded-r-md ">
-        <div className="h-full w-2 rounded-xl ml-3 bg-muted"></div>
-      </div>
-      {children}
-      {/* {previewElement} */}
-    </div>
-  );
-};
+import { CustomDrawer } from "./CustomDrawer";
 
 export const Preview = ({ caseId }: { caseId: string }) => {
   const { previewElementId, setPreviewElementId } = useCaseContext();
@@ -80,7 +37,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
 
   const renderPreviewContent = useMemo(() => {
     return (
-      <div className="flex flex-col gap-3 px-3 md:px-6 pt-3 md:pt-6 z-40 overflow-scroll bg-[#F1E1CF] shadow-xl">
+      <div className="flex flex-col gap-3 px-3 md:px-6 pt-3 md:pt-6 z-40 overflow-scroll bg-[#F1E1CF] shadow-xl border border-amber-800/20 ">
         <div className="flex gap-4">
           <Image
             src="/avatar-m.svg"
