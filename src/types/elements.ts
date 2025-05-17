@@ -18,7 +18,7 @@ export const Position = z.object({
 })
 
 
-export const Tool = ElementType.or(z.literal('SELECT'))
+export const Tool = ElementType.or(z.literal('SELECT')).or(z.literal('MOVE'))
 
 export const Element = z.object({
     id: z.string(),

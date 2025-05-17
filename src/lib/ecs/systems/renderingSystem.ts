@@ -182,7 +182,7 @@ export class RenderingSystem implements System {
     private drawIntent(ctx: CanvasRenderingContext2D, tool: Tool) {
         const input = this.engine.getSystem('InputSystem');
         const mouse = input?.getWorldMousePosition();
-        if (!mouse || tool === 'SELECT') return;
+        if (!mouse || tool === 'SELECT' || tool === 'MOVE') return;
 
         const { width, height } = ELEMENT_CONFIGURATION[tool]
         ctx.save();

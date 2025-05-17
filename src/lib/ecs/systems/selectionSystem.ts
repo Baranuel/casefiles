@@ -28,7 +28,7 @@ export class SelectionSystem implements System {
 
     onTouchEnd = (data: EngineEvents['touch:end']) => {
         const { x, y } = data;
-        this.onSelectCleanup(x, y, data.mouseDownSnapshot);
+        this.onSelectCleanup(x, y, data.mouseDownSnapshot,false, data.screenPositionSnapshot, data.screenX, data.screenY);
     }
 
     onMouseUp = (data: EngineEvents['mouse:up']) => {
@@ -54,10 +54,11 @@ export class SelectionSystem implements System {
         }
     }
 
-    onSelectCleanup = (x: number, y: number, mouseDownSnapshot?: MousePosition, modifier?: boolean) => {
+    onSelectCleanup = (x: number, y: number, mouseDownSnapshot?: MousePosition, modifier?: boolean, mouseScreenPosition?:MousePosition, screenX?:number, screenY?:number) => {
         const selectedEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
         const finishedClickInSelectionArea = isPointInSelectionArea(selectedEntities, x, y);
         const movedMouseSinceMouseDown = mouseDownSnapshot && (Math.abs(x - mouseDownSnapshot.x) > 5 || Math.abs(y - mouseDownSnapshot.y) > 5);
+        const screenMovedMouseSinceMouseDown = mouseScreenPosition && (Math.abs(screenX! - mouseScreenPosition.x) > 5 || Math.abs(screenY! - mouseScreenPosition.y) > 5);
 
         if (finishedClickInSelectionArea && !modifier && !movedMouseSinceMouseDown) {
             const entityHit = getEntityAtPosition(selectedEntities, x, y);
@@ -66,7 +67,7 @@ export class SelectionSystem implements System {
             }
         }
 
-        if (!finishedClickInSelectionArea && !movedMouseSinceMouseDown) {
+        if (!finishedClickInSelectionArea && !movedMouseSinceMouseDown && !screenMovedMouseSinceMouseDown) {
             const entityHit = getEntityAtPosition(this.engine.getEntitiesWithComponents('selectable'), x, y);
             this.handleSelectPreviewEntity(entityHit);
         }
@@ -103,6 +104,7 @@ export class SelectionSystem implements System {
 
         setPreviewElementId(elementId)
     }
+
 
 
 

@@ -37,7 +37,7 @@ export class UserActionSystem implements System {
 
 
     onTouchStart = (data: EngineEvents['touch:start']) => {
-        if(data.touches.length > 1) return this.eventSystem?.emit('selection:cleared', undefined)
+        if (data.touches.length > 1 || this.engine.getState().tool === 'MOVE') return this.eventSystem?.emit('selection:cleared', undefined)
         this.handleSelectionEvent(data.x, data.y, data.mouseDownSnapshot)
     }
 
@@ -62,7 +62,7 @@ export class UserActionSystem implements System {
     }
 
 
-    
+
 
 
     private handleCleanup = () => {
@@ -101,7 +101,7 @@ export class UserActionSystem implements System {
 
         }
 
-        if (tool !== 'SELECT') {
+        if (tool !== 'SELECT' && tool !== 'MOVE') {
             // Probably emit a create action here
             this.eventSystem?.emit('action:create', { x, y, tool })
         }
@@ -128,6 +128,7 @@ export class UserActionSystem implements System {
                 break;
         }
     }
+
 
 
     private checkForMoveInteraction(mouse: { x: number, y: number }, entities: Entity[]) {

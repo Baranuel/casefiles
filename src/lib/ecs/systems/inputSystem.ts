@@ -16,6 +16,7 @@ export class InputSystem implements System {
 
   public mousePosition = { x: 0, y: 0 }
   public onMouseDownPositionSnapshot = { x: 0, y: 0 }
+  public onMouseDownScreenPositionSnapshot = { x: 0, y: 0 }
   public isMouseDown = false
   public isDragging = false
   private mouseButton = 0
@@ -37,11 +38,11 @@ export class InputSystem implements System {
     const opts = { signal: this.controller.signal }
     this.canvas.addEventListener("touchstart", this.onTouchStart, opts)
     this.canvas.addEventListener("touchmove", this.onTouchMove, opts)
-    this.canvas.addEventListener("touchend",   this.onTouchEnd,   opts)
+    this.canvas.addEventListener("touchend", this.onTouchEnd, opts)
     this.canvas.addEventListener("mousedown", this.onMouseDown, opts)
-    this.canvas.addEventListener("mouseup",   this.onMouseUp,   opts)
+    this.canvas.addEventListener("mouseup", this.onMouseUp, opts)
     this.canvas.addEventListener("mousemove", this.updateMousePosition, opts)
-    this.canvas.addEventListener("wheel",     this.onWheel,     opts)
+    this.canvas.addEventListener("wheel", this.onWheel, opts)
   }
 
   // —————————————————————————————
@@ -93,7 +94,7 @@ export class InputSystem implements System {
         x: mousePos.x,
         y: mousePos.y,
         modifier: e.shiftKey || e.ctrlKey || e.altKey,
-        mouseDownSnapshot: this.onMouseDownPositionSnapshot
+        mouseDownSnapshot: this.onMouseDownPositionSnapshot,
       })
     }
   }
@@ -108,6 +109,10 @@ export class InputSystem implements System {
         x: mousePos.x,
         y: mousePos.y,
         mouseDownSnapshot: this.onMouseDownPositionSnapshot,
+        mouseScreenPositionSnapshot: {
+          x: e.clientX,
+          y: e.clientY
+        },
         modifier: e.shiftKey || e.ctrlKey || e.altKey
       })
 
@@ -132,7 +137,7 @@ export class InputSystem implements System {
   private onTouchStart = (e: TouchEvent) => {
     e.preventDefault()
     this.isMouseDown = true
-    
+
 
     if (this.eventSystem) {
 
@@ -145,6 +150,7 @@ export class InputSystem implements System {
 
       this.mousePosition = { x: clientX, y: clientY }
       this.onMouseDownPositionSnapshot = { ...this.mousePosition }
+      this.onMouseDownScreenPositionSnapshot = { x: touch.clientX, y: touch.clientY }
 
       this.eventSystem.emit('touch:start', {
         x: clientX,
@@ -152,7 +158,8 @@ export class InputSystem implements System {
         screenX: touch.clientX,
         screenY: touch.clientY,
         touches: e.touches,
-        mouseDownSnapshot: this.onMouseDownPositionSnapshot
+        mouseDownSnapshot: this.onMouseDownPositionSnapshot,
+        screenPositionSnapshot: this.onMouseDownScreenPositionSnapshot
       })
     }
   }
@@ -173,7 +180,9 @@ export class InputSystem implements System {
         screenX: touch.clientX,
         screenY: touch.clientY,
         touches: e.touches,
-        mouseDownSnapshot: this.onMouseDownPositionSnapshot
+        mouseDownSnapshot: this.onMouseDownPositionSnapshot,
+        screenPositionSnapshot: this.onMouseDownScreenPositionSnapshot
+
       })
     }
   }
@@ -198,7 +207,9 @@ export class InputSystem implements System {
         screenX: touch.clientX,
         screenY: touch.clientY,
         touches: e.touches,
-        mouseDownSnapshot: this.onMouseDownPositionSnapshot
+        mouseDownSnapshot: this.onMouseDownPositionSnapshot,
+        screenPositionSnapshot: this.onMouseDownScreenPositionSnapshot
+
       })
     }
   }
@@ -297,7 +308,7 @@ export class InputSystem implements System {
   // —————————————————————————————
   //  Helpers
   // —————————————————————————————
- public getWorldMousePosition() {
+  public getWorldMousePosition() {
     return this.mousePosition
   }
 }
