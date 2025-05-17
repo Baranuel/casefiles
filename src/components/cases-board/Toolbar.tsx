@@ -1,33 +1,46 @@
 "use client";
-import {  useCaseContext } from "@/providers/CaseStateProvider";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { useCaseContext } from "@/providers/CaseStateProvider";
 import { Tool } from "@/types/elements";
 
-import { Move, User, MapPin, StickyNote, ArrowUpFromDot } from "lucide-react";
-import { JSX } from "react";
+import {
+  Move,
+  User,
+  MapPin,
+  StickyNote,
+  ArrowUpFromDot,
+  Hand,
+} from "lucide-react";
+import { JSX, useMemo } from "react";
 
 const tools: { id: Tool; icon: JSX.Element; label: string }[] = [
+  {
+    id: "MOVE",
+    icon: <Hand className="w-5 h-5" />,
+    label: "Move",
+  },
   {
     id: "SELECT",
     icon: <Move className="w-5 h-5" />,
     label: "Select",
   },
   {
-    id: 'PERSON',
+    id: "PERSON",
     icon: <User className="w-5 h-5" />,
     label: "Person",
   },
   {
-    id: 'LOCATION',
+    id: "LOCATION",
     icon: <MapPin className="w-5 h-5" />,
     label: "Location",
   },
   {
-    id: 'POINTER',
+    id: "POINTER",
     icon: <ArrowUpFromDot className="w-5 h-5" />,
     label: "Line",
   },
   {
-    id: 'NOTE',
+    id: "NOTE",
     icon: <StickyNote className="w-5 h-5" />,
     label: "Note",
   },
@@ -35,8 +48,16 @@ const tools: { id: Tool; icon: JSX.Element; label: string }[] = [
 
 export const Toolbar = () => {
   // const params = useParams<{id:string}>()
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const { tool, setTool } = useCaseContext();
+
+  const toolsArray = useMemo(() => {
+    if (!isMobile) {
+      return tools.filter((t) => t.id !== "MOVE");
+    }
+    return tools;
+  }, [isMobile]);
   // const {deleteAllMutation} = useCaseElementsMutation(params.id)
 
   return (
@@ -50,7 +71,7 @@ export const Toolbar = () => {
             }px)`,
           }}
         />
-        {tools.map((tool) => (
+        {toolsArray.map((tool) => (
           <button
             key={tool.id}
             onClick={() => {

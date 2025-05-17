@@ -13,12 +13,13 @@ import {
 import type { ElementDto, Tool } from "@/types/elements";
 import { useCaseElementsQuery } from "@/hooks/use-case-elements-query";
 import { useCaseElementsMutation } from "@/hooks/use-case-elements-mutation";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 export type State = {
   elements: ElementDto[];
   tool: Tool;
-  previewElementId: ElementDto['id'] | null;
-  setPreviewElementId: Dispatch<SetStateAction<ElementDto['id'] | null>>;
+  previewElementId: ElementDto["id"] | null;
+  setPreviewElementId: Dispatch<SetStateAction<ElementDto["id"] | null>>;
   addElement: (element: ElementDto) => void;
   updateElement: (element: ElementDto) => void;
   updateBatchElements: (elements: ElementDto[]) => void;
@@ -35,15 +36,25 @@ export function CaseProvider({
   caseId: string;
 }) {
   const { data: elements, isLoading } = useCaseElementsQuery(caseId);
-  const { createMutation, updateMutation, updateBatchMutation } = useCaseElementsMutation(caseId);
-  const [tool, setTool] = useState<Tool>("SELECT");
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const { createMutation, updateMutation, updateBatchMutation } =
+    useCaseElementsMutation(caseId);
 
-  const [previewElementId, setPreviewElementId] = useState<ElementDto['id'] | null>(null);
+  const initialTool = useMemo(() => {
+    if (!isMobile) return "MOVE";
+
+    return "SELECT";
+  }, [isMobile]);
+  const [tool, setTool] = useState<Tool>(initialTool);
+
+  const [previewElementId, setPreviewElementId] = useState<
+    ElementDto["id"] | null
+  >(null);
 
   const addElement = useCallback(
     (newElement: ElementDto) => {
       createMutation.mutate(newElement);
-      setTool('SELECT')
+      setTool("SELECT");
     },
     [createMutation]
   );
@@ -62,7 +73,6 @@ export function CaseProvider({
     [updateBatchMutation]
   );
 
-
   const contextStateValue = useMemo(
     (): State => ({
       elements: elements ?? [],
@@ -74,7 +84,14 @@ export function CaseProvider({
       updateBatchElements,
       setTool,
     }),
-    [elements, tool, previewElementId, addElement, updateElement, updateBatchElements]
+    [
+      elements,
+      tool,
+      previewElementId,
+      addElement,
+      updateElement,
+      updateBatchElements,
+    ]
   );
 
   if (isLoading) {
