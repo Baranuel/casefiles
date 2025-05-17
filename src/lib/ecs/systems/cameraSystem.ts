@@ -98,7 +98,7 @@ export class CameraSystem implements System {
         }
         else if (t.length === 1 && this.lastTouchPos) {
             if (selectedEntities.length > 0) return
-            if(this.engine.getState().tool === 'MOVE') return 
+            if(this.engine.getState().tool !== 'MOVE') return 
 
             const dx = (t[0].screenX - this.lastTouchPos.x) / camera.zoom;
             const dy = (t[0].screenY - this.lastTouchPos.y) / camera.zoom;
