@@ -67,7 +67,7 @@ export const Toolbar = () => {
           className="absolute w-10 h-10 bg-amber-700 rounded-lg transition-transform duration-200"
           style={{
             transform: `translateX(${
-              tools.findIndex((t) => t.id === tool) * (40 + 8)
+              toolsArray.findIndex((t) => t.id === tool) * (40 + 8)
             }px)`,
           }}
         />

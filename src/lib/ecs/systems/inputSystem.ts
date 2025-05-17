@@ -20,6 +20,7 @@ export class InputSystem implements System {
   public isMouseDown = false
   public isDragging = false
   private mouseButton = 0
+  private keyPressed: string | null = ''
 
   // —————————————————————————————
   //  Constructor
@@ -43,6 +44,9 @@ export class InputSystem implements System {
     this.canvas.addEventListener("mouseup", this.onMouseUp, opts)
     this.canvas.addEventListener("mousemove", this.updateMousePosition, opts)
     this.canvas.addEventListener("wheel", this.onWheel, opts)
+    window.addEventListener("keydown", this.onKeyDown, opts)
+    window.addEventListener("keyup", this.onKeyUp, opts)
+
   }
 
   // —————————————————————————————
@@ -55,6 +59,7 @@ export class InputSystem implements System {
 
       if (!this.isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
         this.isDragging = true
+
 
         if (this.eventSystem) {
           this.eventSystem.emit('mouse:drag:start', {
@@ -82,10 +87,21 @@ export class InputSystem implements System {
   // —————————————————————————————
   //  DOM Event Handlers
   // —————————————————————————————
+
+  private onKeyDown = (e: KeyboardEvent) => {
+    this.keyPressed = e.key
+  }
+
+  private onKeyUp = () => {
+    this.keyPressed = null
+  }
+
   private onMouseDown = (e: MouseEvent) => {
     this.isMouseDown = true
     this.mouseButton = e.button
     this.onMouseDownPositionSnapshot = { ...this.mousePosition }
+
+    this.onMouseDownScreenPositionSnapshot = { x: e.clientX, y: e.clientY }
 
     if (this.eventSystem) {
       const mousePos = this.getWorldMousePosition()
@@ -95,6 +111,7 @@ export class InputSystem implements System {
         y: mousePos.y,
         modifier: e.shiftKey || e.ctrlKey || e.altKey,
         mouseDownSnapshot: this.onMouseDownPositionSnapshot,
+        screenPositionSnapshot: this.onMouseDownScreenPositionSnapshot
       })
     }
   }
@@ -109,11 +126,10 @@ export class InputSystem implements System {
         x: mousePos.x,
         y: mousePos.y,
         mouseDownSnapshot: this.onMouseDownPositionSnapshot,
-        mouseScreenPositionSnapshot: {
-          x: e.clientX,
-          y: e.clientY
-        },
-        modifier: e.shiftKey || e.ctrlKey || e.altKey
+        screenPositionSnapshot: this.onMouseDownScreenPositionSnapshot,
+        modifier: e.shiftKey || e.ctrlKey || e.altKey,
+        screenX: e.clientX,
+        screenY: e.clientY
       })
 
       this.emitEntityHoverEvent()
@@ -217,6 +233,7 @@ export class InputSystem implements System {
   private updateMousePosition = (e: MouseEvent | WheelEvent) => {
     const { canvas, engine } = this
     const { camera } = engine
+
     const rect = canvas.getBoundingClientRect()
     const screenX = e.clientX - rect.left
     const screenY = e.clientY - rect.top
@@ -230,6 +247,16 @@ export class InputSystem implements System {
       this.eventSystem.emit('mouse:move', {
         mouse: { x: clientX, y: clientY },
         modifier: e.shiftKey || e.ctrlKey || e.altKey
+      })
+    }
+
+    if (this.isMouseDown && this.keyPressed === ' ') {
+      this.eventSystem?.emit('action:pan', {
+        mouse: {
+          x: e.movementX,
+          y: e.movementY
+        },
+        mouseDownSnapshot: this.onMouseDownPositionSnapshot
       })
     }
 

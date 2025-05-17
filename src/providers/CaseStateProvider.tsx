@@ -41,7 +41,7 @@ export function CaseProvider({
     useCaseElementsMutation(caseId);
 
   const initialTool = useMemo(() => {
-    if (!isMobile) return "MOVE";
+    if (isMobile) return "MOVE";
 
     return "SELECT";
   }, [isMobile]);
