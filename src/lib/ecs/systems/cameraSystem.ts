@@ -87,10 +87,10 @@ export class CameraSystem implements System {
 
     private onTouchMove = (data: EngineEvents['touch:move']) => {
         const selectedEntities = this.engine.getEntitiesWithComponents("selectable").filter(entity => entity.getComponent("selectable")?.selected);
-
+        
         const { camera } = this.engine;
         const t = data.touches;
-
+        
         if (t.length === 2 && this.pinch.startDist && this.pinch.startCam) {
             const newD = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
             const scale = newD / this.pinch.startDist;
@@ -98,6 +98,8 @@ export class CameraSystem implements System {
         }
         else if (t.length === 1 && this.lastTouchPos) {
             if (selectedEntities.length > 0) return
+            if(this.engine.getState().tool === 'MOVE') return 
+
             const dx = (t[0].screenX - this.lastTouchPos.x) / camera.zoom;
             const dy = (t[0].screenY - this.lastTouchPos.y) / camera.zoom;
             this.engine.camera = { ...camera, x: camera.x - dx, y: camera.y - dy };
