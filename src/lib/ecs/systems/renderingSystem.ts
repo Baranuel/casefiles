@@ -41,7 +41,6 @@ export class RenderingSystem implements System {
 
 
     private onPanStart = () => {
-        console.log('Panning started');
         this.currentCursor = 'grabbing'
     }
     private onActionChange = (data: EngineEvents['action:change']) => {

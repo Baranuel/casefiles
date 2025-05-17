@@ -1,4 +1,4 @@
-import { MousePosition, System } from "@/types/engine";
+import { System } from "@/types/engine";
 import { Engine } from "..";
 import { Entity } from "../entities/Entity";
 import { PositionWithinElement } from "@/types/elements";
@@ -19,23 +19,11 @@ export class SelectionSystem implements System {
         this.eventSystem = this.engine.getSystem('EventSystem') as EventSystem;
 
         if (this.eventSystem) {
-            this.eventSystem.subscribe('touch:end', this.onTouchEnd);
-            this.eventSystem.subscribe('mouse:up', this.onMouseUp);
             this.eventSystem.subscribe('action:select', this.onActionSelect);
+            this.eventSystem.subscribe('action:select:end', this.onSelectCleanup);
             this.eventSystem.subscribe('selection:cleared', this.clearSelection);
         }
     }
-
-    onTouchEnd = (data: EngineEvents['touch:end']) => {
-        const { x, y } = data;
-        this.onSelectCleanup(x, y, data.mouseDownSnapshot,false, data.screenPositionSnapshot, data.screenX, data.screenY);
-    }
-
-    onMouseUp = (data: EngineEvents['mouse:up']) => {
-        console.log('Mouse up event', data);
-        this.onSelectCleanup(data.x, data.y, data.mouseDownSnapshot, data.modifier,data.screenPositionSnapshot, data.screenX, data.screenY);
-    }
-
 
     onActionSelect = (data: EngineEvents['action:select']) => {
         const selectableEntities = this.engine.getEntitiesWithComponents('selectable');
@@ -45,7 +33,6 @@ export class SelectionSystem implements System {
         const clickedInSelectionArea = isPointInSelectionArea(selectedEntities, data.mouse.x, data.mouse.y);
 
         if (clickedInSelectionArea && !data.modifier) {
-            console.log('Clicked in selection area, but no modifier key pressed');
             return
         }
         if (!entityHit && selectedEntities.length === 1) {
@@ -55,25 +42,27 @@ export class SelectionSystem implements System {
         }
     }
 
-    onSelectCleanup = (x: number, y: number, mouseDownSnapshot?: MousePosition, modifier?: boolean, mouseScreenPosition?:MousePosition, screenX?:number, screenY?:number) => {
+    onSelectCleanup = (data: EngineEvents['action:select:end']) => {
+        const { mouse, mouseDownSnapshot, modifier, mouseScreenPositionSnapshot, screenX, screenY } = data;
+        const { x, y } = mouse;
         const selectedEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
         const finishedClickInSelectionArea = isPointInSelectionArea(selectedEntities, x, y);
         const movedMouseSinceMouseDown = mouseDownSnapshot && (Math.abs(x - mouseDownSnapshot.x) > 5 || Math.abs(y - mouseDownSnapshot.y) > 5);
-        const screenMovedMouseSinceMouseDown = mouseScreenPosition && (Math.abs(screenX! - mouseScreenPosition.x) > 5 || Math.abs(screenY! - mouseScreenPosition.y) > 5);
+        const screenMovedMouseSinceMouseDown = mouseScreenPositionSnapshot && (Math.abs(screenX! - mouseScreenPositionSnapshot.x) > 5 || Math.abs(screenY! - mouseScreenPositionSnapshot.y) > 5);
 
-        if (finishedClickInSelectionArea && !modifier && !movedMouseSinceMouseDown) {
+        if (finishedClickInSelectionArea && !modifier && !movedMouseSinceMouseDown && !screenMovedMouseSinceMouseDown) {
             const entityHit = getEntityAtPosition(selectedEntities, x, y);
             if (entityHit && selectedEntities.length > 1) {
                 this.selectEntity(entityHit, false)
             }
         }
 
-        if (!finishedClickInSelectionArea && !movedMouseSinceMouseDown && !screenMovedMouseSinceMouseDown) {
+        if (!finishedClickInSelectionArea && !movedMouseSinceMouseDown && !screenMovedMouseSinceMouseDown && !modifier) {
             const entityHit = getEntityAtPosition(this.engine.getEntitiesWithComponents('selectable'), x, y);
             this.handleSelectPreviewEntity(entityHit);
         }
 
-        if (!movedMouseSinceMouseDown && !modifier && selectedEntities.length > 1) {
+        if (!movedMouseSinceMouseDown && !screenMovedMouseSinceMouseDown && !modifier && selectedEntities.length > 1) {
             return this.clearSelection()
         }
     }
@@ -123,8 +112,7 @@ export class SelectionSystem implements System {
     destroy() {
         if (this.eventSystem) {
             this.eventSystem.unsubscribe('action:select', this.onActionSelect);
-            this.eventSystem.unsubscribe('touch:end', this.onTouchEnd);
-            this.eventSystem.unsubscribe('mouse:up', this.onMouseUp);
+            this.eventSystem.unsubscribe('action:select:end', this.onSelectCleanup);
             this.eventSystem.unsubscribe('selection:cleared', this.clearSelection);
 
         }

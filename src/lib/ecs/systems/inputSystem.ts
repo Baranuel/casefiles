@@ -126,7 +126,7 @@ export class InputSystem implements System {
         x: mousePos.x,
         y: mousePos.y,
         mouseDownSnapshot: this.onMouseDownPositionSnapshot,
-        screenPositionSnapshot: this.onMouseDownScreenPositionSnapshot,
+        mouseScreenPositionSnapshot: this.onMouseDownScreenPositionSnapshot,
         modifier: e.shiftKey || e.ctrlKey || e.altKey,
         screenX: e.clientX,
         screenY: e.clientY
@@ -175,7 +175,7 @@ export class InputSystem implements System {
         screenY: touch.clientY,
         touches: e.touches,
         mouseDownSnapshot: this.onMouseDownPositionSnapshot,
-        screenPositionSnapshot: this.onMouseDownScreenPositionSnapshot
+        mouseScreenPositionSnapshot: this.onMouseDownScreenPositionSnapshot
       })
     }
   }
@@ -197,7 +197,7 @@ export class InputSystem implements System {
         screenY: touch.clientY,
         touches: e.touches,
         mouseDownSnapshot: this.onMouseDownPositionSnapshot,
-        screenPositionSnapshot: this.onMouseDownScreenPositionSnapshot
+        mouseScreenPositionSnapshot: this.onMouseDownScreenPositionSnapshot
 
       })
     }
@@ -224,7 +224,7 @@ export class InputSystem implements System {
         screenY: touch.clientY,
         touches: e.touches,
         mouseDownSnapshot: this.onMouseDownPositionSnapshot,
-        screenPositionSnapshot: this.onMouseDownScreenPositionSnapshot
+        mouseScreenPositionSnapshot: this.onMouseDownScreenPositionSnapshot
 
       })
     }
