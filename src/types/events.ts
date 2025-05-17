@@ -10,7 +10,7 @@ export interface EngineEvents {
     // Mouse events
     'mouse:move': { mouse:MousePosition, modifier: boolean };
     'mouse:down': { x: number, y: number, modifier?: boolean, mouseDownSnapshot:{x:number, y:number}, screenPositionSnapshot?:MousePosition };
-    'mouse:up': { x: number, y: number, mouseDownSnapshot?: { x: number, y: number }, mouseScreenPositionSnapshot?:MousePosition,  modifier?: boolean,   screenPositionSnapshot?: MousePosition; screenX?: number, screenY?: number };
+    'mouse:up': { x: number, y: number, mouseDownSnapshot: { x: number, y: number }, mouseScreenPositionSnapshot:MousePosition,  modifier?: boolean,   screenPositionSnapshot?: MousePosition; screenX?: number, screenY?: number };
     'mouse:drag': { x: number, y: number, mouseDownSnapshot: { x: number, y: number }, modifier?: boolean };
 
     'touch:start': TouchEvent;
@@ -24,6 +24,7 @@ export interface EngineEvents {
     // Interaction events
     'action:pan:start': undefined;
     'action:pan': {mouse:MousePosition, mouseDownSnapshot:MousePosition};
+    'action:select:end':{mouse:MousePosition, mouseDownSnapshot:MousePosition, modifier?:boolean, mouseScreenPositionSnapshot?:MousePosition, screenX?:number, screenY?:number};
     'action:select': {mouse:MousePosition,  onMouseDownSnapshot:MousePosition, modifier?: boolean };
     'action:hover':{mouse:MousePosition, entityId:Entity['id'], interactionPoint:PositionWithinElement, isMouseDown?: boolean};
     'action:move:start': { x: number, y: number, mouseDownSnapshot: { x: number, y: number } };
@@ -46,7 +47,7 @@ type TouchEvent = {
     screenY: number;
     touches: TouchList;
     mouseDownSnapshot: MousePosition;
-    screenPositionSnapshot?: MousePosition;
+    mouseScreenPositionSnapshot?: MousePosition;
 }
 
 type ActionResizeStartDto = {

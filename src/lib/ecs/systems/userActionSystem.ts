@@ -62,13 +62,14 @@ export class UserActionSystem implements System {
         this.handleDragEvent(data.x, data.y, data.mouseDownSnapshot)
     }
 
-    onTouchEnd = () => {
+    onTouchEnd = (data:EngineEvents['touch:end']) => {
         if (this.currentAction === 'panning') return
+        this.eventSystem?.emit('action:select:end', { mouse: { x: data.x, y: data.y },  mouseDownSnapshot: data.mouseDownSnapshot, mouseScreenPositionSnapshot:data.mouseScreenPositionSnapshot, screenX:data.screenX, screenY:data.screenY })
         this.handleCleanup()
     }
 
-    onMouseUp = () => {
-        if (this.currentAction === 'panning') return
+    onMouseUp = (data:EngineEvents['mouse:up']) => {
+        this.eventSystem?.emit('action:select:end', { mouse: { x: data.x, y: data.y }, modifier:data.modifier, mouseDownSnapshot: data.mouseDownSnapshot, mouseScreenPositionSnapshot:data.mouseScreenPositionSnapshot, screenX:data.screenX, screenY:data.screenY })
         this.handleCleanup()
     }
 
@@ -85,7 +86,6 @@ export class UserActionSystem implements System {
                 this.eventSystem?.emit('action:resize:end', null)
                 break;
         }
-
         this.eventSystem?.emit('action:change', { action: 'idle' })
     }
 
