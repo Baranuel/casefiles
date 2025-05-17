@@ -32,7 +32,8 @@ export class SelectionSystem implements System {
     }
 
     onMouseUp = (data: EngineEvents['mouse:up']) => {
-        this.onSelectCleanup(data.x, data.y, data.mouseDownSnapshot, data.modifier);
+        console.log('Mouse up event', data);
+        this.onSelectCleanup(data.x, data.y, data.mouseDownSnapshot, data.modifier,data.screenPositionSnapshot, data.screenX, data.screenY);
     }
 
 

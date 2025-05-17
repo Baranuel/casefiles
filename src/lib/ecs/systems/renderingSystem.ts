@@ -32,15 +32,24 @@ export class RenderingSystem implements System {
         this.eventSystem = this.engine.getSystem('EventSystem') || null;
 
         if (this.eventSystem) {
+            this.eventSystem.subscribe('action:pan:start', this.onPanStart);
             this.eventSystem.subscribe('action:change', this.onActionChange);
             this.eventSystem.subscribe('action:hover:end', this.onHoverEnd);
             this.eventSystem.subscribe('action:hover', this.onHover);
         }
     }
 
+
+    private onPanStart = () => {
+        console.log('Panning started');
+        this.currentCursor = 'grabbing'
+    }
     private onActionChange = (data: EngineEvents['action:change']) => {
         const { action } = data
         switch (action) {
+            case 'panning':
+                this.currentCursor = 'grabbing'
+                break
             case 'moving':
                 this.currentCursor = 'move'
                 break
@@ -482,6 +491,8 @@ export class RenderingSystem implements System {
 
     destroy() {
         if (this.eventSystem) {
+            this.eventSystem.unsubscribe('action:pan:start', this.onPanStart);
+            this.eventSystem.unsubscribe('action:change', this.onActionChange);
             this.eventSystem.unsubscribe('action:hover', this.onHover);
             this.eventSystem.unsubscribe('action:hover:end', this.onHoverEnd);
         }

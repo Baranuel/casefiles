@@ -14,7 +14,7 @@ export class UserActionSystem implements System {
     selectionSystem: SelectionSystem | null
     inputSystem: InputSystem | null
     eventSystem: EventSystem | null
-    currentAction: 'idle' | 'moving' | 'resizing' = 'idle'
+    currentAction: 'idle' | 'moving' | 'resizing' | 'panning' = 'idle'
 
 
     constructor(engine: Engine) {
@@ -31,33 +31,44 @@ export class UserActionSystem implements System {
             this.eventSystem.subscribe('touch:move', this.onTouchMove)
             this.eventSystem.subscribe('touch:end', this.onTouchEnd)
             this.eventSystem.subscribe('action:change', this.updateAction)
+            this.eventSystem.subscribe('action:pan', this.onPan)
         }
 
     }
 
+    onPan = () => {
+        this.eventSystem?.emit('action:change', { action: 'panning' })
+    }
 
     onTouchStart = (data: EngineEvents['touch:start']) => {
+        if (this.currentAction === 'panning') return
         if (data.touches.length > 1 || this.engine.getState().tool === 'MOVE') return this.eventSystem?.emit('selection:cleared', undefined)
         this.handleSelectionEvent(data.x, data.y, data.mouseDownSnapshot)
     }
 
     onMouseDown = (data: EngineEvents['mouse:down']) => {
+        if (this.currentAction === 'panning') return
         this.handleSelectionEvent(data.x, data.y, data.mouseDownSnapshot, data.modifier)
     }
 
     onTouchMove = (data: EngineEvents['touch:move']) => {
+        if (this.currentAction === 'panning') return
         if (data.touches.length > 1) return
         this.handleDragEvent(data.x, data.y, data.mouseDownSnapshot)
     }
 
     onDrag = (data: EngineEvents['mouse:drag']) => {
+        if (this.currentAction === 'panning') return
         this.handleDragEvent(data.x, data.y, data.mouseDownSnapshot)
     }
 
     onTouchEnd = () => {
+        if (this.currentAction === 'panning') return
         this.handleCleanup()
     }
+
     onMouseUp = () => {
+        if (this.currentAction === 'panning') return
         this.handleCleanup()
     }
 
@@ -81,7 +92,6 @@ export class UserActionSystem implements System {
 
     private handleSelectionEvent(x: number, y: number, mouseDownSnapshot: { x: number, y: number }, modifier?: boolean) {
         const tool = this.engine.getState().tool
-
         if (tool === 'SELECT') {
             //handle the interaction here
             const selectedEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
@@ -190,6 +200,7 @@ export class UserActionSystem implements System {
             this.eventSystem.unsubscribe('touch:move', this.onTouchMove)
             this.eventSystem.unsubscribe('touch:end', this.onTouchEnd)
             this.eventSystem.unsubscribe('action:change', this.updateAction)
+            this.eventSystem.unsubscribe('action:pan', this.onPan)
         }
     }
 }

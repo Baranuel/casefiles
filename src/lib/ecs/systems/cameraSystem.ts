@@ -6,7 +6,6 @@ import { EngineEvents } from "@/types/events";
 export class CameraSystem implements System {
     private lastTouchPos: { x: number; y: number } | null = null;
     private pinch = { startDist: null as number | null, startCam: null as Camera | null, center: { x: 0, y: 0 } };
-
     private eventSystem: EventSystem | null = null;
     private controller = new AbortController();
 
@@ -15,12 +14,30 @@ export class CameraSystem implements System {
 
         this.eventSystem = engine.getSystem("EventSystem") as EventSystem;
         canvas.addEventListener("wheel", this.onWheel, { passive: false, signal: this.controller.signal });
+        // window.addEventListener("keydown", this.onKeyDown, {  passive:false, signal: this.controller.signal });
 
         if (this.eventSystem) {
+            this.eventSystem.subscribe("action:pan", this.onPan);
             this.eventSystem.subscribe("touch:start", this.onTouchStart);
             this.eventSystem.subscribe("touch:move", this.onTouchMove);
             this.eventSystem.subscribe("touch:end", this.onTouchEnd);
         }
+    }
+    
+    private onPan = (data: EngineEvents['action:pan']) => {
+        const camera = this.engine.camera;
+
+        const updateX =  camera.x - data.mouse.x / camera.zoom;
+        const updateY = camera.y - data.mouse.y / camera.zoom;
+        const updateZoom = camera.zoom;
+
+        const updateCamera = {
+            x: updateX,
+            y: updateY,
+            zoom: updateZoom
+        };
+
+        this.engine.camera = updateCamera
     }
 
     private onWheel = (e: WheelEvent) => {
@@ -123,6 +140,7 @@ export class CameraSystem implements System {
     destroy() {
         this.controller.abort();
         if (this.eventSystem) {
+            this.eventSystem.unsubscribe("action:pan", this.onPan);
             this.eventSystem.unsubscribe("touch:start", this.onTouchStart);
             this.eventSystem.unsubscribe("touch:move", this.onTouchMove);
             this.eventSystem.unsubscribe("touch:end", this.onTouchEnd);
