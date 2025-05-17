@@ -3,7 +3,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { useCaseContext } from "@/providers/CaseStateProvider";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Switch } from "../ui/switch";
 import { Content } from "@/types/contents";
 import { usePreviewElement } from "@/hooks/use-preview-element";
@@ -35,9 +35,21 @@ export const Preview = ({ caseId }: { caseId: string }) => {
     });
   }, 700);
 
+   const scrollRef = useRef<HTMLDivElement>(null);
+   
+   useEffect(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "smooth",
+        });
+      }
+   },[previewElementId])
+
   const renderPreviewContent = useMemo(() => {
     return (
-      <div className="flex flex-col gap-3 px-3 md:px-6 pt-3 md:pt-6 z-40 overflow-scroll bg-[#F1E1CF] shadow-xl border border-amber-800/20 ">
+      <div ref={scrollRef} className="flex flex-col gap-3 px-3 md:px-6 pt-3 md:pt-6 z-40 overflow-scroll bg-[#F1E1CF] shadow-xl border border-amber-800/20 ">
         <div className="flex gap-4">
           <Image
             src="/avatar-m.svg"

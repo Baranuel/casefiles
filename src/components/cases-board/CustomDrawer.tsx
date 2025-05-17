@@ -14,11 +14,9 @@ export const CustomDrawer = ({
 }) => {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-    // add this:
   useEffect(() => {
-    // when drawer opens, hide overflowing content on the page
     document.body.style.overflow = open ? "hidden" : "";
-    // cleanup in case this component unmounts while open
+ 
     return () => {
       document.body.style.overflow = "";
     };
@@ -40,7 +38,7 @@ export const CustomDrawer = ({
             !open ? "translate-y-[100%]" : "translate-y-0"
           } transition-transform fixed inset-x-0 bottom-0 z-50`}
         >
-          <div className="flex flex-col gap-2 bg-[#E4C18E] max-h-[90vh] overflow-hidden px-2 pt-2 border-t border-muted rounded-t-lg">
+          <div  className="flex flex-col gap-2 bg-[#E4C18E] max-h-[90vh] overflow-auto px-2 pt-2 border-t border-muted rounded-t-lg">
             <Button
               size={"xs"}
               className="bg-amber-900/80 text-white absolute z-50 right-4 top-4  max-w-8  self-end rounded-sm"
