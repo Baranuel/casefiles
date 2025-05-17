@@ -42,9 +42,9 @@ export function CaseProvider({
 
   const initialTool = useMemo(() => {
     if (isMobile) return "MOVE";
-
     return "SELECT";
   }, [isMobile]);
+
   const [tool, setTool] = useState<Tool>(initialTool);
 
   const [previewElementId, setPreviewElementId] = useState<
