@@ -5,6 +5,7 @@ import { EventSystem } from "./eventSystem";
 import { EngineEvents } from "@/types/events";
 import { PositionWithinElement, Tool } from "@/types/elements";
 import { ELEMENT_CONFIGURATION } from "../configurations";
+import { State } from "@/providers/CaseStateProvider";
 
 
 type HoverProperties = {
@@ -18,7 +19,7 @@ export class RenderingSystem implements System {
     hoverProperties: HoverProperties = null
     hoverEventPrecedence?: boolean = true
 
-
+    private imageCache: Map<string, HTMLImageElement> = new Map();
     private dpr = window.devicePixelRatio || 1;
     private layerMap: Record<string, Layer> = {
         PERSON: Layer.PERSON,
@@ -88,6 +89,20 @@ export class RenderingSystem implements System {
 
 
     update() { }
+
+    stateUpdated(state: State) {
+        const { elements } = state
+        if (!elements) return
+
+        elements.forEach(el => {
+            if (el.type !== 'PERSON') return
+            if (this.imageCache.has(el.id)) return
+            const image = new Image();
+            image.src = el.content?.image || ''
+            this.imageCache.set(el.id, image)
+        })
+
+    }
 
 
 
@@ -232,6 +247,9 @@ export class RenderingSystem implements System {
         const posC = entity.getComponent('position');
         if (!posC) return;
 
+        const person = entity.element
+        if (!person) return;
+
         const { x1, y1, x2, y2 } = posC.position;
         const width = x2 - x1;
         const height = y2 - y1;
@@ -239,6 +257,8 @@ export class RenderingSystem implements System {
         const PORTRAIT_RATIO = 0.8;
         const PADDING = 5;
 
+        const personImage = this.imageCache.get(person.id);
+        if(!personImage) return;
         // inner box, inset for portrait + name
         const innerX = x1 + PADDING;
         const innerY = y1 + PADDING;
@@ -257,7 +277,7 @@ export class RenderingSystem implements System {
         ctx.save();
         ctx.fillStyle = '#000';
         ctx.fillRect(innerX, innerY, innerW, portraitH);
-        // TODO: drawImage(person.image, innerX + 2, innerY + 2, innerW - 4, portraitH - 4);
+        ctx.drawImage(personImage, innerX + 2, innerY + 2, innerW - 4, portraitH - 4);
         ctx.restore();
 
         // 4) name tag area at bottom

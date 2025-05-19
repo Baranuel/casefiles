@@ -1,9 +1,9 @@
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "../ui/button";
 import { X } from "lucide-react";
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
 
-export const CustomDrawer = ({
+ const CustomDrawer = memo(({
   open,
   onClose,
   children,
@@ -16,7 +16,6 @@ export const CustomDrawer = ({
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
- 
     return () => {
       document.body.style.overflow = "";
     };
@@ -75,4 +74,7 @@ export const CustomDrawer = ({
         {children}
       </div>
     );
-  }
+  })
+
+CustomDrawer.displayName = "CustomDrawer";
+export default CustomDrawer;

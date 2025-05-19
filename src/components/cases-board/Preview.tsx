@@ -1,14 +1,14 @@
 "use client";
 import { useDebouncedCallback } from "use-debounce";
 import { useForm } from "react-hook-form";
-import Image from "next/image";
 import { useCaseContext } from "@/providers/CaseStateProvider";
 import { useEffect, useMemo, useRef } from "react";
 import { Switch } from "../ui/switch";
 import { Content } from "@/types/contents";
 import { usePreviewElement } from "@/hooks/use-preview-element";
 import { useCaseContentsMutation } from "@/hooks/use-case-contents-mutation";
-import { CustomDrawer } from "./CustomDrawer";
+import CustomDrawer from "./CustomDrawer";
+import Headshot from "./Headshot";
 
 export const Preview = ({ caseId }: { caseId: string }) => {
   const { previewElementId, setPreviewElementId } = useCaseContext();
@@ -22,6 +22,9 @@ export const Preview = ({ caseId }: { caseId: string }) => {
       id: previewElement?.content?.id || null,
       name: previewElement?.content?.name || "",
       text: previewElement?.content?.text || "no value",
+      image: previewElement?.content?.image || "",
+      time_of_death: previewElement?.content?.time_of_death || "",
+      victim: previewElement?.content?.victim || false,
     },
   });
 
@@ -35,29 +38,31 @@ export const Preview = ({ caseId }: { caseId: string }) => {
     });
   }, 700);
 
-   const scrollRef = useRef<HTMLDivElement>(null);
-   
-   useEffect(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTo({
-          top: 0,
-          left: 0,
-          behavior: "smooth",
-        });
-      }
-   },[previewElementId])
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "smooth",
+      });
+    }
+  }, [previewElementId]);
 
   const renderPreviewContent = useMemo(() => {
     return (
-      <div ref={scrollRef} className="flex flex-col gap-3 px-3 md:px-6 pt-3 md:pt-6 z-40 overflow-scroll bg-[#F1E1CF] shadow-xl border border-amber-800/20 ">
+      <div
+        ref={scrollRef}
+        className="flex flex-col w-full gap-3 px-3 md:px-6 pt-3 md:pt-6 z-40 overflow-scroll bg-[#F1E1CF] shadow-xl border border-amber-800/20 "
+      >
         <div className="flex gap-4">
-          <Image
-            src="/avatar-m.svg"
-            width={100}
-            height={100}
-            alt="head-shot image"
-            className="w-1/2 -rotate-1 rounded-sm shadow-md aspect-square border border-muted"
-          />
+          <div className="w-1/2 rotate-1 rounded-sm shadow-md aspect-square border border-muted relative overflow-hidden">
+            <Headshot
+              imagePath={previewElement?.content?.image}
+              onImageChange={() => {}}
+            />
+          </div>
           <div className="flex flex-col gap-4 w-1/2 text-black p-2">
             <div className="flex flex-col">
               <h5 className="text-sm font-semibold">Name</h5>
@@ -72,7 +77,6 @@ export const Preview = ({ caseId }: { caseId: string }) => {
           </div>
         </div>
 
-        
         {/* Second Row */}
         <div className="flex gap-2 mt-3">
           <div className="flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
@@ -91,7 +95,6 @@ export const Preview = ({ caseId }: { caseId: string }) => {
             />
           </div>
         </div>
-
 
         {/* Third Row */}
         <div className="flex gap-2">
@@ -122,8 +125,6 @@ export const Preview = ({ caseId }: { caseId: string }) => {
             </div>
           </div>
         </div>
-
-
 
         {/* Fourth Row */}
         <div className="flex-1 mb-3 md:mb-6 h-full gap-2">

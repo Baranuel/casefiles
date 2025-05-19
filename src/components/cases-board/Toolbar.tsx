@@ -11,7 +11,7 @@ import {
   ArrowUpFromDot,
   Hand,
 } from "lucide-react";
-import { JSX, useMemo } from "react";
+import { JSX, useEffect, useMemo } from "react";
 
 const tools: { id: Tool; icon: JSX.Element; label: string }[] = [
   {
@@ -50,14 +50,21 @@ export const Toolbar = () => {
   // const params = useParams<{id:string}>()
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  const { tool, setTool } = useCaseContext();
-
+  
   const toolsArray = useMemo(() => {
     if (!isMobile) {
       return tools.filter((t) => t.id !== "MOVE");
     }
     return tools;
   }, [isMobile]);
+  
+  const { tool, setTool } = useCaseContext();
+
+  useEffect(() => {
+    if (isMobile) {
+      setTool("MOVE");
+    }
+  }, [isMobile, setTool]);
   // const {deleteAllMutation} = useCaseElementsMutation(params.id)
 
   return (
