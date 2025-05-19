@@ -78,7 +78,7 @@ export class Engine {
         // 2. Add new entities and update existing ones
         for (const element of newState.elements) {
             const { id } = element;
-            
+
             if (this.entities.has(id)) {
                 const entity = this.entities.get(id)!;
                 entity.element = element;
@@ -104,7 +104,7 @@ export class Engine {
                         entity.addComponent('movable', new MovableComponent(entity));
                         entity.addComponent('selectable', new SelectableComponent(entity));
                         break;
-                        case 'POINTER':
+                    case 'POINTER':
                         entity.addComponent('type', new TypeComponent(entity, 'POINTER'));
                         entity.addComponent('movable', new MovableComponent(entity));
                         entity.addComponent('selectable', new SelectableComponent(entity));
@@ -115,6 +115,15 @@ export class Engine {
                 }
             }
         }
+
+        const engineSystems = Array.from(this.systems.entries())
+        engineSystems.forEach(([, system]) => {
+            if (system.stateUpdated) {
+                system.stateUpdated(this.state)
+            }
+        }
+        )
+
     }
     public addEntity(entity: Entity) {
         this.entities.set(entity.id, entity)

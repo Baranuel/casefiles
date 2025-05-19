@@ -5,6 +5,9 @@ export const ContentDto = z.object({
     element_id: z.string().optional(),
     name: z.string().nullable(),
     text: z.string().nullable(),
+    image: z.string().nullable(),
+    time_of_death: z.string().nullable(),
+    victim:z.boolean().nullable(),
 })
 
 

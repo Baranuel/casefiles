@@ -5,7 +5,6 @@ import { useQueryClient } from "@tanstack/react-query"
 
 
 export const useWsCacheUpdate = (caseId: string) => {
-
     const queryClient = useQueryClient()
 
     const wsElementCreate = (queryKey: string, newElement: ElementDto) => {
@@ -20,7 +19,6 @@ export const useWsCacheUpdate = (caseId: string) => {
     const wsElementUpdate = (queryKey: string, updatedElement: ElementDto) => {
         const updater = (oldCachedElements: ElementDto[]) => {
             if (!oldCachedElements.find(el => el.id === updatedElement.id)) return
-
             return [...oldCachedElements.map(el => el.id === updatedElement.id ? { ...el, ...updatedElement } : el)]
         }
         queryClient.setQueryData([queryKey, caseId], updater)
@@ -29,7 +27,6 @@ export const useWsCacheUpdate = (caseId: string) => {
     const wsElementsBatchUpdate = (queryKey: string, updatedElements: ElementDto[]) => {
         const updater = (oldCachedElements: ElementDto[]) => {
             const updatesById = new Map(updatedElements.map(el => [el.id, el]));
-
             return oldCachedElements.map(el =>
                 updatesById.has(el.id)
                     ? { ...el, ...updatesById.get(el.id)! }
@@ -42,7 +39,6 @@ export const useWsCacheUpdate = (caseId: string) => {
     const wsContentUpdate = (queryKey: string, updatedContent: Content) => {
          const updater = (oldCachedElements: ElementDto[]) => {
             if (!oldCachedElements.find(el => el.id === updatedContent.element_id)) return
-
             return [...oldCachedElements.map(el => el.id === updatedContent.element_id ? { ...el, content: updatedContent } : el)]
         }
         queryClient.setQueryData([queryKey, caseId], updater)

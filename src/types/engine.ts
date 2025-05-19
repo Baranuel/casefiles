@@ -18,12 +18,14 @@ import { NodeComponent } from "@/lib/ecs/components/NodeComponent"
 import { AttachmentSystem } from "@/lib/ecs/systems/attachmentSystem"
 import { SelectableComponent } from "@/lib/ecs/components/SelectableComponent"
 import { PositionWithinElement } from "./elements"
+import { State } from "@/providers/CaseStateProvider"
 
 export interface System {
     engine: Engine
     update: (delta?: number) => void
     draw: () => void
-    destroy: () => void
+    destroy: () => void,
+    stateUpdated?: (state: State) => void
 }
 
 export type Component = {
@@ -77,6 +79,7 @@ export type ComponentsMap = {
 }
 
 export type GetComponent<K extends ComponentsType> = ComponentsMap[K];
+
 
 export type Camera = {
     x: number;

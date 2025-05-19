@@ -13,7 +13,6 @@ import {
 import type { ElementDto, Tool } from "@/types/elements";
 import { useCaseElementsQuery } from "@/hooks/use-case-elements-query";
 import { useCaseElementsMutation } from "@/hooks/use-case-elements-mutation";
-import { useMediaQuery } from "@/hooks/use-media-query";
 
 export type State = {
   elements: ElementDto[];
@@ -36,16 +35,11 @@ export function CaseProvider({
   caseId: string;
 }) {
   const { data: elements, isLoading } = useCaseElementsQuery(caseId);
-  const isMobile = useMediaQuery("(max-width: 768px)");
   const { createMutation, updateMutation, updateBatchMutation } =
-    useCaseElementsMutation(caseId);
+  useCaseElementsMutation(caseId);
+  
 
-  const initialTool = useMemo(() => {
-    if (isMobile) return "MOVE";
-    return "SELECT";
-  }, [isMobile]);
-
-  const [tool, setTool] = useState<Tool>(initialTool);
+  const [tool, setTool] = useState<Tool>('SELECT');
 
   const [previewElementId, setPreviewElementId] = useState<
     ElementDto["id"] | null
