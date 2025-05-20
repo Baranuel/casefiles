@@ -92,15 +92,28 @@ export class RenderingSystem implements System {
 
     stateUpdated(state: State) {
         const { elements } = state
-        if (!elements) return
+        const entities = this.engine.entities
+        
+        if (!elements || !entities) return
 
-        elements.forEach(el => {
-            if (el.type !== 'PERSON') return
-            if (this.imageCache.has(el.id)) return
+        for (const [, entity] of entities) {
+            const typeC = entity.getComponent('type');
+            if (!typeC) continue
+
+            if (this.imageCache.has(entity.id)) {
+                const image = this.imageCache.get(entity.id);
+                
+                if (image && image.src !== entity.element?.content?.image) {
+                    image.src = entity.element?.content?.image || ''
+                }
+                continue
+            }
+
             const image = new Image();
-            image.src = el.content?.image || ''
-            this.imageCache.set(el.id, image)
-        })
+            image.src = entity.element?.content?.image || ''
+            this.imageCache.set(entity.id, image)
+        }
+
 
     }
 
@@ -258,7 +271,7 @@ export class RenderingSystem implements System {
         const PADDING = 5;
 
         const personImage = this.imageCache.get(person.id);
-        if(!personImage) return;
+        if (!personImage) return;
         // inner box, inset for portrait + name
         const innerX = x1 + PADDING;
         const innerY = y1 + PADDING;

@@ -1,12 +1,12 @@
 import { z } from "zod";
 
 export const ContentDto = z.object({
-    id: z.string().nullable(),
+    id: z.string().optional(),
     element_id: z.string().optional(),
     name: z.string().nullable(),
     text: z.string().nullable(),
     image: z.string().nullable(),
-    time_of_death: z.string().nullable(),
+    time_of_death: z.date().nullable(),
     victim:z.boolean().nullable(),
 })
 
