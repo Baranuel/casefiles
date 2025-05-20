@@ -2,13 +2,21 @@
 import { useDebouncedCallback } from "use-debounce";
 import { useForm } from "react-hook-form";
 import { useCaseContext } from "@/providers/CaseStateProvider";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Switch } from "../ui/switch";
 import { Content } from "@/types/contents";
 import { usePreviewElement } from "@/hooks/use-preview-element";
 import { useCaseContentsMutation } from "@/hooks/use-case-contents-mutation";
 import CustomDrawer from "./CustomDrawer";
 import Headshot from "./Headshot";
+
+const emptyContent:Content = {
+  name: "",
+  text: "",
+  image:null,
+  time_of_death:null,
+  victim: false,
+};
 
 export const Preview = ({ caseId }: { caseId: string }) => {
   const { previewElementId, setPreviewElementId } = useCaseContext();
@@ -17,18 +25,18 @@ export const Preview = ({ caseId }: { caseId: string }) => {
 
   const previewElement = getPreviewElement(previewElementId);
   const isOpen = Boolean(previewElement);
+
   const { register, getValues } = useForm<Content>({
     values: {
-      id: previewElement?.content?.id || null,
-      name: previewElement?.content?.name || "",
-      text: previewElement?.content?.text || "no value",
-      image: previewElement?.content?.image || "",
-      time_of_death: previewElement?.content?.time_of_death || "",
-      victim: previewElement?.content?.victim || false,
+      ...emptyContent,
+      ...(previewElement?.content || {}),
     },
   });
 
-  const handleClose = () => setPreviewElementId(null);
+
+  const handleClose = () => {
+    setPreviewElementId(null)
+  }
 
   const debounce = useDebouncedCallback((newState: Partial<Content>) => {
     if (!previewElement) return;
@@ -37,6 +45,23 @@ export const Preview = ({ caseId }: { caseId: string }) => {
       value: { ...getValues(), ...newState },
     });
   }, 700);
+
+  const mutationWrapper = useCallback(
+    (newState: Partial<Content>, options?: { noDelay: boolean }) => {
+      console.log("Mutation wrapper called", newState);
+      if (!previewElement) return;
+
+      if (options?.noDelay) {
+        return updateMutation.mutate({
+          element_id: previewElement.id,
+          value: { ...getValues(), ...newState },
+        });
+      } else {
+        return debounce(newState);
+      }
+    },
+    [previewElement, getValues, updateMutation, debounce]
+  );
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +75,8 @@ export const Preview = ({ caseId }: { caseId: string }) => {
     }
   }, [previewElementId]);
 
+
+
   const renderPreviewContent = useMemo(() => {
     return (
       <div
@@ -60,7 +87,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
           <div className="w-1/2 rotate-1 rounded-sm shadow-md aspect-square border border-muted relative overflow-hidden">
             <Headshot
               imagePath={previewElement?.content?.image}
-              onImageChange={() => {}}
+              onImageChange={mutationWrapper}
             />
           </div>
           <div className="flex flex-col gap-4 w-1/2 text-black p-2">
@@ -90,7 +117,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
               title="name"
               type="text"
               {...register("name")}
-              onChange={(e) => debounce({ name: e.target.value })}
+              onChange={(e) => mutationWrapper({ name: e.target.value })}
               className="border border-amber-800/40 rounded-sm bg-background-500/60 p-1 focus:outline-none focus:bg-background focus:border-amber-800"
             />
           </div>
@@ -137,14 +164,19 @@ export const Preview = ({ caseId }: { caseId: string }) => {
             </label>
             <textarea
               {...register("text")}
-              onChange={(e) => debounce({ text: e.target.value })}
+              onChange={(e) => mutationWrapper({ text: e.target.value })}
               className="h-full min-h-[50vh] p-3 border border-amber-800/40 rounded-sm bg-background-500/60 focus:outline-none focus:bg-background focus:border-amber-800"
             />
           </div>
         </div>
       </div>
     );
-  }, [previewElement, register, debounce]);
+  }, [
+    previewElement?.content?.image,
+    previewElement?.content?.name,
+    register,
+    mutationWrapper,
+  ]);
 
   return (
     <CustomDrawer open={isOpen} onClose={handleClose}>

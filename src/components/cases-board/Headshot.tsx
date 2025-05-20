@@ -8,10 +8,14 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import { useQuery } from "@tanstack/react-query";
+import { Content } from "@/types/contents";
 
 type SelectHeadshotProps = {
   imagePath?: string | null;
-  onImageChange?: () => void;
+  onImageChange?: (
+    newState: Partial<Content>,
+    options?: { noDelay: true }
+  ) => void;
 };
 
 const Headshot = memo(({ imagePath, onImageChange }: SelectHeadshotProps) => {
@@ -74,7 +78,9 @@ const Headshot = memo(({ imagePath, onImageChange }: SelectHeadshotProps) => {
                 <div
                   key={index}
                   className="aspect-square w-full overflow-hidden rounded-lg"
-                  onClick={() => onImageChange?.()}
+                  onClick={() =>
+                    onImageChange?.({ image: src }, { noDelay: true })
+                  }
                 >
                   <img
                     src={src}
