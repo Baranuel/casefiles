@@ -11,6 +11,7 @@ import CustomDrawer from "./CustomDrawer";
 import Headshot from "./Headshot";
 
 const emptyContent:Content = {
+  id:crypto.randomUUID(),
   name: "",
   text: "",
   image:null,
@@ -29,9 +30,10 @@ export const Preview = ({ caseId }: { caseId: string }) => {
   const { register, getValues } = useForm<Content>({
     values: {
       ...emptyContent,
-      ...(previewElement?.content || {}),
+      ...previewElement?.content
     },
   });
+  
 
 
   const handleClose = () => {
@@ -48,7 +50,6 @@ export const Preview = ({ caseId }: { caseId: string }) => {
 
   const mutationWrapper = useCallback(
     (newState: Partial<Content>, options?: { noDelay: boolean }) => {
-      console.log("Mutation wrapper called", newState);
       if (!previewElement) return;
 
       if (options?.noDelay) {
