@@ -35,9 +35,9 @@ import { memo, useEffect } from "react";
         <div
           className={`${
             !open ? "translate-y-[100%]" : "translate-y-0"
-          } transition-transform fixed inset-x-0 bottom-0 z-50`}
+          }  transition-transform fixed inset-x-0 bottom-0 z-50`}
         >
-          <div  className="flex flex-col gap-2 bg-[#E4C18E] max-h-[90vh] overflow-auto px-2 pt-2 border-t border-muted rounded-t-lg">
+          <div  className="flex flex-col gap-2 bg-[#E4C18E] h-[90vh] overflow-auto px-2 pt-2 border-t border-muted rounded-t-lg">
             <Button
               size={"xs"}
               className="bg-amber-900/80 text-white absolute z-50 right-4 top-4  max-w-8  self-end rounded-sm"
