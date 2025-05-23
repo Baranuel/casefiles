@@ -104,6 +104,12 @@ export class Engine {
                         entity.addComponent('movable', new MovableComponent(entity));
                         entity.addComponent('selectable', new SelectableComponent(entity));
                         break;
+                    case 'NOTE':
+                        entity.addComponent('type', new TypeComponent(entity, 'NOTE'));
+                        entity.addComponent('style', new StyleComponent(entity, 'blue'));
+                        entity.addComponent('movable', new MovableComponent(entity));
+                        entity.addComponent('selectable', new SelectableComponent(entity));
+                        break;
                     case 'POINTER':
                         entity.addComponent('type', new TypeComponent(entity, 'POINTER'));
                         entity.addComponent('movable', new MovableComponent(entity));
