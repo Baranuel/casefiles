@@ -25,6 +25,7 @@ export class RenderingSystem implements System {
         PERSON: Layer.PERSON,
         LOCATION: Layer.LOCATION,
         ITEM: Layer.ITEM,
+        NOTE: Layer.NOTE,
         POINTER: Layer.POINTER,
     } as const;
 
@@ -93,7 +94,7 @@ export class RenderingSystem implements System {
     stateUpdated(state: State) {
         const { elements } = state
         const entities = this.engine.entities
-        
+
         if (!elements || !entities) return
 
         for (const [, entity] of entities) {
@@ -102,7 +103,7 @@ export class RenderingSystem implements System {
 
             if (this.imageCache.has(entity.id)) {
                 const image = this.imageCache.get(entity.id);
-                
+
                 if (image && image.src !== entity.element?.content?.image) {
                     image.src = entity.element?.content?.image || ''
                 }
@@ -113,6 +114,12 @@ export class RenderingSystem implements System {
             image.src = entity.element?.content?.image || ''
             this.imageCache.set(entity.id, image)
         }
+
+        if (this.imageCache.has('LOCATION')) return
+
+        const locationImage = new Image();
+        locationImage.src = '/location-pin.svg'
+        this.imageCache.set('LOCATION', locationImage)
 
 
     }
@@ -171,7 +178,11 @@ export class RenderingSystem implements System {
                 this.renderPerson(ctx, entity);
                 break;
             case 'LOCATION':
-            case 'ITEM':
+                this.renderLocation(ctx, entity);
+                break;
+            case 'NOTE':
+                this.renderNote(ctx, entity);
+                break;
             default:
                 break;
         }
@@ -255,6 +266,140 @@ export class RenderingSystem implements System {
         ctx.restore();
     }
 
+    private renderLocation(ctx: CanvasRenderingContext2D, entity: Entity) {
+        const posC = entity.getComponent('position');
+        if (!posC) return;
+
+        const location = entity.element
+        if (!location) return;
+
+        const { x1, y1, x2, y2 } = posC.position;
+        const width = x2 - x1;
+        const height = y2 - y1;
+        const IMAGE_RATIO = 0.8;
+        const IMAGE_PADDING = 5;
+        const PADDING = 5;
+
+        ctx.save();
+        ctx.fillStyle = '#F5F7FA';
+        ctx.fillRect(x1, y1, width, height);
+        ctx.strokeStyle = '#F5F7FA';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x1, y1, width, height);
+        ctx.restore();
+        // inner box, inset for portrait + name
+        const innerX = x1 + PADDING;
+        const innerY = y1 + PADDING;
+        const innerW = width - 2 * PADDING;
+        const innerH = height - 2 * PADDING;
+        const portraitH = innerH * IMAGE_RATIO;
+        const nameH = innerH - portraitH;
+        const nameY = innerY + portraitH;
+
+        ctx.save();
+        ctx.fillStyle = '#2E3A46';
+        ctx.fillRect(x1, y1, width, height);
+        ctx.restore();
+
+
+        ctx.save();
+        ctx.fillStyle = 'transparent';
+        ctx.fillRect(innerX, innerY, innerW, portraitH);
+        ctx.drawImage(this.imageCache.get('LOCATION')!, innerX + IMAGE_PADDING, innerY + IMAGE_PADDING, innerW - IMAGE_PADDING * 2, portraitH - IMAGE_PADDING * 2);
+        ctx.restore();
+
+        // 4) name tag area at bottom
+        this.drawWrappedTextInBox(
+            ctx,
+            entity.element.content?.name || 'Unknown',
+            innerX,
+            nameY,
+            innerW,
+            nameH, {
+            font: 'bold 18px serif',
+            fillStyle: '#FFF',
+        }
+        )
+    }
+
+  // Updated renderNote to emulate a sticky note with shadow, slight rotation, and a pin
+private renderNote(ctx: CanvasRenderingContext2D, entity: Entity) {
+  const posC = entity.getComponent('position');
+  if (!posC) return;
+  const note = entity.element;
+  if (!note) return;
+
+  const { x1, y1, x2, y2 } = posC.position;
+  const width = x2 - x1;
+  const height = y2 - y1;
+
+  // ---------- Sticky note styling ----------
+  const PADDING = 8;
+  const SHADOW_COLOR = 'rgba(0, 0, 0, 0.2)';
+  const NOTE_COLOR = '#FFFB8F'; // pale yellow sticky note
+  const centerX = x1 + width / 2;
+  const centerY = y1 + height / 2;
+
+  // Save and apply rotation about center
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.translate(-centerX, -centerY);
+
+  // Drop shadow
+  ctx.save();
+  ctx.shadowColor = SHADOW_COLOR;
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetX = 4;
+  ctx.shadowOffsetY = 4;
+  ctx.fillStyle = NOTE_COLOR;
+  ctx.fillRect(x1, y1, width, height);
+  ctx.restore();
+
+  // Draw note border
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#E0D600';
+  ctx.strokeRect(x1, y1, width, height);
+  ctx.restore();
+
+  // Draw pin at top center
+  const pinX = centerX;
+  const pinY = y1 + 4;
+  const PIN_RADIUS = 6;
+  ctx.save();
+  ctx.beginPath();
+  ctx.fillStyle = '#D32F2F';
+  ctx.strokeStyle = '#B71C1C';
+  ctx.lineWidth = 1;
+  ctx.arc(pinX, pinY, PIN_RADIUS, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.restore(); // restore unrotated coordinate system
+
+  // Compute inner text box with padding
+  const innerX = x1 + PADDING;
+  const innerY = y1 + PADDING;
+  const innerW = width - 2 * PADDING;
+  const innerH = height - 2 * PADDING;
+
+  // Draw wrapped text inside
+  this.drawWrappedTextInBox(
+    ctx,
+    note.content?.text || 'Unknown',
+    innerX,
+    innerY,
+    innerW,
+    innerH,
+    {
+      font: '16px sans-serif',
+      fillStyle: '#333',
+    }
+  );
+}
+
+
 
     private renderPerson(ctx: CanvasRenderingContext2D, entity: Entity) {
         const posC = entity.getComponent('position');
@@ -272,6 +417,7 @@ export class RenderingSystem implements System {
 
         const personImage = this.imageCache.get(person.id);
         if (!personImage) return;
+
         // inner box, inset for portrait + name
         const innerX = x1 + PADDING;
         const innerY = y1 + PADDING;
@@ -300,7 +446,8 @@ export class RenderingSystem implements System {
             innerX,
             nameY,
             innerW,
-            nameH)
+            nameH
+        )
     }
 
 

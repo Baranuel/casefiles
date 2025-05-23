@@ -97,9 +97,10 @@ export type PointerHandle = Extract<PositionWithinElement, 'start'|'end'>;
 
 // 1) Define your layers (bottom → top)
 export enum Layer {
-    PERSON = 3,
-    LOCATION = 2,
-    ITEM = 1,
+    PERSON = 4,
+    LOCATION = 3,
+    ITEM = 2,
+    NOTE = 1,
     POINTER = 0,
 }
 
