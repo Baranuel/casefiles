@@ -80,7 +80,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
     return (
       <div
         ref={scrollRef}
-        className="flex flex-col w-full gap-3 px-3 md:px-6 pt-3 md:pt-6 z-40 overflow-scroll bg-[#F1E1CF] shadow-xl border border-amber-800/20 "
+        className="flex h-full flex-col w-full gap-3 px-3 md:px-6 pt-3 md:pt-6 z-40 overflow-scroll bg-[#F1E1CF] shadow-xl border border-amber-800/20 "
       >
         {previewElement?.type === "PERSON" && (
           <div className="flex gap-4">
@@ -161,7 +161,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
 
         {/* Fourth Row */}
         <div className="flex-1 mb-3 md:mb-6 h-full gap-2">
-          <div className="flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
+          <div className="h-full flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
             <label
               htmlFor="text"
               className="text-sm font-semibold text-amber-800"
