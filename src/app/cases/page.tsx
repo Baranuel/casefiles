@@ -9,7 +9,7 @@ export default async function CasesPage() {
   return (
     <PageWrapper>
       <SectionWrapper className="min-h-24 md:min-h-24">
-        <div className="w-full flex justify-between items-start  ">
+        <div className="w-full h-screen flex justify-between items-start  ">
           <SectionHeader>Active Cases</SectionHeader>
           <CreateCaseButton />
         </div>

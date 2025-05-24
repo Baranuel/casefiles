@@ -24,7 +24,7 @@ export const CaseList = () => {
   }
 
   return (
-    <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-2">
+    <div className="grid  grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-2 ">
       {data?.map((caseItem) => (
         <CasefileCard key={caseItem.id} caseItem={caseItem} />
       ))}

@@ -9,6 +9,7 @@ import {
 } from "../ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { Content } from "@/types/contents";
+import { useCdnApi } from "@/hooks/use-cdn-api";
 
 type SelectHeadshotProps = {
   imagePath?: string | null;
@@ -19,31 +20,12 @@ type SelectHeadshotProps = {
 };
 
 const Headshot = memo(({ imagePath, onImageChange }: SelectHeadshotProps) => {
+  const cdnApi = useCdnApi();
   const { data } = useQuery({
     queryKey: ["headshot"],
     queryFn: async () => {
-      // Replace with real API call
-      return [
-        "https://dummyjson.com/image/120",
-        "https://dummyjson.com/image/140",
-        "https://dummyjson.com/image/110",
-        "https://casefiles.ams3.cdn.digitaloceanspaces.com/images/man-evil.webp",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-        "https://dummyjson.com/image/110",
-      ];
+        const data = await cdnApi.getImages();
+        return data
     },
   });
 

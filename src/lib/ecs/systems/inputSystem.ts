@@ -36,7 +36,7 @@ export class InputSystem implements System {
   //  Initialization
   // —————————————————————————————
   private initEventListeners() {
-    const opts = { signal: this.controller.signal }
+    const opts = { signal: this.controller.signal}
     this.canvas.addEventListener("touchstart", this.onTouchStart, opts)
     this.canvas.addEventListener("touchmove", this.onTouchMove, opts)
     this.canvas.addEventListener("touchend", this.onTouchEnd, opts)

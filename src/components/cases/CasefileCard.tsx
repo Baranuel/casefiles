@@ -20,7 +20,7 @@ export const CasefileCard = ({ caseItem }: { caseItem: Case }) => {
   return (
     <Link
       href={`/cases/${caseItem.id}`}
-      className={`group/card relative flex flex-col gap-3 p-4 rounded-lg bg-white
+      className={` max-h-[175px] md:max-h-fit group/card relative flex flex-col gap-3 p-4 rounded-lg bg-white
         hover:shadow-sm transition-all 
         ${isPending ? "opacity-50 pointer-events-none" : ""}`}
     >
@@ -30,9 +30,7 @@ export const CasefileCard = ({ caseItem }: { caseItem: Case }) => {
           e.preventDefault();
           mutate(caseItem.id);
         }}
-        className="absolute right-3 top-3 p-2 rounded-full
-          opacity-0 group-hover/card:opacity-100 transition-opacity
-          bg-red-50 text-red-600 hover:bg-red-100"
+        className="absolute right-3 top-3 p-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100"
         disabled={isPending}
       >
         {isPending ? (
