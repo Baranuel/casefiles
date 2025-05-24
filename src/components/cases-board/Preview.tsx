@@ -176,7 +176,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
                   disabled={!previewElement?.content?.victim}
                   onChange={(e) => {
                     const value = e.target.value
-                      ? dayjs(e.target.value).toDate()
+                      ? dayjs(e.target.value).toString()
                       : null;
                     mutationWrapper({ time_of_death: value });
                   }}
