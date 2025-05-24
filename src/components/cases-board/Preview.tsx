@@ -65,7 +65,6 @@ export const Preview = ({ caseId }: { caseId: string }) => {
     [previewElement, getValues, updateMutation, debounce]
   );
 
-  console.log("Preview Element:", getValues());
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -102,7 +101,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
               </div>
               <div className="flex flex-col">
                 <h5 className="text-sm font-semibold">Status</h5>
-                <span className="text-xl font-bold">Suspect</span>
+                <span className="text-xl font-bold">{previewElement?.content?.victim ? 'Victim' : 'Suspect'}</span>
               </div>
             </div>
           </div>
