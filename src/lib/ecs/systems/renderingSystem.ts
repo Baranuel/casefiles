@@ -269,25 +269,40 @@ export class RenderingSystem implements System {
     private renderLocation(ctx: CanvasRenderingContext2D, entity: Entity) {
         const posC = entity.getComponent('position');
         if (!posC) return;
-
-        const location = entity.element
+        const location = entity.element;
         if (!location) return;
 
         const { x1, y1, x2, y2 } = posC.position;
         const width = x2 - x1;
         const height = y2 - y1;
-        const IMAGE_RATIO = 0.8;
+        const IMAGE_RATIO = 0.75;
         const IMAGE_PADDING = 5;
         const PADDING = 5;
 
+        const colorA = '#004f3b';
+        const colorB = '#006045';
+
+        //
+        // 1) DRAW OUTER BOX WITH GRADIENT
+        //
         ctx.save();
-        ctx.fillStyle = '#F5F7FA';
+        // create a vertical gradient from top (y1) to bottom (y2)
+        const grad = ctx.createLinearGradient(x1, y1, x1, y2);
+        grad.addColorStop(0, colorB);
+        grad.addColorStop(1, colorA);
+
+        ctx.fillStyle = grad;
         ctx.fillRect(x1, y1, width, height);
-        ctx.strokeStyle = '#F5F7FA';
+
+        // optional stroke
+        ctx.strokeStyle = colorB;
         ctx.lineWidth = 2;
         ctx.strokeRect(x1, y1, width, height);
         ctx.restore();
-        // inner box, inset for portrait + name
+
+        //
+        // 2) CALCULATE INNER LAYOUT
+        //
         const innerX = x1 + PADDING;
         const innerY = y1 + PADDING;
         const innerW = width - 2 * PADDING;
@@ -296,108 +311,116 @@ export class RenderingSystem implements System {
         const nameH = innerH - portraitH;
         const nameY = innerY + portraitH;
 
-        ctx.save();
-        ctx.fillStyle = '#2E3A46';
-        ctx.fillRect(x1, y1, width, height);
-        ctx.restore();
-
-
+        //
+        // 3) PORTRAIT AREA (transparent background then image)
+        //
         ctx.save();
         ctx.fillStyle = 'transparent';
         ctx.fillRect(innerX, innerY, innerW, portraitH);
-        ctx.drawImage(this.imageCache.get('LOCATION')!, innerX + IMAGE_PADDING, innerY + IMAGE_PADDING, innerW - IMAGE_PADDING * 2, portraitH - IMAGE_PADDING * 2);
+        ctx.drawImage(
+            this.imageCache.get('LOCATION')!,
+            innerX + IMAGE_PADDING,
+            innerY + IMAGE_PADDING,
+            innerW - IMAGE_PADDING * 2,
+            portraitH - IMAGE_PADDING * 2
+        );
         ctx.restore();
 
-        // 4) name tag area at bottom
+        //
+        // 4) NAME TAG
+        //
         this.drawWrappedTextInBox(
             ctx,
             entity.element.content?.name || 'Unknown',
             innerX,
             nameY,
             innerW,
-            nameH, {
-            font: 'bold 18px serif',
-            fillStyle: '#FFF',
-        }
-        )
+            nameH,
+            {
+                font: 'bold 20px sans-serif',
+                fillStyle: '#FFF',
+                lineHeight: 24,
+            }
+        );
+
     }
 
-  // Updated renderNote to emulate a sticky note with shadow, slight rotation, and a pin
-private renderNote(ctx: CanvasRenderingContext2D, entity: Entity) {
-  const posC = entity.getComponent('position');
-  if (!posC) return;
-  const note = entity.element;
-  if (!note) return;
+    // Updated renderNote to emulate a sticky note with shadow, slight rotation, and a pin
+    private renderNote(ctx: CanvasRenderingContext2D, entity: Entity) {
+        const posC = entity.getComponent('position');
+        if (!posC) return;
+        const note = entity.element;
+        if (!note) return;
 
-  const { x1, y1, x2, y2 } = posC.position;
-  const width = x2 - x1;
-  const height = y2 - y1;
+        const { x1, y1, x2, y2 } = posC.position;
+        const width = x2 - x1;
+        const height = y2 - y1;
 
-  // ---------- Sticky note styling ----------
-  const PADDING = 8;
-  const SHADOW_COLOR = 'rgba(0, 0, 0, 0.2)';
-  const NOTE_COLOR = '#FFFB8F'; // pale yellow sticky note
-  const centerX = x1 + width / 2;
-  const centerY = y1 + height / 2;
+        // ---------- Sticky note styling ----------
+        const PADDING = 8;
+        const SHADOW_COLOR = 'rgba(0, 0, 0, 0.2)';
+        const NOTE_COLOR = '#FFFB8F'; // pale yellow sticky note
+        const centerX = x1 + width / 2;
+        const centerY = y1 + height / 2;
 
-  // Save and apply rotation about center
-  ctx.save();
-  ctx.translate(centerX, centerY);
-  ctx.translate(-centerX, -centerY);
+        // Save and apply rotation about center
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.translate(-centerX, -centerY);
 
-  // Drop shadow
-  ctx.save();
-  ctx.shadowColor = SHADOW_COLOR;
-  ctx.shadowBlur = 12;
-  ctx.shadowOffsetX = 4;
-  ctx.shadowOffsetY = 4;
-  ctx.fillStyle = NOTE_COLOR;
-  ctx.fillRect(x1, y1, width, height);
-  ctx.restore();
+        // Drop shadow
+        ctx.save();
+        ctx.shadowColor = SHADOW_COLOR;
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetX = 4;
+        ctx.shadowOffsetY = 4;
+        ctx.fillStyle = NOTE_COLOR;
+        ctx.fillRect(x1, y1, width, height);
+        ctx.restore();
 
-  // Draw note border
-  ctx.save();
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = '#E0D600';
-  ctx.strokeRect(x1, y1, width, height);
-  ctx.restore();
+        // Draw note border
+        ctx.save();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#E0D600';
+        ctx.strokeRect(x1, y1, width, height);
+        ctx.restore();
 
-  // Draw pin at top center
-  const pinX = centerX;
-  const pinY = y1 + 4;
-  const PIN_RADIUS = 6;
-  ctx.save();
-  ctx.beginPath();
-  ctx.fillStyle = '#D32F2F';
-  ctx.strokeStyle = '#B71C1C';
-  ctx.lineWidth = 1;
-  ctx.arc(pinX, pinY, PIN_RADIUS, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
+        // Draw pin at top center
+        const pinX = centerX;
+        const pinY = y1 + 4;
+        const PIN_RADIUS = 6;
+        ctx.save();
+        ctx.beginPath();
+        ctx.fillStyle = '#D32F2F';
+        ctx.strokeStyle = '#B71C1C';
+        ctx.lineWidth = 1;
+        ctx.arc(pinX, pinY, PIN_RADIUS, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
 
-  ctx.restore(); // restore unrotated coordinate system
+        ctx.restore(); // restore unrotated coordinate system
 
-  // Compute inner text box with padding
-  const innerX = x1 + PADDING;
-  const innerY = y1 + PADDING;
-  const innerW = width - 2 * PADDING;
-  const innerH = height - 2 * PADDING;
+        // Compute inner text box with padding
+        const innerX = x1 + PADDING;
+        const innerY = y1 + PADDING;
+        const innerW = width - 2 * PADDING;
+        const innerH = height - 2 * PADDING;
 
-  // Draw wrapped text inside
-  this.drawWrappedTextInBox(
-    ctx,
-    note.content?.text || 'Unknown',
-    innerX,
-    innerY,
-    innerW,
-    innerH,
-    {
-      font: '16px sans-serif',
-      fillStyle: '#333',
+        // Draw wrapped text inside
+        this.drawWrappedTextInBox(
+            ctx,
+            note.content?.text || 'Unknown',
+            innerX,
+            innerY,
+            innerW,
+            innerH,
+            {
+                font: '16px sans-serif',
+                fillStyle: '#333',
+            }
+        );
     }
-  );
-}
 
 
 
