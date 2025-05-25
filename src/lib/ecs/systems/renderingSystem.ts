@@ -266,84 +266,78 @@ export class RenderingSystem implements System {
         ctx.restore();
     }
 
-    private renderLocation(ctx: CanvasRenderingContext2D, entity: Entity) {
-        const posC = entity.getComponent('position');
-        if (!posC) return;
-        const location = entity.element;
-        if (!location) return;
+private renderLocation(ctx: CanvasRenderingContext2D, entity: Entity) {
+    const posC = entity.getComponent('position');
+    if (!posC) return;
+    const location = entity.element;
+    if (!location) return;
 
-        const { x1, y1, x2, y2 } = posC.position;
-        const width = x2 - x1;
-        const height = y2 - y1;
-        const IMAGE_RATIO = 0.75;
-        const IMAGE_PADDING = 5;
-        const PADDING = 5;
+    const { x1, y1, x2, y2 } = posC.position;
+    const width = x2 - x1;
+    const height = y2 - y1;
+    const IMAGE_RATIO = 0.75;    // shrink image region to 60%
+    const IMAGE_PADDING = 5;
+    const PADDING = 5;
 
-        const colorA = '#004f3b';
-        const colorB = '#006045';
+    const colorA = '#733e0a';
+    const colorB = '#894b00';
 
-        //
-        // 1) DRAW OUTER BOX WITH GRADIENT
-        //
-        ctx.save();
-        // create a vertical gradient from top (y1) to bottom (y2)
-        const grad = ctx.createLinearGradient(x1, y1, x1, y2);
-        grad.addColorStop(0, colorB);
-        grad.addColorStop(1, colorA);
+    ctx.save();
+    const grad = ctx.createLinearGradient(x1, y1, x1, y2);
+    grad.addColorStop(0, colorB);
+    grad.addColorStop(1, colorA);
+    ctx.fillStyle = grad;
+    ctx.fillRect(x1, y1, width, height);
 
-        ctx.fillStyle = grad;
-        ctx.fillRect(x1, y1, width, height);
+    ctx.strokeStyle = colorB;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x1, y1, width, height);
+    ctx.restore();
 
-        // optional stroke
-        ctx.strokeStyle = colorB;
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x1, y1, width, height);
-        ctx.restore();
 
-        //
-        // 2) CALCULATE INNER LAYOUT
-        //
-        const innerX = x1 + PADDING;
-        const innerY = y1 + PADDING;
-        const innerW = width - 2 * PADDING;
-        const innerH = height - 2 * PADDING;
-        const portraitH = innerH * IMAGE_RATIO;
-        const nameH = innerH - portraitH;
-        const nameY = innerY + portraitH;
+    const innerX = x1 + PADDING;
+    const innerY = y1 + PADDING;
+    const innerW = width - 2 * PADDING;
+    const innerH = height - 2 * PADDING;
+    const portraitH = innerH * IMAGE_RATIO;
+    const nameH = innerH - portraitH;
+    const nameY = innerY + portraitH;
 
-        //
-        // 3) PORTRAIT AREA (transparent background then image)
-        //
-        ctx.save();
-        ctx.fillStyle = 'transparent';
-        ctx.fillRect(innerX, innerY, innerW, portraitH);
-        ctx.drawImage(
-            this.imageCache.get('LOCATION')!,
-            innerX + IMAGE_PADDING,
-            innerY + IMAGE_PADDING,
-            innerW - IMAGE_PADDING * 2,
-            portraitH - IMAGE_PADDING * 2
-        );
-        ctx.restore();
 
-        //
-        // 4) NAME TAG
-        //
-        this.drawWrappedTextInBox(
-            ctx,
-            entity.element.content?.name || 'Unknown',
-            innerX,
-            nameY,
-            innerW,
-            nameH,
-            {
-                font: 'bold 20px sans-serif',
-                fillStyle: '#FFF',
-                lineHeight: 24,
-            }
-        );
+    ctx.save();
+    ctx.fillStyle = 'transparent';
+    ctx.fillRect(innerX, innerY, innerW, portraitH);
 
-    }
+    const img = this.imageCache.get('LOCATION')!;
+    const iw = img.naturalWidth;
+    const ih = img.naturalHeight;
+
+    const availW = innerW - IMAGE_PADDING * 2;
+    const availH = portraitH - IMAGE_PADDING * 2;
+    const scale = Math.min(availW / iw, availH / ih);
+
+    const dw = iw * scale;
+    const dh = ih * scale;
+    const dx = innerX + IMAGE_PADDING + (availW - dw) / 2;
+    const dy = innerY + IMAGE_PADDING + (availH - dh) / 2;
+
+    ctx.drawImage(img, dx, dy, dw, dh);
+    ctx.restore();
+
+    this.drawWrappedTextInBox(
+        ctx,
+        entity.element.content?.name || 'Unknown',
+        innerX,
+        nameY,
+        innerW,
+        nameH,
+        {
+            font: 'bold 20px sans-serif',
+            fillStyle: '#FFF',
+            lineHeight: 24,
+        }
+    );
+}
 
     // Updated renderNote to emulate a sticky note with shadow, slight rotation, and a pin
     private renderNote(ctx: CanvasRenderingContext2D, entity: Entity) {
@@ -416,8 +410,9 @@ export class RenderingSystem implements System {
             innerW,
             innerH,
             {
-                font: '16px sans-serif',
+                font: 'bold 16px sans-serif',
                 fillStyle: '#333',
+                maxLines:10
             }
         );
     }

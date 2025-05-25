@@ -112,7 +112,7 @@ const Headshot = memo(({ imagePath, onImageChange }: SelectHeadshotProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <LazyImage
+        <img
           src={imagePath || "/avatar-m.svg"}
           alt="Current headshot"
           className="w-full h-full cursor-pointer"
@@ -135,7 +135,7 @@ const Headshot = memo(({ imagePath, onImageChange }: SelectHeadshotProps) => {
               <img
                 src={previewImage}
                 alt="Selected headshot preview"
-                className="aspect-square w-full max-w-[280px]"
+                className="aspect-square w-full max-w-[160px] md:max-w-[250px] rounded-md"
               />
             )}
           </div>
