@@ -31,9 +31,20 @@ export class CdnApi {
         return token ? { Authorization: `Bearer ${token}` } : {};
     }
 
-    async getImages(){
+    async getImages({limit, cursor}: { limit?: number; cursor?: string | null } = {}) {
         const headers = await this.authHeaders();
-        const response = await this.api.get<string[]>(`/cdn/images?wsId=${this.uniqueWsId}`, { headers });
+
+        const params: Record<string, string> = {
+            wsId: this.uniqueWsId || '',
+            limit: limit ? limit.toString() : '20', // Default to 20 if not provided
+            cursor: cursor || '',
+        };
+
+        const queryString = new URLSearchParams(params).toString();
+        const response = await this.api.get<{
+            images: string[];
+            cursor?: string | null;
+        }>(`/cdn/images?${queryString}`, { headers });
         return response.data;
     }
 }

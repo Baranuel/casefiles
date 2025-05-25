@@ -1,15 +1,53 @@
 /* eslint-disable @next/next/no-img-element */
-import { memo } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Content } from "@/types/contents";
 import { useCdnApi } from "@/hooks/use-cdn-api";
+import { Button } from "../ui/button";
+import { DialogDescription } from "@radix-ui/react-dialog";
+
+const LazyImage = ({
+  src,
+  alt,
+  className = "",
+  onClick,
+  animated = false,
+  ...props
+}: React.ImgHTMLAttributes<HTMLImageElement> & {
+  src: string;
+  alt: string;
+  className?: string;
+  animated?: boolean;
+}) => {
+  const [loaded, setLoaded] = useState(false);
+
+  const animation = `${loaded ? "scale-100" : "scale-90"} transition-all duration-300 ease-out`;
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      {/* Skeleton placeholder */}
+      {!loaded && (
+        <div className="absolute inset-0 animate-pulse bg-gray-200" />
+      )}
+      <img
+        src={src}
+        alt={alt}
+        onClick={onClick}
+        onLoad={() => setLoaded(true)}
+        loading="lazy"
+        className={`object-cover w-full h-full transition-all duration-300 ease-out rounded-lg ${animated && animation}`}
+        {...props}
+      />
+    </div>
+  );
+};
 
 type SelectHeadshotProps = {
   imagePath?: string | null;
@@ -21,59 +59,118 @@ type SelectHeadshotProps = {
 
 const Headshot = memo(({ imagePath, onImageChange }: SelectHeadshotProps) => {
   const cdnApi = useCdnApi();
-  const { data } = useQuery({
+  const [previewImage, setPreviewImage] = useState<string | null>(
+    imagePath || null
+  );
+  const [open, setOpen] = useState(false);
+
+  const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
     queryKey: ["headshot"],
-    queryFn: async () => {
-        const data = await cdnApi.getImages();
-        return data
+    initialPageParam: null,
+    queryFn: async (context) => {
+      const { pageParam } = context;
+      const limit = 10;
+      const cursor = pageParam || null;
+
+      const data = await cdnApi.getImages({ limit, cursor });
+      return {
+        images: data.images,
+        cursor: data.cursor || null,
+      };
     },
+    getNextPageParam: (lastPage: { images: string[]; cursor: string | null }) =>
+      lastPage.cursor ?? undefined,
   });
 
+  const imageData = data?.pages.flatMap((page) => page.images) || [];
+  const observer = useRef<IntersectionObserver | null>(null);
+
+  const handleIntersect = useCallback<IntersectionObserverCallback>(
+    ([entry]) => {
+      if (entry.isIntersecting && hasNextPage) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage]
+  );
+
+  const sentinelRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      observer.current?.disconnect();
+      if (node) {
+        observer.current = new IntersectionObserver(handleIntersect, {
+          root: null,
+          rootMargin: "0px 0px 300px 0px",
+          threshold: 0.1,
+        });
+        observer.current.observe(node);
+      }
+    },
+    [handleIntersect]
+  );
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <img
+        <LazyImage
           src={imagePath || "/avatar-m.svg"}
-          alt="Default Headshot"
-          className="w-full h-full object-cover cursor-pointer"
+          alt="Current headshot"
+          className="w-full h-full cursor-pointer"
         />
       </DialogTrigger>
-      <DialogContent className=" border-amber-900/20 overflow-hidden w-[90vw] h-[90vh] max-w-[400px] max-h-[90vh] md:max-w-[1200px] md:max-h-[90vh] flex flex-col p-3 md:p-5 bg-[#F1E1CF]">
+      <DialogContent className="border-amber-900/20 overflow-hidden w-[90vw] h-[90vh] max-w-[400px] max-h-[90vh] md:max-w-[1500px] md:max-h-[90vh] flex flex-col p-3 md:p-5 bg-[#F1E1CF]">
         <DialogHeader>
           <DialogTitle className="text-lg md:text-xl lg:text-2xl">
             Change Image
           </DialogTitle>
         </DialogHeader>
-        <div className=" h-full flex flex-col md:flex-row gap-3 overflow-hidden">
+        <DialogDescription>Current:</DialogDescription>
+        <div className="h-full flex flex-col md:flex-row gap-3 overflow-hidden">
           {/* Current Preview */}
-          <div className="flex-shrink-0  md:basis-1/3 lg:basis-1/4 flex items-start  md:justify-start ">
-            <img
-              src={imagePath || ""}
-              alt="current headshot"
-              className="aspect-square w-full max-w-[160px] md:max-w-[200px] lg:max-w-[280px] object-cover rounded"
-            />
+          <div
+            onClick={() => fetchNextPage()}
+            className="flex-shrink-0 md:basis-1/3 lg:basis-1/4 flex items-start md:justify-start"
+          >
+            {previewImage && (
+              <img
+                src={previewImage}
+                alt="Selected headshot preview"
+                className="aspect-square w-full max-w-[280px]"
+              />
+            )}
           </div>
           {/* Scrollable Grid */}
-          <div className="flex-1 overflow-scroll h-full ">
-            <div className="rounded-md border border-amber-900/10 bg-stone-100 grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-2">
-              {data?.map((src: string, index: number) => (
+          <div className="flex-1 overflow-scroll h-full">
+            <div className="rounded-md border border-amber-900/10 bg-stone-100 grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 p-2">
+              {imageData.map((src, index) => (
                 <div
-                  key={index}
-                  className="aspect-square w-full overflow-hidden rounded-lg"
-                  onClick={() =>
-                    onImageChange?.({ image: src }, { noDelay: true })
-                  }
+                  ref={index === imageData.length - 1 ? sentinelRef : null}
+                  key={src}
+                  onClick={() => setPreviewImage(src)}
+                  className="aspect-square w-full"
                 >
-                  <img
+                  <LazyImage
                     src={src}
                     alt={`headshot ${index}`}
-                    className="object-cover w-full h-full cursor-pointer"
+                    animated
+                    className="w-full h-full cursor-pointer"
                   />
                 </div>
               ))}
             </div>
           </div>
         </div>
+        <DialogFooter>
+          <Button
+            disabled={previewImage === imagePath}
+            onClick={() => {
+              onImageChange?.({ image: previewImage }, { noDelay: true });
+              setOpen(false);
+            }}
+          >
+            Confirm
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
