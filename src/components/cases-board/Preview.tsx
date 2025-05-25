@@ -2,14 +2,16 @@
 import { useDebouncedCallback } from "use-debounce";
 import { Controller, useForm } from "react-hook-form";
 import { useCaseContext } from "@/providers/CaseStateProvider";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef } from "react";
 import { Switch } from "../ui/switch";
 import { Content } from "@/types/contents";
 import { usePreviewElement } from "@/hooks/use-preview-element";
 import { useCaseContentsMutation } from "@/hooks/use-case-contents-mutation";
 import CustomDrawer from "./CustomDrawer";
-import Headshot from "./Headshot";
 import dayjs from "dayjs";
+import React from "react";
+
+const Headshot = React.lazy(() => import("./Headshot"));
 
 export const Preview = ({ caseId }: { caseId: string }) => {
   const { previewElementId, setPreviewElementId } = useCaseContext();
@@ -65,7 +67,6 @@ export const Preview = ({ caseId }: { caseId: string }) => {
     [previewElement, getValues, updateMutation, debounce]
   );
 
-
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -87,10 +88,12 @@ export const Preview = ({ caseId }: { caseId: string }) => {
         {previewElement?.type === "PERSON" && (
           <div className="flex gap-4">
             <div className="w-1/2 rotate-1 rounded-sm shadow-md aspect-square border border-muted relative overflow-hidden">
-              <Headshot
-                imagePath={previewElement?.content?.image}
-                onImageChange={mutationWrapper}
-              />
+              <Suspense fallback={null}>
+                <Headshot
+                  imagePath={previewElement?.content?.image}
+                  onImageChange={mutationWrapper}
+                />
+              </Suspense>
             </div>
             <div className="flex flex-col gap-4 w-1/2 text-black p-2">
               <div className="flex flex-col">
@@ -101,7 +104,9 @@ export const Preview = ({ caseId }: { caseId: string }) => {
               </div>
               <div className="flex flex-col">
                 <h5 className="text-sm font-semibold">Status</h5>
-                <span className="text-xl font-bold">{previewElement?.content?.victim ? 'Victim' : 'Suspect'}</span>
+                <span className="text-xl font-bold">
+                  {previewElement?.content?.victim ? "Victim" : "Suspect"}
+                </span>
               </div>
             </div>
           </div>
@@ -208,7 +213,16 @@ export const Preview = ({ caseId }: { caseId: string }) => {
         </div>
       </div>
     );
-  }, [previewElement?.type, previewElement?.content?.image, previewElement?.content?.name, previewElement?.content?.victim, previewElement?.content?.time_of_death, mutationWrapper, register, control]);
+  }, [
+    previewElement?.type,
+    previewElement?.content?.image,
+    previewElement?.content?.name,
+    previewElement?.content?.victim,
+    previewElement?.content?.time_of_death,
+    mutationWrapper,
+    register,
+    control,
+  ]);
 
   return (
     <CustomDrawer open={isOpen} onClose={handleClose}>
