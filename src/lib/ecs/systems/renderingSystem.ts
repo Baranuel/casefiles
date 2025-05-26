@@ -12,12 +12,13 @@ type HoverProperties = {
     interactionPoint?: PositionWithinElement
     entityId?: Entity['id'],
 } | null
+
+
 export class RenderingSystem implements System {
     engine: Engine;
     eventSystem: EventSystem | null = null;
     currentCursor: string | null = null;
     hoverProperties: HoverProperties = null
-    hoverEventPrecedence?: boolean = true
 
     private imageCache: Map<string, HTMLImageElement> = new Map();
     private dpr = window.devicePixelRatio || 1;
@@ -45,6 +46,7 @@ export class RenderingSystem implements System {
     private onPanStart = () => {
         this.currentCursor = 'grabbing'
     }
+
     private onActionChange = (data: EngineEvents['action:change']) => {
         const { action } = data
         switch (action) {
@@ -138,7 +140,9 @@ export class RenderingSystem implements System {
         const entities = this.engine.getEntitiesWithComponents('position', 'type');
         entities.sort((a, b) => this.layerMap[a.getComponent('type')!.type] - this.layerMap[b.getComponent('type')!.type]);
 
+
         entities.forEach(entity => {
+            this.renderAttachmentArea(ctx, entity);
             this.renderEntity(ctx, entity);
             this.renderHoverOutline(ctx, entity);
         });
@@ -146,11 +150,15 @@ export class RenderingSystem implements System {
         const selected = this.engine.getEntitiesWithComponents('selectable', 'position')
             .filter(e => e.getComponent('selectable')!.selected);
 
+
+
         this.renderSelection(ctx, selected);
         this.drawIntent(ctx, tool);
 
         ctx.restore();
     }
+
+
 
     private prepareContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {
         const { x, y, zoom } = this.engine.camera;
@@ -166,6 +174,7 @@ export class RenderingSystem implements System {
         ctx.translate(-x, -y);
         return ctx;
     }
+
 
     private renderEntity(ctx: CanvasRenderingContext2D, entity: Entity) {
         const typeC = entity.getComponent('type');
@@ -188,6 +197,34 @@ export class RenderingSystem implements System {
         }
     }
 
+    private renderAttachmentArea(ctx: CanvasRenderingContext2D, entity: Entity) {
+        if(this.engine.userAction !== 'resizing' && this.engine.userAction !== 'moving') return
+
+        const posC = entity.getComponent('position');
+        const nodeC = entity.getComponent('node');
+        if (!posC || !nodeC) return;
+
+        const { x1, y1, x2, y2 } = posC.position;
+        const width = x2 - x1;
+        const height = y2 - y1;
+        const { areaPadding } = nodeC;
+
+        const renderWidth = width + areaPadding * 2;
+        const renderHeight = height + areaPadding * 2;
+
+        const centerX = x1 + width / 2;
+        const centerY = y1 + height / 2;
+
+        const startX = centerX - renderWidth / 2;
+        const startY = centerY - renderHeight / 2;
+
+        ctx.save();
+        ctx.fillStyle = '#FFC940';
+        ctx.globalAlpha = 0.2;
+        ctx.fillRect(startX, startY, renderWidth, renderHeight);
+        ctx.restore();
+    }
+    
     private renderHoverOutline(ctx: CanvasRenderingContext2D, entity: Entity) {
         const sel = entity.getComponent('selectable');
         const pos = entity.getComponent('position');
@@ -239,6 +276,7 @@ export class RenderingSystem implements System {
         ctx.restore()
     }
 
+
     private drawDashedRect(
         ctx: CanvasRenderingContext2D,
         { x1, y1, x2, y2 }: { x1: number; y1: number; x2: number; y2: number },
@@ -266,78 +304,79 @@ export class RenderingSystem implements System {
         ctx.restore();
     }
 
-private renderLocation(ctx: CanvasRenderingContext2D, entity: Entity) {
-    const posC = entity.getComponent('position');
-    if (!posC) return;
-    const location = entity.element;
-    if (!location) return;
 
-    const { x1, y1, x2, y2 } = posC.position;
-    const width = x2 - x1;
-    const height = y2 - y1;
-    const IMAGE_RATIO = 0.75;    // shrink image region to 60%
-    const IMAGE_PADDING = 5;
-    const PADDING = 5;
+    private renderLocation(ctx: CanvasRenderingContext2D, entity: Entity) {
+        const posC = entity.getComponent('position');
+        if (!posC) return;
+        const location = entity.element;
+        if (!location) return;
 
-    const colorA = '#733e0a';
-    const colorB = '#894b00';
+        const { x1, y1, x2, y2 } = posC.position;
+        const width = x2 - x1;
+        const height = y2 - y1;
+        const IMAGE_RATIO = 0.75;    // shrink image region to 60%
+        const IMAGE_PADDING = 5;
+        const PADDING = 5;
 
-    ctx.save();
-    const grad = ctx.createLinearGradient(x1, y1, x1, y2);
-    grad.addColorStop(0, colorB);
-    grad.addColorStop(1, colorA);
-    ctx.fillStyle = grad;
-    ctx.fillRect(x1, y1, width, height);
+        const colorA = '#733e0a';
+        const colorB = '#894b00';
 
-    ctx.strokeStyle = colorB;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x1, y1, width, height);
-    ctx.restore();
+        ctx.save();
+        const grad = ctx.createLinearGradient(x1, y1, x1, y2);
+        grad.addColorStop(0, colorB);
+        grad.addColorStop(1, colorA);
+        ctx.fillStyle = grad;
+        ctx.fillRect(x1, y1, width, height);
 
-
-    const innerX = x1 + PADDING;
-    const innerY = y1 + PADDING;
-    const innerW = width - 2 * PADDING;
-    const innerH = height - 2 * PADDING;
-    const portraitH = innerH * IMAGE_RATIO;
-    const nameH = innerH - portraitH;
-    const nameY = innerY + portraitH;
+        ctx.strokeStyle = colorB;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x1, y1, width, height);
+        ctx.restore();
 
 
-    ctx.save();
-    ctx.fillStyle = 'transparent';
-    ctx.fillRect(innerX, innerY, innerW, portraitH);
+        const innerX = x1 + PADDING;
+        const innerY = y1 + PADDING;
+        const innerW = width - 2 * PADDING;
+        const innerH = height - 2 * PADDING;
+        const portraitH = innerH * IMAGE_RATIO;
+        const nameH = innerH - portraitH;
+        const nameY = innerY + portraitH;
 
-    const img = this.imageCache.get('LOCATION')!;
-    const iw = img.naturalWidth;
-    const ih = img.naturalHeight;
 
-    const availW = innerW - IMAGE_PADDING * 2;
-    const availH = portraitH - IMAGE_PADDING * 2;
-    const scale = Math.min(availW / iw, availH / ih);
+        ctx.save();
+        ctx.fillStyle = 'transparent';
+        ctx.fillRect(innerX, innerY, innerW, portraitH);
 
-    const dw = iw * scale;
-    const dh = ih * scale;
-    const dx = innerX + IMAGE_PADDING + (availW - dw) / 2;
-    const dy = innerY + IMAGE_PADDING + (availH - dh) / 2;
+        const img = this.imageCache.get('LOCATION')!;
+        const iw = img.naturalWidth;
+        const ih = img.naturalHeight;
 
-    ctx.drawImage(img, dx, dy, dw, dh);
-    ctx.restore();
+        const availW = innerW - IMAGE_PADDING * 2;
+        const availH = portraitH - IMAGE_PADDING * 2;
+        const scale = Math.min(availW / iw, availH / ih);
 
-    this.drawWrappedTextInBox(
-        ctx,
-        entity.element.content?.name || 'Unknown',
-        innerX,
-        nameY,
-        innerW,
-        nameH,
-        {
-            font: 'bold 20px sans-serif',
-            fillStyle: '#FFF',
-            lineHeight: 24,
-        }
-    );
-}
+        const dw = iw * scale;
+        const dh = ih * scale;
+        const dx = innerX + IMAGE_PADDING + (availW - dw) / 2;
+        const dy = innerY + IMAGE_PADDING + (availH - dh) / 2;
+
+        ctx.drawImage(img, dx, dy, dw, dh);
+        ctx.restore();
+
+        this.drawWrappedTextInBox(
+            ctx,
+            entity.element.content?.name || 'Unknown',
+            innerX,
+            nameY,
+            innerW,
+            nameH,
+            {
+                font: 'bold 20px sans-serif',
+                fillStyle: '#FFF',
+                lineHeight: 24,
+            }
+        );
+    }
 
     // Updated renderNote to emulate a sticky note with shadow, slight rotation, and a pin
     private renderNote(ctx: CanvasRenderingContext2D, entity: Entity) {
@@ -412,7 +451,7 @@ private renderLocation(ctx: CanvasRenderingContext2D, entity: Entity) {
             {
                 font: 'bold 16px sans-serif',
                 fillStyle: '#333',
-                maxLines:10
+                maxLines: 10
             }
         );
     }

@@ -32,7 +32,7 @@ export interface EngineEvents {
     'action:move:end': null;
     'action:resize:start': ActionResizeStartDto;
     'action:resize': { x: number, y: number };
-    'action:resize:end': null
+    'action:resize:end': ActionResizeStartDto | null;
     'action:change': { action: 'idle' | 'moving' | 'resizing' | 'panning' };
     'action:create': ActionCreateDto;
 

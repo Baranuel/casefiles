@@ -172,6 +172,7 @@ export class UserActionSystem implements System {
 
     private updateAction = (data: EngineEvents['action:change']) => {
         this.currentAction = data.action
+        this.engine.userAction = data.action
     }
 
     private emitStartMoveAction(mouse: { x: number, y: number }, mouseDownSnapshot: { x: number, y: number }) {

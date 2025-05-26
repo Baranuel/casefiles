@@ -8,6 +8,7 @@ import { MovableComponent } from "./components/MovableComponent";
 // import { ResizableComponent } from "./components/ResizableComponent";
 import { SelectableComponent } from "./components/SelectableComponent";
 import { ResizableComponent } from "./components/ResizableComponent";
+import { NodeComponent } from "./components/NodeComponent";
 // import { NodeComponent } from "./components/NodeComponent";
 
 
@@ -15,7 +16,7 @@ export class Engine {
     public canvas: HTMLCanvasElement;
     public camera: Camera;
     public entities: Map<string, Entity> = new Map();
-    public userAction: 'idle' | 'moving' | 'resizing' = 'idle'
+    public userAction: 'idle' | 'moving' | 'resizing'| 'panning' = 'idle'
 
     private systems: Map<SystemsType, System> = new Map()
     private deltaTime: number;
@@ -97,6 +98,7 @@ export class Engine {
                         entity.addComponent('style', new StyleComponent(entity, 'green'));
                         entity.addComponent('movable', new MovableComponent(entity));
                         entity.addComponent('selectable', new SelectableComponent(entity));
+                        entity.addComponent('node', new NodeComponent(entity));
                         break;
                     case 'LOCATION':
                         entity.addComponent('type', new TypeComponent(entity, 'LOCATION'));
