@@ -41,7 +41,6 @@ export class Engine {
 
 
     private animate(timestamp: number) {
-
         this.deltaTime = (timestamp - this.lastTime) / 1000;
         this.lastTime = timestamp;
         const engineSystems = Array.from(this.systems.entries())
@@ -55,6 +54,7 @@ export class Engine {
 
     public addSystem(name: SystemsType, system: System) {
         this.systems.set(name, system)
+        system.init?.()
     }
 
     public getSystem<K extends SystemsType>(name: K): GetSystem<K> | undefined {

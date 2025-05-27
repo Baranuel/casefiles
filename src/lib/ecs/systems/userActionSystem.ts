@@ -62,14 +62,14 @@ export class UserActionSystem implements System {
         this.handleDragEvent(data.x, data.y, data.mouseDownSnapshot)
     }
 
-    onTouchEnd = (data:EngineEvents['touch:end']) => {
+    onTouchEnd = (data: EngineEvents['touch:end']) => {
         if (this.currentAction === 'panning') return
-        this.eventSystem?.emit('action:select:end', { mouse: { x: data.x, y: data.y },  mouseDownSnapshot: data.mouseDownSnapshot, mouseScreenPositionSnapshot:data.mouseScreenPositionSnapshot, screenX:data.screenX, screenY:data.screenY })
+        this.eventSystem?.emit('action:select:end', { mouse: { x: data.x, y: data.y }, mouseDownSnapshot: data.mouseDownSnapshot, mouseScreenPositionSnapshot: data.mouseScreenPositionSnapshot, screenX: data.screenX, screenY: data.screenY })
         this.handleCleanup()
     }
 
-    onMouseUp = (data:EngineEvents['mouse:up']) => {
-        this.eventSystem?.emit('action:select:end', { mouse: { x: data.x, y: data.y }, modifier:data.modifier, mouseDownSnapshot: data.mouseDownSnapshot, mouseScreenPositionSnapshot:data.mouseScreenPositionSnapshot, screenX:data.screenX, screenY:data.screenY })
+    onMouseUp = (data: EngineEvents['mouse:up']) => {
+        this.eventSystem?.emit('action:select:end', { mouse: { x: data.x, y: data.y }, modifier: data.modifier, mouseDownSnapshot: data.mouseDownSnapshot, mouseScreenPositionSnapshot: data.mouseScreenPositionSnapshot, screenX: data.screenX, screenY: data.screenY })
         this.handleCleanup()
     }
 
@@ -124,10 +124,10 @@ export class UserActionSystem implements System {
         if (this.checkForMoveInteraction({ x, y }, selectableEntities)) {
             if (this.currentAction === 'idle') {
                 const entityHit = getEntityAtPosition(selectableEntities, x, y)
-                if (entityHit) {
 
-                    this.emitStartMoveAction({ x, y }, mouseDownSnapshot, entityHit?.id )
-                    }
+
+                    this.emitStartMoveAction({ x, y }, mouseDownSnapshot, entityHit?.id)
+
             }
         }
 
@@ -179,7 +179,7 @@ export class UserActionSystem implements System {
         this.engine.userAction = data.action
     }
 
-    private emitStartMoveAction(mouse: { x: number, y: number }, mouseDownSnapshot: { x: number, y: number }, entityId: Entity['id']) {
+    private emitStartMoveAction(mouse: { x: number, y: number }, mouseDownSnapshot: { x: number, y: number }, entityId?: Entity['id']) {
         const { x, y } = mouse
         this.eventSystem?.emit('action:change', { action: 'moving' })
         this.eventSystem?.emit('action:move:start', { x, y, mouseDownSnapshot, entityId })

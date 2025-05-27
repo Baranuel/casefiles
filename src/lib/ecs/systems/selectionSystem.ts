@@ -33,7 +33,7 @@ export class SelectionSystem implements System {
         const clickedInSelectionArea = isPointInSelectionArea(selectedEntities, data.mouse.x, data.mouse.y);
 
         if (clickedInSelectionArea && !data.modifier) {
-            return
+            return console.warn('Clicked in selection area, but no modifier key pressed. No action taken.');
         }
         if (!entityHit && selectedEntities.length === 1) {
             return this.clearSelection()
