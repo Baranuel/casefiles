@@ -22,8 +22,9 @@ import { State } from "@/providers/CaseStateProvider"
 
 export interface System {
     engine: Engine
+    init?: () => void
     update: (delta?: number) => void
-    draw: () => void
+    draw: (ctx:CanvasRenderingContext2D) => void
     destroy: () => void,
     stateUpdated?: (state: State) => void
 }

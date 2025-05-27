@@ -8,6 +8,7 @@ import { MovableComponent } from "./components/MovableComponent";
 // import { ResizableComponent } from "./components/ResizableComponent";
 import { SelectableComponent } from "./components/SelectableComponent";
 import { ResizableComponent } from "./components/ResizableComponent";
+import { NodeComponent } from "./components/NodeComponent";
 // import { NodeComponent } from "./components/NodeComponent";
 
 
@@ -15,8 +16,8 @@ export class Engine {
     public canvas: HTMLCanvasElement;
     public camera: Camera;
     public entities: Map<string, Entity> = new Map();
-    public userAction: 'idle' | 'moving' | 'resizing' = 'idle'
-
+    public userAction: 'idle' | 'moving' | 'resizing' | 'panning' = 'idle'
+    private dpr = window.devicePixelRatio || 1;
     private systems: Map<SystemsType, System> = new Map()
     private deltaTime: number;
     private lastTime: number;
@@ -40,20 +41,20 @@ export class Engine {
 
 
     private animate(timestamp: number) {
-
         this.deltaTime = (timestamp - this.lastTime) / 1000;
         this.lastTime = timestamp;
-
         const engineSystems = Array.from(this.systems.entries())
+        const ctx = this.prepareContext(this.canvas);
+        if(!ctx) return;
 
         engineSystems.forEach(([, system]) => system.update(this.deltaTime))
-        engineSystems.forEach(([, system]) => system.draw())
-
+        engineSystems.forEach(([, system]) => system.draw(ctx))
         requestAnimationFrame(this.animate.bind(this));
     }
 
     public addSystem(name: SystemsType, system: System) {
         this.systems.set(name, system)
+        system.init?.()
     }
 
     public getSystem<K extends SystemsType>(name: K): GetSystem<K> | undefined {
@@ -75,7 +76,6 @@ export class Engine {
         }
 
 
-        // 2. Add new entities and update existing ones
         for (const element of newState.elements) {
             const { id } = element;
 
@@ -97,6 +97,7 @@ export class Engine {
                         entity.addComponent('style', new StyleComponent(entity, 'green'));
                         entity.addComponent('movable', new MovableComponent(entity));
                         entity.addComponent('selectable', new SelectableComponent(entity));
+                        entity.addComponent('node', new NodeComponent(entity));
                         break;
                     case 'LOCATION':
                         entity.addComponent('type', new TypeComponent(entity, 'LOCATION'));
@@ -138,16 +139,29 @@ export class Engine {
         this.systems.forEach(s => s.destroy())
     }
     public getEntitiesWithComponents<
-        K extends readonly ComponentsType[]        // K is a tuple
+        K extends readonly ComponentsType[]      
     >(
         ...componentKeys: K
     ): Entity[] {
         const result = Array.from(this.entities.values()).filter((entity) =>
             componentKeys.every((key) => entity.hasComponent(key))
         )
-
-        // we assert here so TS will narrow the returned entities
         return result
+    }
+
+        private prepareContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {
+        const { x, y, zoom } = this.camera;
+        canvas.width = canvas.clientWidth * this.dpr;
+        canvas.height = canvas.clientHeight * this.dpr;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+
+        ctx.scale(this.dpr * zoom, this.dpr * zoom);
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.translate(-x, -y);
+        return ctx;
     }
 
 
