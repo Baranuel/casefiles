@@ -123,7 +123,11 @@ export class UserActionSystem implements System {
         // Bock shooting a start event even during a drag
         if (this.checkForMoveInteraction({ x, y }, selectableEntities)) {
             if (this.currentAction === 'idle') {
-                this.emitStartMoveAction({ x, y }, mouseDownSnapshot)
+                const entityHit = getEntityAtPosition(selectableEntities, x, y)
+                if (entityHit) {
+
+                    this.emitStartMoveAction({ x, y }, mouseDownSnapshot, entityHit?.id )
+                    }
             }
         }
 
@@ -175,10 +179,10 @@ export class UserActionSystem implements System {
         this.engine.userAction = data.action
     }
 
-    private emitStartMoveAction(mouse: { x: number, y: number }, mouseDownSnapshot: { x: number, y: number }) {
+    private emitStartMoveAction(mouse: { x: number, y: number }, mouseDownSnapshot: { x: number, y: number }, entityId: Entity['id']) {
         const { x, y } = mouse
         this.eventSystem?.emit('action:change', { action: 'moving' })
-        this.eventSystem?.emit('action:move:start', { x, y, mouseDownSnapshot })
+        this.eventSystem?.emit('action:move:start', { x, y, mouseDownSnapshot, entityId })
     }
 
     private emitStartResizeAction(mouse: { x: number, y: number }, mouseDownSnapshot: { x: number, y: number }, interactionPoint: PositionWithinElement, entityId: Entity['id']) {

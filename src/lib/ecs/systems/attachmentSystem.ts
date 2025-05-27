@@ -1,25 +1,45 @@
 import { System } from "@/types/engine";
 import { Engine } from "..";
-import { Entity } from "../entities/Entity";
 import { ElementPosition } from "@/types/elements";
 import { EventSystem } from "./eventSystem";
 import { EngineEvents } from "@/types/events";
+import { Entity } from "../entities/Entity";
 
 export class AttachmentSystem implements System {
     engine: Engine
     eventSystem: EventSystem | null
+    entityToAttach: Entity | null = null
+
     constructor(engine: Engine) {
         this.engine = engine
         this.eventSystem = this.engine.getSystem('EventSystem') || null
 
         if (this.eventSystem) {
-            this.eventSystem.subscribe('action:resize:end', this.onResizeEnd)
+            this.eventSystem.subscribe('action:move:start', this.onMoveStart)
+            this.eventSystem.subscribe('action:resize:start', this.onResizeStart)
+            this.eventSystem.subscribe('action:resize:end', this.attachToNode)
+            this.eventSystem.subscribe('action:move:end', this.attachToNode)
         }
 
-        setTimeout(() => this.initializeAttachments())
     }
 
-    onResizeEnd = (data: EngineEvents['action:resize:end']) => {
+    stateUpdated () {
+        this.initializeAttachments()
+    }
+
+    onResizeStart = (data: EngineEvents['action:resize:start']) => {
+        const entityToAttach = this.engine.entities.get(data.entityId)
+        this.entityToAttach = entityToAttach || null
+    }
+
+    onMoveStart = (data: EngineEvents['action:move:start']) => {
+        const entityToAttach = this.engine.entities.get(data.entityId)
+        this.entityToAttach = entityToAttach || null
+    }
+
+    attachToNode = () => {
+        console.log('Attaching to node')
+        if(!this.entityToAttach) return;
         const nodeEntities = this.engine.getEntitiesWithComponents('type', 'position', 'node')
         const pointerEntities = this.engine.getEntitiesWithComponents('type', 'position')
 
@@ -50,87 +70,60 @@ export class AttachmentSystem implements System {
                 }
             }
         }
-        console.log('AttachmentSystem: onResizeEnd', nodeEntities)
+        this.entityToAttach = null;
     }
 
-    onResizeEnded = (e: CustomEvent) => {
-        const resizedEntity = e.detail.resizedEntity as Entity
-        const resizedPos = resizedEntity.getComponent('position')
-        if (!resizedPos) return
 
-        const { x1, x2, y1, y2 } = resizedPos.position
+
+
+    update() { }
+
+    draw(ctx: CanvasRenderingContext2D) {
+        if (!this.entityToAttach) return;
+
         const nodeEntities = this.engine.getEntitiesWithComponents('node')
+        const posC = this.entityToAttach.getComponent('position')
+        if (!posC) return
+
+        const { x1:pointX1, y1:pointY1, x2:pointX2, y2:pointY2 } = posC.position
 
         for (const node of nodeEntities) {
             const nodePosC = node.getComponent('position')
             const nodeC = node.getComponent('node')
             if (!nodePosC || !nodeC) continue
+            const padding = nodeC.areaPadding
+            const nodeRect = nodePosC.position
 
-            const nodePos = nodePosC.position
-            const nodeAreaPadding = nodeC.areaPadding
-            const attachedPoints = nodeC.attachedPoints
+            const overlapsStart = this.pointOverlapsNode(pointX1, pointY1, nodeRect, padding);
+            const overlapsEnd = this.pointOverlapsNode(pointX2, pointY2, nodeRect, padding);
 
-            if (this.pointOverlapsNode(x1, y1, nodePos, nodeAreaPadding)) {
-                const rel = this.getRelativePosition(x1, y1, nodePos)
-                attachedPoints.set(resizedEntity.id, {
-                    overlapsAt: 'start' as const,
-                    x: rel.x,
-                    y: rel.y
-                })
-                continue
+            if (overlapsStart || overlapsEnd) {
+                const posC = node.getComponent('position');
+                const nodeC = node.getComponent('node');
+                if (!posC || !nodeC) continue;
+
+                const { x1, y1, x2, y2 } = posC.position;
+                const width = x2 - x1;
+                const height = y2 - y1;
+                const { areaPadding } = nodeC;
+
+                const renderWidth = width + areaPadding * 2;
+                const renderHeight = height + areaPadding * 2;
+
+                const centerX = x1 + width / 2;
+                const centerY = y1 + height / 2;
+
+                const startX = centerX - renderWidth / 2;
+                const startY = centerY - renderHeight / 2;
+
+                ctx.fillStyle = '#FFC940';
+                ctx.globalAlpha = 0.2;
+                ctx.fillRect(startX, startY, renderWidth, renderHeight);
             }
 
-            if (this.pointOverlapsNode(x2, y2, nodePos, nodeAreaPadding)) {
-                const rel = this.getRelativePosition(x2, y2, nodePos)
-                attachedPoints.set(resizedEntity.id, {
-                    overlapsAt: 'end' as const,
-                    x: rel.x,
-                    y: rel.y
-                })
-                continue
-            }
 
-            attachedPoints.delete(resizedEntity.id)
         }
     }
-
-    update() {
-        const selectedEntity = this.engine.getSystem('SelectionSystem')!.selectedEntity
-        const selectedEntityTypeC = selectedEntity?.getComponent('type')
-        if (!selectedEntity || !selectedEntityTypeC) return
-
-        if (this.engine.userAction !== 'moving' || selectedEntityTypeC.type === 'POINTER') return
-
-        const nodeEntities = this.engine.getEntitiesWithComponents('node')
-
-        for (const node of nodeEntities) {
-            const nodePosC = node.getComponent("position");
-            const nodeC = node.getComponent("node");
-            if (!nodePosC || !nodeC?.attachedPoints) continue;
-
-            const rect = nodePosC.position;
-            const attachedPoints = nodeC.attachedPoints
-
-            for (const [arrowId, data] of attachedPoints.entries()) {
-                const arrow = this.engine.entities.get(arrowId);
-                const posC = arrow?.getComponent("position");
-                if (!posC) continue;
-
-                const p = posC.position
-
-                // simply reapply the stored offset
-                if (data.overlapsAt === "start") {
-                    p.x1 = rect.x1 + data.x
-                    p.y1 = rect.y1 + data.y
-                } else {
-                    p.x2 = rect.x1 + data.x
-                    p.y2 = rect.y1 + data.y
-                }
-            }
-        }
-    }
-
-    draw() { }
 
     private pointOverlapsNode(
         px: number,
@@ -157,47 +150,49 @@ export class AttachmentSystem implements System {
         };
     }
 
-    /** iterate all pointers and try to attach their ends to any overlapping node */
+
     private initializeAttachments() {
-        const pointerEntities = this.engine.getEntitiesWithComponents('type', 'position')
-        const nodeEntities = this.engine.getEntitiesWithComponents('node')
+    const pointerEntities = this.engine.getEntitiesWithComponents('type', 'position')
+    const nodeEntities    = this.engine.getEntitiesWithComponents('node')
 
-        for (const pointer of pointerEntities) {
-            const posC = pointer.getComponent('position')
-            const typeC = pointer.getComponent('type')
-            if (!posC || typeC?.type !== 'POINTER') continue
-            const { x1, y1, x2, y2 } = posC.position
+    for (const pointer of pointerEntities) {
+      const posC = pointer.getComponent('position')
+      const typeC = pointer.getComponent('type')
+      if (!posC || typeC?.type !== 'POINTER') continue
+      const { x1, y1, x2, y2 } = posC.position
 
-            for (const node of nodeEntities) {
-                const nodePosC = node.getComponent('position')
-                const nodeC = node.getComponent('node')
-                if (!nodePosC || !nodeC) continue
+      for (const node of nodeEntities) {
+        const nodePosC = node.getComponent('position')
+        const nodeC    = node.getComponent('node')
+        if (!nodePosC || !nodeC) continue
 
-                const padding = nodeC.areaPadding
-                const attachedPts = nodeC.attachedPoints
+        const padding     = nodeC.areaPadding
+        const attachedPts = nodeC.attachedPoints
 
-                // try start
-                if (this.pointOverlapsNode(x1, y1, nodePosC.position, padding)) {
-                    const rel = this.getRelativePosition(x1, y1, nodePosC.position)
-                    attachedPts.set(pointer.id, { overlapsAt: 'start', x: rel.x, y: rel.y })
-                }
-                // try end
-                else if (this.pointOverlapsNode(x2, y2, nodePosC.position, padding)) {
-                    const rel = this.getRelativePosition(x2, y2, nodePosC.position)
-                    attachedPts.set(pointer.id, { overlapsAt: 'end', x: rel.x, y: rel.y })
-                }
-                else {
-                    attachedPts.delete(pointer.id)
-                }
-                console.log(attachedPts)
-            }
+        // try start
+        if (this.pointOverlapsNode(x1, y1, nodePosC.position, padding)) {
+          const rel = this.getRelativePosition(x1, y1, nodePosC.position)
+          attachedPts.set(pointer.id, { overlapsAt: 'start', x: rel.x, y: rel.y })
         }
-
+        // try end
+        else if (this.pointOverlapsNode(x2, y2, nodePosC.position, padding)) {
+          const rel = this.getRelativePosition(x2, y2, nodePosC.position)
+          attachedPts.set(pointer.id, { overlapsAt: 'end', x: rel.x, y: rel.y })
+        }
+        else {
+            attachedPts.delete(pointer.id)
+        }
+        console.log(attachedPts)
+      }
     }
+  
+  }
 
     destroy() {
         if (this.eventSystem) {
-            this.eventSystem.unsubscribe('action:resize:end', this.onResizeEnd)
+            this.eventSystem.unsubscribe('action:resize:end', this.attachToNode)
+            this.eventSystem.unsubscribe('action:resize:start', this.onResizeStart)
+            this.eventSystem.unsubscribe('action:move:end', this.attachToNode)
         }
     }
 }

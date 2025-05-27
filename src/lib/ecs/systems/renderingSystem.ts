@@ -128,52 +128,28 @@ export class RenderingSystem implements System {
 
 
 
-    draw() {
-        const canvas = this.engine.canvas;
-        const ctx = this.prepareContext(canvas);
-        const tool = this.engine.getState().tool;
-        if (!ctx) return;
-
+    draw(ctx: CanvasRenderingContext2D) {
+        const tool = this.engine.getState().tool
         ctx.canvas.style.cursor = this.currentCursor || 'default';
-
 
         const entities = this.engine.getEntitiesWithComponents('position', 'type');
         entities.sort((a, b) => this.layerMap[a.getComponent('type')!.type] - this.layerMap[b.getComponent('type')!.type]);
 
 
         entities.forEach(entity => {
-            this.renderAttachmentArea(ctx, entity);
             this.renderEntity(ctx, entity);
             this.renderHoverOutline(ctx, entity);
         });
 
-        const selected = this.engine.getEntitiesWithComponents('selectable', 'position')
-            .filter(e => e.getComponent('selectable')!.selected);
-
+        const selected = entities.filter(e => e.getComponent('selectable')!.selected);
 
 
         this.renderSelection(ctx, selected);
         this.drawIntent(ctx, tool);
 
-        ctx.restore();
     }
 
 
-
-    private prepareContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {
-        const { x, y, zoom } = this.engine.camera;
-        canvas.width = canvas.clientWidth * this.dpr;
-        canvas.height = canvas.clientHeight * this.dpr;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return null;
-
-        ctx.scale(this.dpr * zoom, this.dpr * zoom);
-        ctx.save();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.translate(-x, -y);
-        return ctx;
-    }
 
 
     private renderEntity(ctx: CanvasRenderingContext2D, entity: Entity) {
@@ -197,34 +173,8 @@ export class RenderingSystem implements System {
         }
     }
 
-    private renderAttachmentArea(ctx: CanvasRenderingContext2D, entity: Entity) {
-        if(this.engine.userAction !== 'resizing' && this.engine.userAction !== 'moving') return
 
-        const posC = entity.getComponent('position');
-        const nodeC = entity.getComponent('node');
-        if (!posC || !nodeC) return;
 
-        const { x1, y1, x2, y2 } = posC.position;
-        const width = x2 - x1;
-        const height = y2 - y1;
-        const { areaPadding } = nodeC;
-
-        const renderWidth = width + areaPadding * 2;
-        const renderHeight = height + areaPadding * 2;
-
-        const centerX = x1 + width / 2;
-        const centerY = y1 + height / 2;
-
-        const startX = centerX - renderWidth / 2;
-        const startY = centerY - renderHeight / 2;
-
-        ctx.save();
-        ctx.fillStyle = '#FFC940';
-        ctx.globalAlpha = 0.2;
-        ctx.fillRect(startX, startY, renderWidth, renderHeight);
-        ctx.restore();
-    }
-    
     private renderHoverOutline(ctx: CanvasRenderingContext2D, entity: Entity) {
         const sel = entity.getComponent('selectable');
         const pos = entity.getComponent('position');

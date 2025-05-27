@@ -24,6 +24,8 @@ export class MovingSystem implements System {
     }
 
 
+
+
     onMoveStart = (data: EngineEvents['action:move:start']) => {
         const movableEntities = this.engine.getEntitiesWithComponents('selectable', 'position', 'movable').filter(entity => entity.getComponent('selectable')?.selected);
 
@@ -57,6 +59,32 @@ export class MovingSystem implements System {
             position.y1 = y - offset.y;
             position.x2 = position.x1 + width;
             position.y2 = position.y1 + height;
+
+
+
+            const nodeComponent = entity.getComponent('node');
+            if (nodeComponent) {
+                const attachedPoints = nodeComponent.attachedPoints;
+
+                if (attachedPoints.size > 0) {
+                    for (const [pointerId, point] of attachedPoints.entries()) {
+                        const arrow = this.engine.entities.get(pointerId);
+                        const posC = arrow?.getComponent("position");
+                        if (!posC) continue;
+
+                        const p = posC.position
+
+                        // simply reapply the stored offset
+                        if (point.overlapsAt === "start") {
+                            p.x1 = position.x1 + point.x
+                            p.y1 = position.y1 + point.y
+                        } else {
+                            p.x2 = position.x1 + point.x
+                            p.y2 = position.y1 + point.y
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -66,10 +94,22 @@ export class MovingSystem implements System {
             const movableComponent = entity.getComponent('movable')!;
             movableComponent.moving = false
         }
+
+       const attachedElements = movableEntities.map(entity => {
+            const nodeComponent = entity.getComponent('node');
+            if (nodeComponent) {
+                const attachedEntities = Array.from(nodeComponent.attachedPoints).map(([pointerId]) => {
+                    const pointerEntity = this.engine.entities.get(pointerId);
+                    if (!pointerEntity) return null;
+                    return pointerEntity;
+                })
+                .filter(entity => entity !== null);
+                return attachedEntities.map(entity => entity.element);
+            }
+            return [];
+        })
         const elements = movableEntities.map(entity => entity.element);
-        this.engine.getState().updateBatchElements(elements);
-
-
+        this.engine.getState().updateBatchElements([...elements, ...attachedElements.flat()]);  
     }
 
     update() { }

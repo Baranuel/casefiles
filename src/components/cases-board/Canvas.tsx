@@ -32,12 +32,12 @@ export const Canvas = () => {
     engine.addSystem("EventSystem", new EventSystem(engine));
     engine.addSystem("InputSystem", new InputSystem(engine));
     engine.addSystem("CreationSystem", new CreationSystem(engine));
-    engine.addSystem("RenderingSystem", new RenderingSystem(engine));
     engine.addSystem("CameraSystem", new CameraSystem(engine));
     engine.addSystem("SelectionSystem", new SelectionSystem(engine));
     engine.addSystem("UserActionSystem", new UserActionSystem(engine));
     engine.addSystem("MovingSystem", new MovingSystem(engine));
     engine.addSystem("ResizeSystem", new ResizeSystem(engine));
+    engine.addSystem("RenderingSystem", new RenderingSystem(engine));
     engine.addSystem("AttachmentSystem", new AttachmentSystem(engine));
 
     return () => {
