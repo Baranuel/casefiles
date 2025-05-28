@@ -79,14 +79,9 @@ export class CreationSystem implements System {
         setTimeout(() => {
             const entity = this.engine.entities.get(id);
             if (entity) {
-
-                this.eventSystem?.emit('selection:cleared', undefined)
-                const selectableC = entity.getComponent('selectable')!
-                const resizableC = entity.getComponent('resizable')!
-                selectableC.selected = true
-                resizableC.resizing = true
-                resizableC.interactionPoint = 'end'
+                this.eventSystem?.emit('action:select', { mouse: { x, y }, onMouseDownSnapshot: {x,y}, modifier: false })
                 this.eventSystem?.emit('action:change', { action: 'resizing' })
+                this.eventSystem?.emit('action:resize:start', { x, y, entityId: id, mouseDownSnapshot: { x, y }, interactionPoint: 'end' })
             }
         })
     }

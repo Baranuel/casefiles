@@ -62,7 +62,6 @@ export class ResizeSystem implements System {
         }
     }
 
-
     update() { }
 
     draw() {

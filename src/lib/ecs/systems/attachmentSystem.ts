@@ -41,39 +41,39 @@ export class AttachmentSystem implements System {
     }
 
     attachToNode = () => {
-        if (!this.entityToAttach) return;
-        const nodeEntities = this.engine.getEntitiesWithComponents('type', 'position', 'node')
-        const pointerEntities = this.engine.getEntitiesWithComponents('type', 'position')
 
-        for (const pointer of pointerEntities) {
-            const posC = pointer.getComponent('position')
-            const typeC = pointer.getComponent('type')
-            if (!posC || typeC?.type !== 'POINTER') continue
-            const { x1, y1, x2, y2 } = posC.position
+        const nodeEntities = this.engine.getEntitiesWithComponents('type', 'position', 'node');
+        const pointerEntities = this.engine.getEntitiesWithComponents('type', 'position', 'selectable').filter(e => e.getComponent('selectable')?.selected);
 
-            for (const node of nodeEntities) {
-                const nodePosC = node.getComponent('position')
-                const nodeC = node.getComponent('node')
-                if (!nodePosC || !nodeC) continue
+        for (const node of nodeEntities) {
+            const posC = node.getComponent('position');
+            const nodeC = node.getComponent('node');
+            if (!posC || !nodeC) continue;
 
-                const padding = nodeC.areaPadding
-                const attachedPts = nodeC.attachedPoints
+            const { areaPadding: padding, attachedPoints } = nodeC;
 
-                if (this.pointOverlapsNode(x1, y1, nodePosC.position, padding)) {
-                    const rel = this.getRelativePosition(x1, y1, nodePosC.position)
-                    attachedPts.set(pointer.id, { overlapsAt: 'start', x: rel.x, y: rel.y })
+            for (const pointer of pointerEntities) {
+                const pPosC = pointer.getComponent('position');
+                const typeC = pointer.getComponent('type');
+                if (!pPosC || typeC?.type !== 'POINTER') continue;
+
+                const { x1, y1, x2, y2 } = pPosC.position;
+
+                if (this.pointOverlapsNode(x1, y1, posC.position, padding)) {
+                    const rel = this.getRelativePosition(x1, y1, posC.position);
+                    attachedPoints.set(pointer.id, { overlapsAt: 'start', x: rel.x, y: rel.y });
                 }
-                else if (this.pointOverlapsNode(x2, y2, nodePosC.position, padding)) {
-                    const rel = this.getRelativePosition(x2, y2, nodePosC.position)
-                    attachedPts.set(pointer.id, { overlapsAt: 'end', x: rel.x, y: rel.y })
+                else if (this.pointOverlapsNode(x2, y2, posC.position, padding)) {
+                    const rel = this.getRelativePosition(x2, y2, posC.position);
+                    attachedPoints.set(pointer.id, { overlapsAt: 'end', x: rel.x, y: rel.y });
+                } else {
+                    attachedPoints.delete(pointer.id)
                 }
-                else {
-                    attachedPts.delete(pointer.id)
-                }
+                this.entityToAttach = null;
             }
         }
-        this.entityToAttach = null;
     }
+
 
 
 
@@ -81,9 +81,14 @@ export class AttachmentSystem implements System {
     update() { }
 
     draw(ctx: CanvasRenderingContext2D) {
-        if (!this.entityToAttach) return;
-
+        ctx.save();
         const nodeEntities = this.engine.getEntitiesWithComponents('node')
+
+        if (nodeEntities) {
+            this.drawAttachmentKnots(ctx, nodeEntities);
+        }
+
+        if (!this.entityToAttach) return;
         const posC = this.entityToAttach.getComponent('position')
         if (!posC) return
 
@@ -122,10 +127,48 @@ export class AttachmentSystem implements System {
                 ctx.globalAlpha = 0.2;
                 ctx.fillRect(startX, startY, renderWidth, renderHeight);
             }
-
-
         }
+        ctx.restore();
     }
+
+private drawAttachmentKnots(ctx: CanvasRenderingContext2D, nodeEntities: Entity[]) {
+  const RADIUS = 6;
+  const COLOR = '#FFC940'; // your theme color
+
+  for (const node of nodeEntities) {
+    const posC = node.getComponent('position');
+    const nodeC = node.getComponent('node');
+    if (!posC || !nodeC) continue;
+
+    const { x1, y1 } = posC.position;
+    for (const [entityId, { x, y }] of nodeC.attachedPoints) {
+    if(this.entityToAttach && this.entityToAttach.id === entityId) continue; // skip the currently attached entity
+      const cx = x1 + x;
+      const cy = y1 + y;
+      const off = RADIUS * 0.8;
+
+      ctx.save();
+
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = COLOR;
+      ctx.stroke();
+
+      // 3) draw a diamond inside
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - off);      
+      ctx.lineTo(cx + off, cy);         
+      ctx.lineTo(cx, cy + off);         
+      ctx.lineTo(cx - off, cy);     
+      ctx.closePath();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+  }
+}
+
+
+
 
     private pointOverlapsNode(
         px: number,
@@ -154,33 +197,33 @@ export class AttachmentSystem implements System {
 
 
     private initializeAttachments() {
-        const pointerEntities = this.engine.getEntitiesWithComponents('type', 'position')
-        const nodeEntities = this.engine.getEntitiesWithComponents('node')
 
-        for (const pointer of pointerEntities) {
-            const posC = pointer.getComponent('position')
-            const typeC = pointer.getComponent('type')
-            if (!posC || typeC?.type !== 'POINTER') continue
-            const { x1, y1, x2, y2 } = posC.position
+        const nodeEntities = this.engine.getEntitiesWithComponents('type', 'position', 'node');
+        const pointerEntities = this.engine.getEntitiesWithComponents('type', 'position');
 
-            for (const node of nodeEntities) {
-                const nodePosC = node.getComponent('position')
-                const nodeC = node.getComponent('node')
-                if (!nodePosC || !nodeC) continue
+        for (const node of nodeEntities) {
+            const posC = node.getComponent('position');
+            const nodeC = node.getComponent('node');
+            if (!posC || !nodeC) continue;
 
-                const padding = nodeC.areaPadding
-                const attachedPts = nodeC.attachedPoints
+            const { areaPadding: padding, attachedPoints } = nodeC;
+            // Start fresh for this node
+            attachedPoints.clear();
 
-                if (this.pointOverlapsNode(x1, y1, nodePosC.position, padding)) {
-                    const rel = this.getRelativePosition(x1, y1, nodePosC.position)
-                    attachedPts.set(pointer.id, { overlapsAt: 'start', x: rel.x, y: rel.y })
+            for (const pointer of pointerEntities) {
+                const pPosC = pointer.getComponent('position');
+                const typeC = pointer.getComponent('type');
+                if (!pPosC || typeC?.type !== 'POINTER') continue;
+
+                const { x1, y1, x2, y2 } = pPosC.position;
+
+                if (this.pointOverlapsNode(x1, y1, posC.position, padding)) {
+                    const rel = this.getRelativePosition(x1, y1, posC.position);
+                    attachedPoints.set(pointer.id, { overlapsAt: 'start', x: rel.x, y: rel.y });
                 }
-                else if (this.pointOverlapsNode(x2, y2, nodePosC.position, padding)) {
-                    const rel = this.getRelativePosition(x2, y2, nodePosC.position)
-                    attachedPts.set(pointer.id, { overlapsAt: 'end', x: rel.x, y: rel.y })
-                }
-                else {
-                    attachedPts.delete(pointer.id)
+                else if (this.pointOverlapsNode(x2, y2, posC.position, padding)) {
+                    const rel = this.getRelativePosition(x2, y2, posC.position);
+                    attachedPoints.set(pointer.id, { overlapsAt: 'end', x: rel.x, y: rel.y });
                 }
             }
         }

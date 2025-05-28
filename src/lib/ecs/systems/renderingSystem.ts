@@ -129,6 +129,7 @@ export class RenderingSystem implements System {
 
 
     draw(ctx: CanvasRenderingContext2D) {
+        ctx.save();
         const tool = this.engine.getState().tool
         ctx.canvas.style.cursor = this.currentCursor || 'default';
 
@@ -146,6 +147,7 @@ export class RenderingSystem implements System {
 
         this.renderSelection(ctx, selected);
         this.drawIntent(ctx, tool);
+        ctx.restore();
 
     }
 
@@ -264,11 +266,11 @@ export class RenderingSystem implements System {
         const { x1, y1, x2, y2 } = posC.position;
         const width = x2 - x1;
         const height = y2 - y1;
-        const IMAGE_RATIO = 0.75;    // shrink image region to 60%
+        const IMAGE_RATIO = 0.7;    // shrink image region to 60%
         const IMAGE_PADDING = 5;
         const PADDING = 5;
 
-        const colorA = '#733e0a';
+        const colorA = '#a65f00';
         const colorB = '#894b00';
 
         ctx.save();
@@ -295,6 +297,7 @@ export class RenderingSystem implements System {
 
         ctx.save();
         ctx.fillStyle = 'transparent';
+        ctx.globalAlpha = 0.9;
         ctx.fillRect(innerX, innerY, innerW, portraitH);
 
         const img = this.imageCache.get('LOCATION')!;
@@ -408,54 +411,79 @@ export class RenderingSystem implements System {
 
 
 
-    private renderPerson(ctx: CanvasRenderingContext2D, entity: Entity) {
-        const posC = entity.getComponent('position');
-        if (!posC) return;
+private renderPerson(ctx: CanvasRenderingContext2D, entity: Entity) {
+    const posC = entity.getComponent('position');
+    if (!posC) return;
 
-        const person = entity.element
-        if (!person) return;
+    const person = entity.element;
+    if (!person) return;
 
-        const { x1, y1, x2, y2 } = posC.position;
-        const width = x2 - x1;
-        const height = y2 - y1;
+    // <-- your new flag -->
+    const isKilled = !!person.content?.victim;
 
-        const PORTRAIT_RATIO = 0.8;
-        const PADDING = 5;
+    const { x1, y1, x2, y2 } = posC.position;
+    const width = x2 - x1;
+    const height = y2 - y1;
 
-        const personImage = this.imageCache.get(person.id);
-        if (!personImage) return;
+    const PORTRAIT_RATIO = 0.8;
+    const PADDING = 5;
 
-        // inner box, inset for portrait + name
-        const innerX = x1 + PADDING;
-        const innerY = y1 + PADDING;
-        const innerW = width - 2 * PADDING;
-        const innerH = height - 2 * PADDING;
-        const portraitH = innerH * PORTRAIT_RATIO;
-        const nameH = innerH - portraitH;
-        const nameY = innerY + portraitH;
+    const personImage = this.imageCache.get(person.id);
+    if (!personImage) return;
 
-        ctx.save();
-        ctx.fillStyle = '#F8DCB2';
-        ctx.fillRect(x1, y1, width, height);
-        ctx.restore();
+    ctx.save();
+    ctx.fillStyle = '#F8DCB2';
+    ctx.fillRect(x1, y1, width, height);
+    ctx.restore();
 
+    // inner box
+    const innerX = x1 + PADDING;
+    const innerY = y1 + PADDING;
+    const innerW = width - 2 * PADDING;
+    const innerH = height - 2 * PADDING;
+    const portraitH = innerH * PORTRAIT_RATIO;
+    const nameH = innerH - portraitH;
+    const nameY = innerY + portraitH;
 
-        ctx.save();
-        ctx.fillStyle = '#000';
-        ctx.fillRect(innerX, innerY, innerW, portraitH);
-        ctx.drawImage(personImage, innerX + 2, innerY + 2, innerW - 4, portraitH - 4);
-        ctx.restore();
-
-        // 4) name tag area at bottom
-        this.drawWrappedTextInBox(
-            ctx,
-            entity.element.content?.name || 'Unknown',
-            innerX,
-            nameY,
-            innerW,
-            nameH
-        )
+    ctx.fillRect(innerX, innerY, innerW, portraitH);
+    ctx.save();
+    if (isKilled) {
+        ctx.filter = 'grayscale(100%)';
     }
+    ctx.drawImage(personImage, innerX + 2, innerY + 2, innerW - 4, portraitH - 4);
+    ctx.restore();
+
+    // if killed → draw a red X
+    if (isKilled) {
+        const padding = 20;
+        const x1 = innerX + padding;
+        const y1 = innerY + padding;
+        const x2 = innerX + innerW - padding;
+        const y2 = innerY + portraitH - padding;
+
+        ctx.save();
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 30;
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.moveTo(x2, y1);
+        ctx.lineTo(x1, y2);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // name tag
+    this.drawWrappedTextInBox(
+        ctx,
+        person.content?.name || 'Unknown',
+        innerX,
+        nameY,
+        innerW,
+        nameH
+    );
+}
 
 
 
@@ -471,13 +499,13 @@ export class RenderingSystem implements System {
         const dy = y2 - y1;
         const angle = Math.atan2(dy, dx);
         const length = Math.hypot(dx, dy);
-        const headLen = 20;
-        const arrowColor = '#FFC940';
+        const headLen = 10;
+        const arrowColor = '#e17100';
 
         // Determine opacity based on selection
         const isSelected = entity.getComponent('selectable')?.selected;
         const isHovered = this.hoverProperties?.entityId === entity.id;
-        const alpha = isSelected ? 1 : 0.6;
+        const alpha = isSelected ? 1 : 0.5;
 
         // Compute base of arrow head
         const bx = x2 - headLen * Math.cos(angle);
@@ -486,7 +514,7 @@ export class RenderingSystem implements System {
         // Draw shaft
         ctx.save();
         ctx.globalAlpha = alpha;
-        ctx.setLineDash([8, 6]);
+        ctx.setLineDash([3, 2]);
         ctx.lineWidth = 2.5;
         ctx.strokeStyle = arrowColor;
         ctx.beginPath();
@@ -522,7 +550,6 @@ export class RenderingSystem implements System {
         // —— Draw interaction handles ——
         if (isSelected || isHovered && isSelected) {
             if (this.engine.getEntitiesWithComponents('selectable', 'position').filter(e => e.getComponent('selectable')!.selected).length > 1) return
-
             ctx.save();
             ctx.globalAlpha = 1;
             ctx.fillStyle = '#FFFFFF';      // white fill
@@ -539,8 +566,6 @@ export class RenderingSystem implements System {
         }
     }
 
-    // utility to draw one handle
-    // …existing code…
     private drawHandle = (
         ctx: CanvasRenderingContext2D,
         activeHandle: PositionWithinElement | undefined,

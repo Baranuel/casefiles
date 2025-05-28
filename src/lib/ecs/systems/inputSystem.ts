@@ -59,8 +59,6 @@ export class InputSystem implements System {
 
       if (!this.isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
         this.isDragging = true
-
-
         if (this.eventSystem) {
           this.eventSystem.emit('mouse:drag:start', {
             x: this.mousePosition.x,
