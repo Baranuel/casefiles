@@ -75,8 +75,6 @@ export class UserActionSystem implements System {
 
 
 
-
-
     private handleCleanup = () => {
         switch (this.currentAction) {
             case 'moving':
@@ -124,9 +122,7 @@ export class UserActionSystem implements System {
         if (this.checkForMoveInteraction({ x, y }, selectableEntities)) {
             if (this.currentAction === 'idle') {
                 const entityHit = getEntityAtPosition(selectableEntities, x, y)
-
-
-                    this.emitStartMoveAction({ x, y }, mouseDownSnapshot, entityHit?.id)
+                this.emitStartMoveAction({ x, y }, mouseDownSnapshot, entityHit?.id)
 
             }
         }

@@ -37,8 +37,8 @@ export const Canvas = () => {
     engine.addSystem("UserActionSystem", new UserActionSystem(engine));
     engine.addSystem("MovingSystem", new MovingSystem(engine));
     engine.addSystem("ResizeSystem", new ResizeSystem(engine));
-    engine.addSystem("RenderingSystem", new RenderingSystem(engine));
     engine.addSystem("AttachmentSystem", new AttachmentSystem(engine));
+    engine.addSystem("RenderingSystem", new RenderingSystem(engine));
 
     return () => {
       engine.cleanup();

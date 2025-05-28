@@ -45,7 +45,7 @@ export class Engine {
         this.lastTime = timestamp;
         const engineSystems = Array.from(this.systems.entries())
         const ctx = this.prepareContext(this.canvas);
-        if(!ctx) return;
+        if (!ctx) return;
 
         engineSystems.forEach(([, system]) => system.update(this.deltaTime))
         engineSystems.forEach(([, system]) => system.draw(ctx))
@@ -104,6 +104,7 @@ export class Engine {
                         entity.addComponent('style', new StyleComponent(entity, 'blue'));
                         entity.addComponent('movable', new MovableComponent(entity));
                         entity.addComponent('selectable', new SelectableComponent(entity));
+                        entity.addComponent('node', new NodeComponent(entity));
                         break;
                     case 'NOTE':
                         entity.addComponent('type', new TypeComponent(entity, 'NOTE'));
@@ -116,7 +117,6 @@ export class Engine {
                         entity.addComponent('movable', new MovableComponent(entity));
                         entity.addComponent('selectable', new SelectableComponent(entity));
                         entity.addComponent('resizable', new ResizableComponent(entity));
-
                     default:
                         break;
                 }
@@ -139,7 +139,7 @@ export class Engine {
         this.systems.forEach(s => s.destroy())
     }
     public getEntitiesWithComponents<
-        K extends readonly ComponentsType[]      
+        K extends readonly ComponentsType[]
     >(
         ...componentKeys: K
     ): Entity[] {
@@ -149,7 +149,7 @@ export class Engine {
         return result
     }
 
-        private prepareContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {
+    private prepareContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {
         const { x, y, zoom } = this.camera;
         canvas.width = canvas.clientWidth * this.dpr;
         canvas.height = canvas.clientHeight * this.dpr;
