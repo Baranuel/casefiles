@@ -28,6 +28,10 @@ export class AttachmentSystem implements System {
         this.initializeAttachments()
     }
 
+    stateUpdated(){
+        this.initializeAttachments();
+    }
+
     onResizeStart = (data: EngineEvents['action:resize:start']) => {
         const entityToAttach = this.engine.entities.get(data.entityId)
         this.entityToAttach = entityToAttach || null
