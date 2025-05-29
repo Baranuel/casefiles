@@ -40,7 +40,7 @@ export const SocketProvider = ({
 }: SocketProviderProps) => {
   const { BASE_API_URL } = useConfig();
   const { parseSocketData } = useReceiveSocketMessage();
-  const { wsElementCreate, wsElementUpdate, wsElementsBatchUpdate, wsContentUpdate } = useWsCacheUpdate(caseId);
+  const { wsElementCreate, wsElementUpdate, wsElementsBatchUpdate, wsContentUpdate, wsElementDelete } = useWsCacheUpdate(caseId);
 
   const pendingRef = useRef<WsMessage[]>([]);
   const timerRef = useRef<number>(0);
@@ -83,6 +83,10 @@ export const SocketProvider = ({
         if(message.type === 'UPDATE') {
           wsElementUpdate("case-elements", message.payload);
         }
+        if(message.type === 'DELETE') {
+          console.log('DELETE', message);
+          wsElementDelete("case-elements", message.payload.id);
+        }
         if(message.type === 'UPDATE_BATCH') {
           wsElementsBatchUpdate("case-elements", message.payload);
         }
@@ -99,7 +103,7 @@ export const SocketProvider = ({
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [lastMessage, parseSocketData, wsContentUpdate, wsElementCreate, wsElementUpdate, wsElementsBatchUpdate]);
+  }, [lastMessage, parseSocketData, wsContentUpdate, wsElementCreate, wsElementDelete, wsElementUpdate, wsElementsBatchUpdate]);
 
   const value = useMemo(
     () => ({ lastMessage, uniqueWsId }),

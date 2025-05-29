@@ -26,7 +26,25 @@ export const useCaseElementsMutation = (caseId: string) => {
                 queryClient.setQueryData(['case-elements', caseId], context.previousElements);
             }
         },
- 
+    });
+
+    const deleteMutation = useMutation({
+        mutationKey: ['element-mutation', caseId],
+        mutationFn: (elementId: string) => api.deleteElement(elementId),
+        onMutate: async (deletedElementId) => {
+            await queryClient.cancelQueries({ queryKey: ['case-elements', caseId] });
+            const previousElements = queryClient.getQueryData<ElementDto[]>(['case-elements', caseId]);
+            queryClient.setQueryData<ElementDto[]>(['case-elements', caseId], (old) => {
+                if (!old) return [];
+                return old.filter(element => element.id !== deletedElementId);
+            });
+            return { previousElements };
+        },
+        onError: (_err, _deletedElementId, context) => {
+            if (context?.previousElements) {
+                queryClient.setQueryData(['case-elements', caseId], context.previousElements);
+            }
+        },
     });
 
     const updateMutation = useMutation({
@@ -88,5 +106,5 @@ export const useCaseElementsMutation = (caseId: string) => {
 
 
 
-    return { createMutation, updateMutation, updateBatchMutation };
+    return { createMutation, updateMutation, updateBatchMutation, deleteMutation };
 };

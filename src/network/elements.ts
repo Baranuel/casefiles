@@ -69,10 +69,11 @@ export class ElementsApi {
         return response.data;
     }
 
-    async deleteElement( elementId: string) {
+    async deleteElement(elementId: string) {
         const headers = await this.authHeaders();
+        const wsIdParam = this.uniqueWsId ? `?wsId=${this.uniqueWsId}` : "";
         const response = await this.api.delete(
-            `/elements/${elementId}`,
+            `/elements/${elementId}${wsIdParam}`,
             { headers }
         );
         return response.data;

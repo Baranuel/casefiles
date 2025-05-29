@@ -37,9 +37,17 @@ export const useWsCacheUpdate = (caseId: string) => {
     }
 
     const wsContentUpdate = (queryKey: string, updatedContent: Content) => {
-         const updater = (oldCachedElements: ElementDto[]) => {
+        const updater = (oldCachedElements: ElementDto[]) => {
             if (!oldCachedElements.find(el => el.id === updatedContent.element_id)) return
             return [...oldCachedElements.map(el => el.id === updatedContent.element_id ? { ...el, content: updatedContent } : el)]
+        }
+        queryClient.setQueryData([queryKey, caseId], updater)
+    }
+
+    const wsElementDelete = (queryKey: string, deletedElementId: string) => {
+        const updater = (oldCachedElements: ElementDto[]) => {
+            if (!oldCachedElements.find(el => el.id === deletedElementId)) return
+            return oldCachedElements.filter(el => el.id !== deletedElementId)
         }
         queryClient.setQueryData([queryKey, caseId], updater)
     }
@@ -48,7 +56,8 @@ export const useWsCacheUpdate = (caseId: string) => {
         wsElementCreate,
         wsElementUpdate,
         wsElementsBatchUpdate,
-        wsContentUpdate
+        wsContentUpdate,
+        wsElementDelete
     }
 
 }

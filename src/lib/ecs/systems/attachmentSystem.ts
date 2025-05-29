@@ -28,7 +28,7 @@ export class AttachmentSystem implements System {
         this.initializeAttachments()
     }
 
-    stateUpdated(){
+    stateUpdated() {
         this.initializeAttachments();
     }
 
@@ -45,7 +45,6 @@ export class AttachmentSystem implements System {
     }
 
     attachToNode = () => {
-
         const nodeEntities = this.engine.getEntitiesWithComponents('type', 'position', 'node');
         const pointerEntities = this.engine.getEntitiesWithComponents('type', 'position', 'selectable').filter(e => e.getComponent('selectable')?.selected);
 
@@ -135,44 +134,40 @@ export class AttachmentSystem implements System {
         ctx.restore();
     }
 
-private drawAttachmentKnots(ctx: CanvasRenderingContext2D, nodeEntities: Entity[]) {
-  const RADIUS = 6;
-  const COLOR = '#FFC940'; // your theme color
+    private drawAttachmentKnots(ctx: CanvasRenderingContext2D, nodeEntities: Entity[]) {
+        const RADIUS = 6;
+        const COLOR = '#FFC940';
 
-  for (const node of nodeEntities) {
-    const posC = node.getComponent('position');
-    const nodeC = node.getComponent('node');
-    if (!posC || !nodeC) continue;
+        for (const node of nodeEntities) {
+            const posC = node.getComponent('position');
+            const nodeC = node.getComponent('node');
+            if (!posC || !nodeC) continue;
 
-    const { x1, y1 } = posC.position;
-    for (const [entityId, { x, y }] of nodeC.attachedPoints) {
-    if(this.entityToAttach && this.entityToAttach.id === entityId) continue; // skip the currently attached entity
-      const cx = x1 + x;
-      const cy = y1 + y;
-      const off = RADIUS * 0.8;
+            const { x1, y1 } = posC.position;
+            for (const [entityId, { x, y }] of nodeC.attachedPoints) {
+                if (this.entityToAttach && this.entityToAttach.id === entityId) continue; // skip the currently attached entity
+                const cx = x1 + x;
+                const cy = y1 + y;
+                const off = RADIUS * 0.8;
 
-      ctx.save();
+                ctx.save();
 
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = COLOR;
-      ctx.stroke();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = COLOR;
+                ctx.stroke();
 
-      // 3) draw a diamond inside
-      ctx.beginPath();
-      ctx.moveTo(cx, cy - off);      
-      ctx.lineTo(cx + off, cy);         
-      ctx.lineTo(cx, cy + off);         
-      ctx.lineTo(cx - off, cy);     
-      ctx.closePath();
-      ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - off);
+                ctx.lineTo(cx + off, cy);
+                ctx.lineTo(cx, cy + off);
+                ctx.lineTo(cx - off, cy);
+                ctx.closePath();
+                ctx.stroke();
 
-      ctx.restore();
+                ctx.restore();
+            }
+        }
     }
-  }
-}
-
-
-
 
     private pointOverlapsNode(
         px: number,
@@ -211,7 +206,6 @@ private drawAttachmentKnots(ctx: CanvasRenderingContext2D, nodeEntities: Entity[
             if (!posC || !nodeC) continue;
 
             const { areaPadding: padding, attachedPoints } = nodeC;
-            // Start fresh for this node
             attachedPoints.clear();
 
             for (const pointer of pointerEntities) {
@@ -236,6 +230,7 @@ private drawAttachmentKnots(ctx: CanvasRenderingContext2D, nodeEntities: Entity[
 
     destroy() {
         if (this.eventSystem) {
+            this.eventSystem.subscribe('action:move:start', this.onMoveStart)
             this.eventSystem.unsubscribe('action:resize:end', this.attachToNode)
             this.eventSystem.unsubscribe('action:resize:start', this.onResizeStart)
             this.eventSystem.unsubscribe('action:move:end', this.attachToNode)

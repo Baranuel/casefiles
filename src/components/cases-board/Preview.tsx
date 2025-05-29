@@ -10,11 +10,12 @@ import { useCaseContentsMutation } from "@/hooks/use-case-contents-mutation";
 import CustomDrawer from "./CustomDrawer";
 import dayjs from "dayjs";
 import React from "react";
+import { Button } from "../ui/button";
 
 const Headshot = React.lazy(() => import("./Headshot"));
 
 export const Preview = ({ caseId }: { caseId: string }) => {
-  const { previewElementId, setPreviewElementId } = useCaseContext();
+  const { previewElementId, setPreviewElementId, deleteElement } = useCaseContext();
   const { getPreviewElement } = usePreviewElement(caseId);
   const { updateMutation } = useCaseContentsMutation(caseId);
   const previewElement = getPreviewElement(previewElementId);
@@ -195,7 +196,7 @@ export const Preview = ({ caseId }: { caseId: string }) => {
         )}
 
         {/* Fourth Row */}
-        <div className="flex-1 mb-3 md:mb-6 h-full gap-2">
+        <div className="flex-1 h-full gap-2">
           <div className="h-full flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
             <label
               htmlFor="text"
@@ -207,22 +208,27 @@ export const Preview = ({ caseId }: { caseId: string }) => {
               placeholder="Enter notes here..."
               {...register("text")}
               onChange={(e) => mutationWrapper({ text: e.target.value })}
-              className="h-full min-h-[50vh] p-3 border border-amber-800/40 rounded-sm bg-background-500/60 focus:outline-none focus:bg-background focus:border-amber-800"
+              className="h-full min-h-[60vh] md:min-h-[30vh] p-3 border border-amber-800/40 rounded-sm bg-background-500/60 focus:outline-none focus:bg-background focus:border-amber-800"
             />
+          </div>
+        </div>
+
+        <div className="flex gap-2  mb-3 md:mb-6  ">
+          <div className="flex flex-col gap-1 p-3 w-full bg-amber-900/20 rounded-sm">
+            <label
+              htmlFor="name"
+              className="text-sm font-semibold text-amber-800"
+            >
+              Options
+            </label>
+            <Button
+             onClick={() => previewElement?.id && deleteElement(previewElement?.id, true)}
+             className="min-w-[200px]">Delete</Button>
           </div>
         </div>
       </div>
     );
-  }, [
-    previewElement?.type,
-    previewElement?.content?.image,
-    previewElement?.content?.name,
-    previewElement?.content?.victim,
-    previewElement?.content?.time_of_death,
-    mutationWrapper,
-    register,
-    control,
-  ]);
+  }, [previewElement?.type, previewElement?.content?.image, previewElement?.content?.name, previewElement?.content?.victim, previewElement?.content?.time_of_death, previewElement?.id, mutationWrapper, register, control, deleteElement]);
 
   return (
     <CustomDrawer open={isOpen} onClose={handleClose}>
