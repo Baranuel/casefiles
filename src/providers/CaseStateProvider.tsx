@@ -13,6 +13,7 @@ import {
 import type { ElementDto, Tool } from "@/types/elements";
 import { useCaseElementsQuery } from "@/hooks/use-case-elements-query";
 import { useCaseElementsMutation } from "@/hooks/use-case-elements-mutation";
+import { useConfirm } from "./ConfirmProvider";
 
 export type State = {
   elements: ElementDto[];
@@ -22,6 +23,7 @@ export type State = {
   addElement: (element: ElementDto) => void;
   updateElement: (element: ElementDto) => void;
   updateBatchElements: (elements: ElementDto[]) => void;
+  deleteElement: (elementId: ElementDto["id"], confirm?: boolean) => void;
   setTool: Dispatch<SetStateAction<Tool>>;
 };
 
@@ -35,11 +37,16 @@ export function CaseProvider({
   caseId: string;
 }) {
   const { data: elements, isLoading } = useCaseElementsQuery(caseId);
-  const { createMutation, updateMutation, updateBatchMutation } =
-  useCaseElementsMutation(caseId);
-  
+  const {
+    createMutation,
+    updateMutation,
+    updateBatchMutation,
+    deleteMutation,
+  } = useCaseElementsMutation(caseId);
 
-  const [tool, setTool] = useState<Tool>('SELECT');
+  const { confirmModal } = useConfirm();
+
+  const [tool, setTool] = useState<Tool>("SELECT");
 
   const [previewElementId, setPreviewElementId] = useState<
     ElementDto["id"] | null
@@ -60,6 +67,26 @@ export function CaseProvider({
     [updateMutation]
   );
 
+  const deleteElement = useCallback(
+    async (elementId: ElementDto["id"], confirm?: boolean) => {
+      if (!confirm) return deleteMutation.mutate(elementId);
+
+      try {
+        await confirmModal({
+          title: "Confirm Deletion",
+          description: "Are you sure you want to delete this element?",
+          okText: "Delete",
+          cancelText: "Cancel",
+        });
+        deleteMutation.mutate(elementId);
+      } catch (e) {
+        console.log(e);
+        return; // Exit if deletion is cancelled
+      }
+    },
+    [confirmModal, deleteMutation]
+  );
+
   const updateBatchElements = useCallback(
     (elementsToUpdate: ElementDto[]) => {
       updateBatchMutation.mutate(elementsToUpdate);
@@ -76,6 +103,7 @@ export function CaseProvider({
       addElement,
       updateElement,
       updateBatchElements,
+      deleteElement,
       setTool,
     }),
     [
@@ -85,6 +113,7 @@ export function CaseProvider({
       addElement,
       updateElement,
       updateBatchElements,
+      deleteElement,
     ]
   );
 

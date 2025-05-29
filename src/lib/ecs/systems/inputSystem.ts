@@ -36,7 +36,7 @@ export class InputSystem implements System {
   //  Initialization
   // —————————————————————————————
   private initEventListeners() {
-    const opts = { signal: this.controller.signal}
+    const opts = { signal: this.controller.signal }
     this.canvas.addEventListener("touchstart", this.onTouchStart, opts)
     this.canvas.addEventListener("touchmove", this.onTouchMove, opts)
     this.canvas.addEventListener("touchend", this.onTouchEnd, opts)
@@ -88,10 +88,17 @@ export class InputSystem implements System {
 
   private onKeyDown = (e: KeyboardEvent) => {
     this.keyPressed = e.key
+
+    if (this.eventSystem) {
+      this.eventSystem.emit('key:down', { key: e.key, code: e.code, modifier: e.shiftKey || e.ctrlKey || e.altKey })
+    }
   }
 
-  private onKeyUp = () => {
+  private onKeyUp = (e: KeyboardEvent) => {
     this.keyPressed = null
+    if (this.eventSystem) {
+      this.eventSystem.emit('key:up', { key: e.key, code: e.code, modifier: e.shiftKey || e.ctrlKey || e.altKey })
+    }
   }
 
   private onMouseDown = (e: MouseEvent) => {
@@ -240,7 +247,6 @@ export class InputSystem implements System {
 
     this.mousePosition = { x: clientX, y: clientY }
 
-    // Emit mouse move event
     if (this.eventSystem) {
       this.eventSystem.emit('mouse:move', {
         mouse: { x: clientX, y: clientY },

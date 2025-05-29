@@ -12,6 +12,9 @@ export interface EngineEvents {
     'mouse:down': { x: number, y: number, modifier?: boolean, mouseDownSnapshot:{x:number, y:number}, screenPositionSnapshot?:MousePosition };
     'mouse:up': { x: number, y: number, mouseDownSnapshot: { x: number, y: number }, mouseScreenPositionSnapshot:MousePosition,  modifier?: boolean,   screenPositionSnapshot?: MousePosition; screenX?: number, screenY?: number };
     'mouse:drag': { x: number, y: number, mouseDownSnapshot: { x: number, y: number }, modifier?: boolean };
+    
+    'key:down': { key: string, code: string, modifier: boolean };
+    'key:up': { key: string, code: string, modifier: boolean };
 
     'touch:start': TouchEvent;
     'touch:move': TouchEvent; 
@@ -35,8 +38,8 @@ export interface EngineEvents {
     'action:resize:end': ActionResizeStartDto | null;
     'action:change': { action: 'idle' | 'moving' | 'resizing' | 'panning' };
     'action:create': ActionCreateDto;
+    'action:delete': { entityIds: Entity['id'][] };
 
-    // Keep this for backward compatibility with any existing code
     [key: string]: unknown;
 }
 

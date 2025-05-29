@@ -71,7 +71,9 @@ import { memo, useEffect } from "react";
         <div className="h-24 w-12 flex items-center justify-center bg-[#E4C18E] absolute -right-8 -top-[0.85px] border-r border-t border-muted p-2 rounded-r-md ">
           <div className="h-full w-2 rounded-xl ml-3 bg-muted"></div>
         </div>
+        <div className="flex flex-col gap-2 h-full w-full relative z-40 overflow-auto">
         {children}
+        </div>
       </div>
     );
   })

@@ -449,6 +449,7 @@ private renderPerson(ctx: CanvasRenderingContext2D, entity: Entity) {
     ctx.save();
     if (isKilled) {
         ctx.filter = 'grayscale(100%)';
+        ctx.fillRect(innerX + 2, innerY + 2, innerW - 4, portraitH - 4);
     }
     ctx.drawImage(personImage, innerX + 2, innerY + 2, innerW - 4, portraitH - 4);
     ctx.restore();

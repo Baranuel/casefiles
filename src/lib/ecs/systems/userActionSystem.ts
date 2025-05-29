@@ -27,6 +27,7 @@ export class UserActionSystem implements System {
             this.eventSystem.subscribe('mouse:down', this.onMouseDown)
             this.eventSystem.subscribe('mouse:drag', this.onDrag)
             this.eventSystem.subscribe('mouse:up', this.onMouseUp)
+            this.eventSystem.subscribe('key:up', this.keyUp)
             this.eventSystem.subscribe('touch:start', this.onTouchStart)
             this.eventSystem.subscribe('touch:move', this.onTouchMove)
             this.eventSystem.subscribe('touch:end', this.onTouchEnd)
@@ -34,6 +35,17 @@ export class UserActionSystem implements System {
             this.eventSystem.subscribe('action:pan', this.onPan)
         }
 
+    }
+
+    keyUp = (data: EngineEvents['key:up']) => {
+        if (data.key === 'Backspace') {
+            const selectedEntities = this.engine.getEntitiesWithComponents('selectable').filter(entity => entity.getComponent('selectable')?.selected);
+            if (!selectedEntities) return
+            const entity = selectedEntities[0]
+            if(!entity || entity.getComponent('type')?.type !== 'POINTER') return
+            this.engine.getState().deleteElement(entity.id, !!entity.element?.content)
+            this.eventSystem?.emit('selection:cleared', undefined)
+        }
     }
 
     onPan = () => {
@@ -123,7 +135,6 @@ export class UserActionSystem implements System {
             if (this.currentAction === 'idle') {
                 const entityHit = getEntityAtPosition(selectableEntities, x, y)
                 this.emitStartMoveAction({ x, y }, mouseDownSnapshot, entityHit?.id)
-
             }
         }
 
@@ -202,6 +213,7 @@ export class UserActionSystem implements System {
             this.eventSystem.unsubscribe('touch:end', this.onTouchEnd)
             this.eventSystem.unsubscribe('action:change', this.updateAction)
             this.eventSystem.unsubscribe('action:pan', this.onPan)
+            this.eventSystem.unsubscribe('key:up', this.keyUp)
         }
     }
 }
