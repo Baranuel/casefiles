@@ -2,6 +2,7 @@ import { SectionHeader } from "../global/SectionHeader";
 import { SectionWrapper } from "../global/SectionWrapper";
 import { Button } from "../global/Button";
 import { Check, Coffee, Fingerprint } from "lucide-react";
+import Link from "next/link";
 
 const pricingPlans = [
   {
@@ -109,13 +110,14 @@ export const Pricing = () => {
                   </div>
                 ))}
               </div>
-
+              <Link href="/cases" className="w-full">
               <Button
                 variant={plan.buttonVariant}
                 className="w-full py-2.5 rounded-md border border-amber-600 mt-auto"
-              >
+                >
                 {plan.price === "0" ? "Start Investigating" : "Become a Master Detective"}
               </Button>
+                </Link>
             </div>
           ))}
         </div>
