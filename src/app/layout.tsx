@@ -5,6 +5,7 @@ import Navigation from "@/components/global/Navigation";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConfigProvider } from "@/providers/ConfigProvider";
 import { Providers } from "@/providers";
+import { Footer } from "@/components/global/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -106,11 +107,7 @@ export default async function RootLayout({
             >
               <Navigation />
               {children}
-              {/* <footer className="flex items-center justify-center w-full h-24 bg-primary-800">
-                <p className="text-sm text-center text-background-500">
-                  Designed and developed by <a> Samuel Baran </a>
-                </p>
-              </footer> */}
+             <Footer/> 
             </body>
           </html>
         </Providers>

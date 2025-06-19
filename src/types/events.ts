@@ -28,7 +28,7 @@ export interface EngineEvents {
     'action:pan:start': undefined;
     'action:pan': {mouse:MousePosition, mouseDownSnapshot:MousePosition};
     'action:select:end':{mouse:MousePosition, mouseDownSnapshot:MousePosition, modifier?:boolean, mouseScreenPositionSnapshot?:MousePosition, screenX?:number, screenY?:number};
-    'action:select': {mouse:MousePosition,  onMouseDownSnapshot:MousePosition, modifier?: boolean };
+    'action:select': {mouse:MousePosition,  onMouseDownSnapshot:MousePosition, modifier?: boolean, entity?:Entity};
     'action:hover':{mouse:MousePosition, entityId:Entity['id'], interactionPoint:PositionWithinElement, isMouseDown?: boolean};
     'action:move:start': { x: number, y: number, mouseDownSnapshot: { x: number, y: number }, entityId?: Entity['id'],};
     'action:move': { x: number, y: number };
