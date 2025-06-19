@@ -27,7 +27,7 @@ export class SelectionSystem implements System {
 
     onActionSelect = (data: EngineEvents['action:select']) => {
         const selectableEntities = this.engine.getEntitiesWithComponents('selectable');
-        const entityHit = getEntityAtPosition(selectableEntities, data.mouse.x, data.mouse.y);
+        const entityHit = data.entity ??  getEntityAtPosition(selectableEntities, data.mouse.x, data.mouse.y);
 
         const selectedEntities = selectableEntities.filter(entity => entity.getComponent('selectable')?.selected);
         const clickedInSelectionArea = isPointInSelectionArea(selectedEntities, data.mouse.x, data.mouse.y);
