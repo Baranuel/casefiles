@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     siteName: "Casefiles",
     images: [
       {
-        url: "https://your-domain.com/og-image.png",
+        url: "https://casefiles.app/casefile.png",
         width: 1200,
         height: 630,
         alt: "Casefiles – Collaborative Detective Board"

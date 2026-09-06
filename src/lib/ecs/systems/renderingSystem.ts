@@ -6,6 +6,7 @@ import { EngineEvents } from "@/types/events";
 import { PositionWithinElement, Tool } from "@/types/elements";
 import { ELEMENT_CONFIGURATION } from "../configurations";
 import { State } from "@/providers/CaseStateProvider";
+import { toLocalImage } from "@/lib/local-images";
 
 
 type HoverProperties = {
@@ -103,17 +104,19 @@ export class RenderingSystem implements System {
             const typeC = entity.getComponent('type');
             if (!typeC) continue
 
+            const contentImage = toLocalImage(entity.element?.content?.image) || ''
+
             if (this.imageCache.has(entity.id)) {
                 const image = this.imageCache.get(entity.id);
 
-                if (image && image.src !== entity.element?.content?.image) {
-                    image.src = entity.element?.content?.image || ''
+                if (image && image.src !== contentImage) {
+                    image.src = contentImage
                 }
                 continue
             }
 
             const image = new Image();
-            image.src = entity.element?.content?.image || ''
+            image.src = contentImage
             this.imageCache.set(entity.id, image)
         }
 
