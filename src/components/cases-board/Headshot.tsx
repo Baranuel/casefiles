@@ -10,7 +10,7 @@ import {
 } from "../ui/dialog";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Content } from "@/types/contents";
-import { useCdnApi } from "@/hooks/use-cdn-api";
+import { PORTRAITS, toLocalImage } from "@/lib/local-images";
 import { Button } from "../ui/button";
 import { DialogDescription } from "@radix-ui/react-dialog";
 
@@ -58,27 +58,27 @@ type SelectHeadshotProps = {
 };
 
 const Headshot = memo(({ imagePath, onImageChange }: SelectHeadshotProps) => {
-  const cdnApi = useCdnApi();
+  const localImagePath = toLocalImage(imagePath);
   const [previewImage, setPreviewImage] = useState<string | null>(
-    imagePath || null
+    localImagePath || null
   );
   const [open, setOpen] = useState(false);
 
   const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
     queryKey: ["headshot"],
-    initialPageParam: null,
+    initialPageParam: 0,
     queryFn: async (context) => {
       const { pageParam } = context;
       const limit = 10;
-      const cursor = pageParam || null;
+      const images = PORTRAITS.slice(pageParam, pageParam + limit);
+      const nextCursor = pageParam + limit;
 
-      const data = await cdnApi.getImages({ limit, cursor });
       return {
-        images: data.images,
-        cursor: data.cursor || null,
+        images,
+        cursor: nextCursor < PORTRAITS.length ? nextCursor : null,
       };
     },
-    getNextPageParam: (lastPage: { images: string[]; cursor: string | null }) =>
+    getNextPageParam: (lastPage: { images: string[]; cursor: number | null }) =>
       lastPage.cursor ?? undefined,
   });
 
@@ -113,7 +113,7 @@ const Headshot = memo(({ imagePath, onImageChange }: SelectHeadshotProps) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <img
-          src={imagePath || "/avatar-m.svg"}
+          src={localImagePath || "/avatar-m.svg"}
           alt="Current headshot"
           className="w-full h-full cursor-pointer"
         />
@@ -162,7 +162,7 @@ const Headshot = memo(({ imagePath, onImageChange }: SelectHeadshotProps) => {
         </div>
         <DialogFooter>
           <Button
-            disabled={previewImage === imagePath}
+            disabled={previewImage === localImagePath}
             onClick={() => {
               onImageChange?.({ image: previewImage }, { noDelay: true });
               setOpen(false);
